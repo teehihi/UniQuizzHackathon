@@ -32,12 +32,15 @@ async function listAvailableModels() {
 }
 
 // Hàm chính: generate quiz
-async function generateQuizFromText(text) {
+async function generateQuizFromText(text, questionCount = 10) {
+  // Đảm bảo questionCount hợp lệ
+  const numQuestions = Math.max(1, Math.min(50, parseInt(questionCount) || 10));
+  
   // build prompt
   const prompt = `
 Dựa vào văn bản sau đây, hãy thực hiện 2 yêu cầu:
 1) Tóm tắt nội dung chính trong 3 gạch đầu dòng (summary).
-2) Tạo 10 câu hỏi trắc nghiệm (questions) chỉ tập trung vào nội dung văn bản.
+2) Tạo ${numQuestions} câu hỏi trắc nghiệm (questions) chỉ tập trung vào nội dung văn bản.
 
 YÊU CẦU:
 - Trả về duy nhất 1 đối tượng JSON (không dùng markdown).

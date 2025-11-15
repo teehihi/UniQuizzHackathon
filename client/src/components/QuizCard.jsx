@@ -2,7 +2,16 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 // Component này nhận 'quiz' làm prop, chứa thông tin như title, questionCount
-export default function QuizCard({ quiz }) {
+export default function QuizCard({ quiz, onDelete }) {
+  const handleDelete = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (window.confirm(`Bạn có chắc chắn muốn xóa quiz "${quiz.title}"?`)) {
+      onDelete?.(quiz.id);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg border border-red-50 overflow-hidden flex flex-col">
       {/* Ảnh bìa (tùy chọn, bạn có thể thêm sau) */}
@@ -25,10 +34,11 @@ export default function QuizCard({ quiz }) {
             Làm ngay
           </Link>
           <button
+            onClick={handleDelete}
             title="Xóa"
             className="px-3 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-red-200 hover:text-red-800 transition"
           >
-            {/* Icon thùng rác (Bạn có thể dùng icon thật sau) */}
+            {/* Icon thùng rác */}
             Xóa
           </button>
         </div>

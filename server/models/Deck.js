@@ -31,6 +31,11 @@ const DeckSchema = new mongoose.Schema({
     type: [String], // Mảng các gạch đầu dòng tóm tắt
   },
   questions: [QuestionSchema], // Mảng các câu hỏi (dùng schema ở trên)
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

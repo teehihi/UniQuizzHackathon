@@ -1,41 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-
-// === DỮ LIỆU MẪU (Sử dụng JSON bạn đã cung cấp) ===
-const mockQuizData = {
-  _id: "6917fee5535b46e1e1e58e69",
-  title: "Test Quang hợp",
-  courseCode: "PHIL101",
-  questions: [
-    {
-      question: "Quang hợp chủ yếu diễn ra ở bộ phận nào của cây?",
-      options: ["Rễ cây", "Thân cây", "Lá cây", "Hoa"],
-      answer: "Lá cây",
-    },
-    {
-      question: "Sinh vật nào chủ yếu thực hiện quá trình quang hợp?",
-      options: ["Động vật", "Thực vật", "Nấm", "Vi khuẩn lam"],
-      answer: "Thực vật",
-    },
-    {
-      question: "Chất hữu cơ được tổng hợp từ các chất nào trong quá trình quang hợp?",
-      options: ["Chất hữu cơ", "Chất vô cơ", "Nước và oxy", "Carbon dioxide và protein"],
-      answer: "Chất vô cơ",
-    },
-    {
-      question: "Sản phẩm chính của quang hợp cung cấp năng lượng cho cây là gì?",
-      options: ["Oxy", "Carbon dioxide", "Nước", "Glucose"],
-      answer: "Glucose",
-    },
-    {
-      question: "Diệp lục có vai trò gì trong quá trình quang hợp?",
-      options: ["Hấp thụ nước", "Hấp thụ năng lượng ánh sáng", "Tạo ra carbon dioxide", "Giải phóng oxy"],
-      answer: "Hấp thụ năng lượng ánh sáng",
-    },
-  ],
-};
-// === KẾT THÚC DỮ LIỆU MẪU ===
+import { API_ENDPOINTS } from "../config/api.js";
+import { getAuthToken } from "../utils/auth.js";
 
 // === 1. TẠO ĐỐI TƯỢNG ÂM THANH ===
 // (Đảm bảo file đã nằm trong thư mục /public)
@@ -49,6 +16,7 @@ export default function QuizPlayer() {
 
   const [quiz, setQuiz] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -57,12 +25,51 @@ export default function QuizPlayer() {
   const [questionKey, setQuestionKey] = useState(0);
 
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setQuiz(mockQuizData);
-      setIsLoading(false);
-    }, 500);
-  }, [quizId]);
+    const fetchQuiz = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+        
+        const token = getAuthToken();
+        if (!token) {
+          setError("Vui lòng đăng nhập để làm quiz");
+          setIsLoading(false);
+          return;
+        }
+
+        const res = await fetch(API_ENDPOINTS.DECK_BY_ID(quizId), {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.dispatchEvent(new Event("userUpdate"));
+            navigate("/login");
+            return;
+          }
+          const errData = await res.json();
+          throw new Error(errData.message || "Không thể tải quiz");
+        }
+
+        const data = await res.json();
+        setQuiz(data);
+      } catch (err) {
+        console.error("Lỗi khi tải quiz:", err);
+        setError(err.message || "Có lỗi xảy ra khi tải quiz");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (quizId) {
+      fetchQuiz();
+    }
+  }, [quizId, navigate]);
 
   const currentQuestion = quiz?.questions[currentQuestionIndex];
 
@@ -135,10 +142,20 @@ export default function QuizPlayer() {
     );
   }
 
-  if (!quiz) {
+  if (error || !quiz) {
     return (
-      <div className="min-h-screen bg-[#fff7f0] flex items-center justify-center">
-        <div className="text-xl font-semibold text-red-700">Không tìm thấy quiz.</div>
+      <div className="min-h-screen bg-[#fff7f0] flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="text-xl font-semibold text-red-700 mb-4">
+            {error || "Không tìm thấy quiz."}
+          </div>
+          <button
+            onClick={() => navigate("/myquizzes")}
+            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          >
+            Quay về "Quiz của tôi"
+          </button>
+        </div>
       </div>
     );
   }

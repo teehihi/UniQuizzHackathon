@@ -1,39 +1,48 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Header from "../components/Header"; // Đảm bảo đường dẫn đúng
-import Footer from "../components/Footer"; // Đảm bảo đường dẫn đúng
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { API_ENDPOINTS } from "../config/api.js";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
-    // Tạm thời, chúng ta sẽ log ra console
-    console.log("Đang thử đăng nhập với:", { email, password });
-    setError("Chức năng backend chưa được kết nối.");
+    try {
+      const res = await fetch(API_ENDPOINTS.LOGIN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    // ---- ĐOẠN CODE KHI CÓ BACKEND ----
-    // try {
-    //   const res = await fetch("http://localhost:5000/api/auth/login", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ email, password }),
-    //   });
-    //   const data = await res.json();
-    //   if (!res.ok) throw new Error(data.msg || "Đăng nhập thất bại");
-    //   
-    //   localStorage.setItem("token", data.token); // Lưu token
-    //   navigate("/"); // Chuyển về trang chủ
-    //
-    // } catch (err) {
-    //   setError(err.message);
-    // }
-    // ---- KẾT THÚC ----
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Đăng nhập thất bại");
+      }
+
+      // Lưu token và user info
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Dispatch custom event để Header cập nhật (trong cùng tab)
+      window.dispatchEvent(new Event("userUpdate"));
+
+      // Chuyển về trang chủ hoặc trang trước đó
+      navigate("/");
+    } catch (err) {
+      setError(err.message || "Có lỗi xảy ra khi đăng nhập");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -77,9 +86,10 @@ export default function Login() {
             </div>
             <button
               type="submit"
-              className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition"
+              disabled={isLoading}
+              className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              Đăng nhập
+              {isLoading ? "Đang xử lý..." : "Đăng nhập"}
             </button>
           </form>
           <p className="text-center text-gray-600 mt-4">
