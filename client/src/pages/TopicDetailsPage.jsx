@@ -287,17 +287,17 @@ function TopicDetailsPage() {
             ← Trở về {type === "topic" ? "Chủ đề" : "Hub Flashcard"}
           </button>
 
-          {/* ⭐️ KHỐI NÚT ĐÃ SỬA GIAO DIỆN ⭐️ */}
-          {type === "topic" && (
-            <div className="flex items-center gap-3">
+          {/* KHỐI NÚT */}
+          <div className="flex items-center gap-3">
+            {/* Chỉ hiển thị nút Thêm từ mới khi là topic */}
+            {type === "topic" && (
               <button
-                // Nút Thêm từ mới: Nổi bật, màu đỏ/trắng
                 className={`px-4 py-2 rounded-full font-semibold transition duration-300 shadow-md flex items-center gap-2 
-                                            ${
-                                              showAddForm
-                                                ? "bg-red-100 text-red-700 border-red-400 hover:bg-red-200"
-                                                : "bg-white text-gray-700 border border-gray-300 hover:border-red-500 hover:text-red-600"
-                                            }`}
+                  ${
+                    showAddForm
+                      ? "bg-red-100 text-red-700 border-red-400 hover:bg-red-200"
+                      : "bg-white text-gray-700 border border-gray-300 hover:border-red-500 hover:text-red-600"
+                  }`}
                 onClick={() => setShowAddForm((prev) => !prev)}
                 aria-expanded={showAddForm}
               >
@@ -311,34 +311,32 @@ function TopicDetailsPage() {
                 </svg>
                 <span className="text-sm">Thêm từ mới</span>
               </button>
+            )}
 
-              {/* Nút Luyện Tập (Flashcard) ngay → */}
-              {items?.length > 0 && (
-                <button
-                  onClick={() => navigate(`/flashcard/${itemData.id}`)}
-                  // Nút Luyện Tập: Xanh lá, lớn hơn, shadow mạnh, có mũi tên
-                  className="px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold hover:bg-green-700 transition duration-300 shadow-lg flex items-center gap-2"
+            {/* Nút Luyện Tập: hiển thị nếu items tồn tại (không phụ thuộc type) */}
+            {items?.length > 0 && (
+              <button
+                onClick={() => navigate(`/flashcard/${itemData.id}`)}
+                className="px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold hover:bg-green-700 transition duration-300 shadow-lg flex items-center gap-2"
+              >
+                Luyện Tập
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
                 >
-                  Luyện Tập
-                  {/* Mũi tên SVG nhỏ */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                  </svg>
-                </button>
-              )}
-            </div>
-          )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
         <h1 className="text-4xl font-extrabold mb-4 text-red-700">

@@ -11,7 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/text-to-speech": "^6.4.0",
     "@google/generative-ai": "^0.24.1",
+    "@tailwindcss/vite": "^4.1.17",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
@@ -22,6 +24,8 @@
     "mongodb": "^7.0.0",
     "mongoose": "^8.19.4",
     "multer": "^2.0.2",
+    "openai": "^6.9.0",
+    "tailwindcss": "^4.1.17",
     "vite": "^7.2.2"
   },
   "devDependencies": {
