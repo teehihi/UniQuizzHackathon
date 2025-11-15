@@ -1,44 +1,18 @@
-import React, { useEffect, useState } from 'react'; // Cần import React hook
 import { Link } from "react-router-dom";
 import FallingBlossoms from "../components/FallingBlossoms.jsx";
 import Footer from "../components/Footer.jsx"; 
 import Header from "../components/Header.jsx";
-// ⭐️ IMPORT HÀM KIỂM TRA TỪ utils/auth.js ⭐️
-import { isAuthenticated } from '../utils/auth.js'; 
-// ⭐️ IMPORT FRAMER MOTION ⭐️
-import { motion } from 'framer-motion'; 
-
-// Cấu hình animation trượt lên
-const fadeInVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-};
 
 export default function Home() {
-  // Lấy trạng thái đăng nhập (Dùng useState để đảm bảo component được render lại)
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    // ⭐️ Kiểm tra trạng thái đăng nhập khi component mount ⭐️
-    setIsLoggedIn(isAuthenticated());
-  }, []);
-
-  // Xác định đường dẫn CTA dựa trên trạng thái đăng nhập
-  const ctaLink = isLoggedIn ? "/create" : "/register";
-
   return (
+    // 'overflow-x-hidden' để tránh lỗi thanh cuộn ngang do hoa rơi
     <div className="min-h-screen bg-[#fff7f0] relative overflow-x-hidden">
       <FallingBlossoms />
 
       <Header />
-      
       {/* Hero Section */}
-      <motion.section 
-        className="px-8 mt-10 flex flex-col items-center text-center relative z-10"
-        variants={fadeInVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      {/* 2. THÊM 'relative z-10' */}
+      <section className="px-8 mt-10 flex flex-col items-center text-center relative z-10">
         {/* Hoa mai góc trái */}
         <img
           src="/tet_left.png"
@@ -85,21 +59,17 @@ export default function Home() {
             Quiz của tôi
           </Link>
         </div>
-      </motion.section>
+      </section>
 
-      {/* --- Features --- */}
-      <motion.section 
-        className="mt-20 px-8 pb-20 relative z-10"
-        variants={fadeInVariants}
-        initial="hidden"
-        whileInView="visible" // ⭐️ Dùng whileInView cho các phần dưới ⭐️
-        viewport={{ once: true, amount: 0.2 }}
-      >
+      {/* Features */}
+      {/* 2. THÊM 'relative z-10' */}
+      <section className="mt-20 px-8 pb-20 relative z-10">
         <h3 className="text-2xl font-bold text-center text-gray-800">
           Tại sao UniQuizz sẽ giúp bạn học tốt hơn?
         </h3>
-        {/* ... (Nội dung Features giữ nguyên) ... */}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 max-w-5xl mx-auto">
+          {/* Sửa lại class để đẹp hơn một chút */}
           <div className="bg-white p-6 rounded-xl shadow-lg border border-red-50 hover:shadow-xl transition">
             <h4 className="text-lg font-semibold text-red-600">
               AI tạo câu hỏi tự động
@@ -127,16 +97,10 @@ export default function Home() {
             </p>
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* --- Mentor AI --- */}
-      <motion.section 
-        className="relative z-10 py-20 px-8 bg-red-50"
-        variants={fadeInVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-      >
+      {/* Mentor AI */}
+      <section className="relative z-10 py-20 px-8 bg-red-50">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-extrabold text-gray-800">
             Gặp gỡ 🎙️ Mentor AI
@@ -152,17 +116,10 @@ export default function Home() {
             Trải nghiệm ngay
           </Link>
         </div>
-      </motion.section>
+      </section>
 
-      {/* === Cách Hoạt Động === */}
-      <motion.section 
-        className="mt-10 px-8 pb-20 relative z-10 bg-white"
-        variants={fadeInVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-      >
-        {/* ... (Nội dung Cách Hoạt Động giữ nguyên) ... */}
+      {/* === 3. SECTION "CÁCH HOẠT ĐỘNG" MỚI === */}
+      <section className="mt-10 px-8 pb-20 relative z-10 bg-white">
         <div className="max-w-5xl mx-auto py-16">
           <h3 className="text-2xl font-bold text-center text-gray-800">
             Hoạt động như thế nào?
@@ -172,7 +129,7 @@ export default function Home() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-            {/* Step 1, 2, 3 giữ nguyên */}
+            {/* Step 1 */}
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-red-100 text-red-700 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
                 1
@@ -184,6 +141,7 @@ export default function Home() {
                 Chỉ cần tải lên file .docx chứa nội dung bài học của bạn.
               </p>
             </div>
+            {/* Step 2 */}
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-red-100 text-red-700 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
                 2
@@ -194,6 +152,7 @@ export default function Home() {
                 quan.
               </p>
             </div>
+            {/* Step 3 */}
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-red-100 text-red-700 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
                 3
@@ -208,17 +167,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </motion.section>
+      </section>
       
       {/* FAQ Section */}
-      <motion.section 
-        className="mt-10 px-8 pb-10 relative z-10"
-        variants={fadeInVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-      >
-        {/* ... (Nội dung FAQ giữ nguyên) ... */}
+      <section className="mt-10 px-8 pb-10 relative z-10">
         <div className="max-w-3xl mx-auto">
           <h3 className="text-2xl font-bold text-center text-gray-800">
             Câu hỏi thường gặp
@@ -246,38 +198,34 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* === KHỐI CTA MỚI (ĐÃ SỬA LOGIC CHUYỂN HƯỚNG) === */}
-      <motion.section
+      {/* === KHỐI CTA MỚI === */}
+      <section
         className="relative z-10 py-20 mt-20 bg-cover bg-center"
         style={{ backgroundImage: "url('/bgCTA.jpg')" }}
-        variants={fadeInVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
       >
         <div className="absolute inset-0 bg-black/60"></div>
 
+        {/* 5. Nội dung CTA */}
         <div className="max-w-2xl mx-auto text-center px-8 relative z-20">
           <h2 className="text-3xl font-extrabold text-white">
             Sẵn sàng học tập hiệu quả dịp Tết?
           </h2>
+          {/* Đổi sang text-gray-200 để dễ đọc hơn trên nền ảnh */}
           <p className="mt-4 text-lg text-gray-200">
-            {/* Thay đổi text dựa trên trạng thái */}
-            {isLoggedIn ? 'Bắt đầu tạo quiz đầu tiên của bạn ngay.' : 'Tạo tài khoản miễn phí và bắt đầu tạo quiz đầu tiên của bạn chỉ trong vài giây.'}
+            Tạo tài khoản miễn phí và bắt đầu tạo quiz đầu tiên của bạn chỉ
+            trong vài giây.
           </p>
           <Link
-            // ⭐️ SỬ DỤNG BIẾN ĐƯỜNG DẪN ĐÃ TÍNH TOÁN ⭐️
-            to={ctaLink}
+            to="/register"
             className="mt-8 inline-block px-10 py-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-orange-500 transition shadow-lg text-lg"
           >
-            {/* Thay đổi text nút */}
-            {isLoggedIn ? 'Tạo Quiz Mới Ngay' : 'Bắt đầu ngay'}
+            Bắt đầu ngay
           </Link>
         </div>
-      </motion.section>
-      
+      </section>
+      {/* === 4. THÊM FOOTER VÀO === */}
       <Footer />
     </div>
   );
