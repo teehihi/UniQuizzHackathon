@@ -12,7 +12,7 @@ export default function CreateQuiz() {
   const [file, setFile] = useState(null); // Để lưu file .docx
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ export default function CreateQuiz() {
     formData.append("courseCode", courseCode || "");
     formData.append("questionCount", questionCount.toString());
     formData.append("file", file); // Tên 'file' phải khớp với backend
-    
+
     try {
       const token = getAuthToken();
       if (!token) {
@@ -107,7 +107,7 @@ export default function CreateQuiz() {
           "Authorization": `Bearer ${token}`,
         },
         // Không cần 'Content-Type', FormData sẽ tự đặt
-        body: formData, 
+        body: formData,
       });
 
       if (!res.ok) {
@@ -220,17 +220,15 @@ export default function CreateQuiz() {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors cursor-pointer ${
-                  isDragging
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 hover:border-red-400"
-                }`}
+                className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors cursor-pointer ${isDragging
+                  ? "border-red-500 bg-red-50"
+                  : "border-gray-300 hover:border-red-400"
+                  }`}
               >
                 <div className="space-y-1 text-center">
                   <svg
-                    className={`mx-auto h-12 w-12 transition-colors ${
-                      isDragging ? "text-red-500" : "text-gray-400"
-                    }`}
+                    className={`mx-auto h-12 w-12 transition-colors ${isDragging ? "text-red-500" : "text-gray-400"
+                      }`}
                     stroke="currentColor"
                     fill="none"
                     viewBox="0 0 48 48"

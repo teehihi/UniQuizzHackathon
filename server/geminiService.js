@@ -20,19 +20,41 @@ async function listAvailableModels() {
 
 // Hàm 1: generate quiz (ĐÃ CẬP NHẬT)
 async function generateQuizFromText(text, numQuestions = 10) { // <-- ĐÃ NHẬN numQuestions
+  // bên trong hàm generateQuizFromText(text, numQuestions = 10)
+
   const prompt = `
 Dựa vào văn bản sau đây, hãy thực hiện 2 yêu cầu:
 1) Tóm tắt nội dung chính trong 3 gạch đầu dòng (summary).
 2) Tạo chính xác ${numQuestions} câu hỏi trắc nghiệm (questions) chỉ tập trung vào nội dung văn bản.
 
-YÊU CẦU:
+YÊU CẦU BẮT BUỘC:
 - Trả về duy nhất 1 đối tượng JSON (không dùng markdown).
-- Cấu trúc: { "summary": ["..."], "questions": [ {"question":"...","options":["A","B","C","D"],"answer":"A"} ] }
+- "options" phải là một mảng (array) chứa 4 chuỗi (string) nội dung câu trả lời.
+- "answer" phải là NỘI DUNG của 1 trong 4 câu trả lời đó.
+- Cấu trúc:
+{
+  "summary": ["Nội dung tóm tắt 1", "Nội dung tóm tắt 2", "..."],
+  "questions": [
+    {
+      "question": "Nội dung câu hỏi 1?",
+      "options": [
+        "Nội dung câu trả lời 1",
+        "Nội dung câu trả lời 2",
+        "Nội dung câu trả lời 3",
+        "Nội dung câu trả lời 4"
+      ],
+      "answer": "Nội dung câu trả lời đúng"
+    }
+  ]
+}
+
 Văn bản:
 ---
 ${text}
 ---
 `.trim();
+
+// ... (phần code gọi AI và parse JSON giữ nguyên) ...
 
   let modelName = PREFERRED_MODEL;
   let modelClient;

@@ -12,6 +12,8 @@ export const API_ENDPOINTS = {
   // Auth endpoints
   REGISTER: `${API_BASE_URL}/api/auth/register`,
   LOGIN: `${API_BASE_URL}/api/auth/login`,
+
+  TOPIC_BY_ID: (id) => `${API_BASE_URL}/api/topics/${id}`,
 };
 
 export default API_BASE_URL;

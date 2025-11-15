@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import FallingBlossoms from "../components/FallingBlossoms.jsx";
-import Footer from "../components/Footer.jsx"; // <-- 1. IMPORT FOOTER
+import Footer from "../components/Footer.jsx"; 
 import Header from "../components/Header.jsx";
+
 export default function Home() {
   return (
     // 'overflow-x-hidden' để tránh lỗi thanh cuộn ngang do hoa rơi
     <div className="min-h-screen bg-[#fff7f0] relative overflow-x-hidden">
       <FallingBlossoms />
-      
+
       <Header />
       {/* Hero Section */}
       {/* 2. THÊM 'relative z-10' */}
@@ -35,14 +36,22 @@ export default function Home() {
         </p>
 
         {/* Action buttons */}
-        <div className="mt-8 flex gap-6">
+        <div className="mt-8 flex gap-6 flex-wrap justify-center">
           <Link
             to="/create"
             className="px-8 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition shadow-md"
           >
             Tạo Quiz mới
           </Link>
-
+          
+          {/* ⭐️ THÊM NÚT HỌC TỪ VỰNG MỚI ⭐️ */}
+          <Link
+            to="/vocabulary"
+            className="px-8 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition shadow-md"
+          >
+            Học Từ Vựng
+          </Link>
+          
           <Link
             to="/myquizzes"
             className="px-8 py-3 rounded-xl bg-white text-red-600 border border-red-400 font-semibold hover:bg-red-50 transition"
@@ -90,6 +99,25 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Mentor AI */}
+      <section className="relative z-10 py-20 px-8 bg-red-50">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-extrabold text-gray-800">
+            Gặp gỡ 🎙️ Mentor AI
+          </h2>
+          <p className="mt-4 text-lg text-gray-700 max-w-2xl mx-auto">
+            Tính năng mới! Củng cố kiến thức của bạn với một mentor 2D. Tải tài
+            liệu lên, mentor sẽ giảng bài cho bạn nghe.
+          </p>
+          <Link
+            to="/mentor"
+            className="mt-8 inline-block px-10 py-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition shadow-lg text-lg"
+          >
+            Trải nghiệm ngay
+          </Link>
+        </div>
+      </section>
+
       {/* === 3. SECTION "CÁCH HOẠT ĐỘNG" MỚI === */}
       <section className="mt-10 px-8 pb-20 relative z-10 bg-white">
         <div className="max-w-5xl mx-auto py-16">
@@ -118,9 +146,7 @@ export default function Home() {
               <div className="w-16 h-16 bg-red-100 text-red-700 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
                 2
               </div>
-              <h4 className="text-lg font-semibold text-gray-800">
-                AI xử lý
-              </h4>
+              <h4 className="text-lg font-semibold text-gray-800">AI xử lý</h4>
               <p className="text-sm mt-1 text-gray-600">
                 UniQuizz AI sẽ đọc, hiểu và tạo ra các câu hỏi trắc nghiệm liên
                 quan.
@@ -142,7 +168,9 @@ export default function Home() {
           </div>
         </div>
       </section>
-<section className="mt-10 px-8 pb-10 relative z-10">
+      
+      {/* FAQ Section */}
+      <section className="mt-10 px-8 pb-10 relative z-10">
         <div className="max-w-3xl mx-auto">
           <h3 className="text-2xl font-bold text-center text-gray-800">
             Câu hỏi thường gặp
@@ -164,8 +192,8 @@ export default function Home() {
               </h4>
               <p className="text-sm mt-2 text-gray-600">
                 Chúng tôi cam kết không lưu trữ file của bạn sau khi đã xử lý
-                xong. Nội dung file chỉ được dùng để tạo câu hỏi và bị xóa
-                ngay sau đó.
+                xong. Nội dung file chỉ được dùng để tạo câu hỏi và bị xóa ngay
+                sau đó.
               </p>
             </div>
           </div>
@@ -177,12 +205,9 @@ export default function Home() {
         className="relative z-10 py-20 mt-20 bg-cover bg-center"
         style={{ backgroundImage: "url('/bgCTA.jpg')" }}
       >
-        
         <div className="absolute inset-0 bg-black/60"></div>
 
-        {/* 5. Nội dung CTA
-          Phải thêm 'relative' và 'z-20' để nó NỔI LÊN TRÊN overlay
-        */}
+        {/* 5. Nội dung CTA */}
         <div className="max-w-2xl mx-auto text-center px-8 relative z-20">
           <h2 className="text-3xl font-extrabold text-white">
             Sẵn sàng học tập hiệu quả dịp Tết?
