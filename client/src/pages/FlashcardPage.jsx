@@ -4,9 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from "../components/Header.jsx"; 
 import Footer from "../components/Footer.jsx"; 
-
-// 1. IMPORT API THẬT
-import api from '../api.js'; // <-- IMPORT API đã có Interceptor (Tự gắn Token)
+import api from '../api.js'; // IMPORT API đã có Interceptor (Tự gắn Token)
 
 // 2. ĐỊNH NGHĨA HÀM GỌI API THẬT
 const fetchTopicById = async (topicId) => {
@@ -14,12 +12,10 @@ const fetchTopicById = async (topicId) => {
     const response = await api.get(`/topics/${topicId}`);
     return response.data; // Trả về data thật từ server
 };
-// --- XÓA HẾT MOCK DATA VÀ LOGIC CŨ ---
 
 function FlashcardPage() {
     const { topicId } = useParams();
     const navigate = useNavigate();
-    // (Xóa const token = mockToken;)
 
     const [topic, setTopic] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -49,7 +45,7 @@ function FlashcardPage() {
         return (
             <div className="min-h-screen bg-[#fff7f0] flex flex-col">
                 <Header />
-                <div className="flex-grow text-center p-8 text-xl">Đang tải từ vựng...</div>
+                <div className="grow text-center p-8 text-xl">Đang tải từ vựng...</div>
                 <Footer />
             </div>
         );
@@ -59,7 +55,7 @@ function FlashcardPage() {
         return (
             <div className="min-h-screen bg-[#fff7f0] flex flex-col">
                 <Header />
-                <div className="flex-grow text-center p-8 text-xl text-red-600">
+                <div className="grow text-center p-8 text-xl text-red-600">
                     Không tìm thấy chủ đề hoặc chủ đề này chưa có từ vựng.
                 </div>
                 <Footer />
@@ -85,20 +81,24 @@ function FlashcardPage() {
     return (
         <div className="min-h-screen bg-[#fff7f0] relative overflow-x-hidden flex flex-col">
             <Header />
-            <main className="flex-grow max-w-3xl mx-auto p-4 text-center relative z-10 w-full">
+            <main className="grow max-w-3xl mx-auto p-4 text-center relative z-10 w-full">
+                
+                {/* ⭐️ FIX NÚT TRỞ VỀ ĐÃ LÀM ĐẸP HƠN ⭐️ */}
                 <button 
                     onClick={() => navigate('/vocabulary')} 
-                    className="mb-6 text-blue-600 hover:underline font-semibold"
+                    className="mb-6 text-red-600 border border-red-300 bg-red-50 hover:bg-red-100 
+                               px-4 py-2 rounded-full font-semibold transition duration-200 shadow-sm"
                 >
                     ← Trở về danh sách Chủ đề
                 </button>
-                <h1 className="text-4xl font-extrabold mb-4 text-purple-700">{topic.title}</h1>
+                
+                <h1 className="text-4xl font-extrabold mb-4 text-red-700">{topic.title}</h1>
                 <p className="mb-8 text-lg text-gray-600">Từ {currentIndex + 1} / {words.length}</p>
 
                 {/* Flashcard Component */}
                 <div 
                     onClick={flipCard} 
-                    className={`w-full h-80 bg-white border-4 border-purple-500 rounded-2xl shadow-xl 
+                    className={`w-full h-80 bg-white border-4 border-red-500 rounded-2xl shadow-xl 
                             flex items-center justify-center cursor-pointer transition-transform duration-500 
                             transform perspective-1000 ${isFlipped ? 'rotate-y-180' : ''}`}
                     style={{ position: 'relative' }}
@@ -108,16 +108,20 @@ function FlashcardPage() {
                         className={`absolute backface-hidden ${isFlipped ? 'opacity-0' : 'opacity-100'}`}
                         style={{ transition: 'opacity 0.5s' }}
                     >
-                        <p className="text-6xl font-black text-purple-800 p-4">{currentWord.word}</p>
+                        <p className="text-6xl font-black text-red-800 p-4">{currentWord.word}</p>
                         <p className="text-gray-500 mt-2">Bấm để lật</p>
                     </div>
+                    
                     {/* Mặt sau: Định nghĩa và Ví dụ */}
                     <div 
-                        className={`absolute backface-hidden ${isFlipped ? 'rotate-y-180 opacity-100' : 'opacity-0'}`}
+                        className={`absolute backface-hidden ${isFlipped ? 'opacity-100' : 'opacity-0'}`}
                         style={{ transition: 'opacity 0.5s', padding: '1.5rem' }}
                     >
-                        <p className="text-4xl font-bold text-gray-700 mb-2">{currentWord.definition}</p>
-                        <p className="text-lg italic text-purple-600 px-4">"{currentWord.example}"</p>
+                        {/* FIX: CHỈ XOAY NGƯỢC NỘI DUNG KHI LẬT ĐỂ CHỮ KHÔNG BỊ NGƯỢC */}
+                        <div className={`${isFlipped ? 'rotate-y-180' : ''}`}> 
+                            <p className="text-4xl font-bold text-gray-700 mb-2">{currentWord.definition}</p>
+                            <p className="text-lg italic text-red-600 px-4">"{currentWord.example}"</p>
+                        </div>
                     </div>
                 </div>
 
@@ -129,9 +133,10 @@ function FlashcardPage() {
                     >
                         ← Lùi
                     </button>
+                    {/* Nút Tiếp đổi sang màu xanh lá cây */}
                     <button 
                         onClick={nextCard} 
-                        className="px-6 py-3 bg-purple-600 text-white rounded-lg text-lg font-semibold hover:bg-purple-700"
+                        className="px-6 py-3 bg-green-600 text-white rounded-lg text-lg font-semibold hover:bg-green-700"
                     >
                         Tiếp →
                     </button>
@@ -142,4 +147,4 @@ function FlashcardPage() {
     );
 }
 
-export default FlashcardPage;
+export default FlashcardPage;   

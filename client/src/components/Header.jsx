@@ -25,7 +25,6 @@ export default function Header() {
     updateUser();
 
     // Lắng nghe sự kiện storage để cập nhật khi login/logout
-    // (hoạt động cả trong cùng tab và tab khác)
     window.addEventListener("storage", updateUser);
     // Lắng nghe custom event từ cùng tab
     window.addEventListener("userUpdate", updateUser);
@@ -46,8 +45,9 @@ export default function Header() {
   };
 
   return (
-    // 'relative z-10' rất quan trọng để nó nằm trên hoa rơi
-    <header className="w-full py-5 px-8 flex justify-between items-center relative z-10">
+    // ⭐️ THAY ĐỔI: Thêm sticky top-0, bg-white/95, backdrop-blur-sm và shadow-md ⭐️
+    <header className="w-full py-5 px-8 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur-sm shadow-md z-50">
+      
       {/* Logo */}
       <Link to="/">
         <img
