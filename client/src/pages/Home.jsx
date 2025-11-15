@@ -1,9 +1,27 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import FallingBlossoms from "../components/FallingBlossoms.jsx";
 import Footer from "../components/Footer.jsx"; 
 import Header from "../components/Header.jsx";
+import { isAuthenticated } from "../utils/auth.js";
 
 export default function Home() {
+  const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger animation when component mounts
+    setIsVisible(true);
+  }, []);
+
+  const handleStartNow = () => {
+    if (isAuthenticated()) {
+      navigate("/create");
+    } else {
+      navigate("/register");
+    }
+  };
+
   return (
     // 'overflow-x-hidden' để tránh lỗi thanh cuộn ngang do hoa rơi
     <div className="min-h-screen bg-[#fff7f0] relative overflow-x-hidden">
@@ -12,7 +30,9 @@ export default function Home() {
       <Header />
       {/* Hero Section */}
       {/* 2. THÊM 'relative z-10' */}
-      <section className="px-8 mt-10 flex flex-col items-center text-center relative z-10">
+      <section className={`px-8 mt-10 flex flex-col items-center text-center relative z-10 transition-all duration-700 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}>
         {/* Hoa mai góc trái */}
         <img
           src="/tet_left.png"
@@ -63,7 +83,9 @@ export default function Home() {
 
       {/* Features */}
       {/* 2. THÊM 'relative z-10' */}
-      <section className="mt-20 px-8 pb-20 relative z-10">
+      <section className={`mt-20 px-8 pb-20 relative z-10 transition-all duration-700 ease-out delay-100 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}>
         <h3 className="text-2xl font-bold text-center text-gray-800">
           Tại sao UniQuizz sẽ giúp bạn học tốt hơn?
         </h3>
@@ -100,7 +122,9 @@ export default function Home() {
       </section>
 
       {/* Mentor AI */}
-      <section className="relative z-10 py-20 px-8 bg-red-50">
+      <section className={`relative z-10 py-20 px-8 bg-red-50 transition-all duration-700 ease-out delay-200 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-extrabold text-gray-800">
             Gặp gỡ 🎙️ Mentor AI
@@ -119,7 +143,9 @@ export default function Home() {
       </section>
 
       {/* === 3. SECTION "CÁCH HOẠT ĐỘNG" MỚI === */}
-      <section className="mt-10 px-8 pb-20 relative z-10 bg-white">
+      <section className={`mt-10 px-8 pb-20 relative z-10 bg-white transition-all duration-700 ease-out delay-300 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}>
         <div className="max-w-5xl mx-auto py-16">
           <h3 className="text-2xl font-bold text-center text-gray-800">
             Hoạt động như thế nào?
@@ -170,7 +196,9 @@ export default function Home() {
       </section>
       
       {/* FAQ Section */}
-      <section className="mt-10 px-8 pb-10 relative z-10">
+      <section className={`mt-10 px-8 pb-10 relative z-10 transition-all duration-700 ease-out delay-400 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}>
         <div className="max-w-3xl mx-auto">
           <h3 className="text-2xl font-bold text-center text-gray-800">
             Câu hỏi thường gặp
@@ -202,7 +230,9 @@ export default function Home() {
 
       {/* === KHỐI CTA MỚI === */}
       <section
-        className="relative z-10 py-20 mt-20 bg-cover bg-center"
+        className={`relative z-10 py-20 mt-20 bg-cover bg-center transition-all duration-700 ease-out delay-500 ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
         style={{ backgroundImage: "url('/bgCTA.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/60"></div>
@@ -217,12 +247,12 @@ export default function Home() {
             Tạo tài khoản miễn phí và bắt đầu tạo quiz đầu tiên của bạn chỉ
             trong vài giây.
           </p>
-          <Link
-            to="/register"
+          <button
+            onClick={handleStartNow}
             className="mt-8 inline-block px-10 py-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-orange-500 transition shadow-lg text-lg"
           >
             Bắt đầu ngay
-          </Link>
+          </button>
         </div>
       </section>
       {/* === 4. THÊM FOOTER VÀO === */}
