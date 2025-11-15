@@ -257,10 +257,10 @@ export default function QuizPlayer() {
                   whileTap={{ scale: 0.98 }}
                   className={baseClasses}
                 >
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white mr-3 flex-shrink-0 ${iconClass}`}>
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white mr-3 shrink-0 ${iconClass}`}>
                     {String.fromCharCode(65 + index)} {/* A, B, C, D */}
                   </span>
-                  <span className="flex-grow">{option}</span>
+                  <span className="grow">{option}</span>
                   {isAnswered && option === currentQuestion.answer && (
                     <motion.div
                       initial={{ scale: 0 }}
