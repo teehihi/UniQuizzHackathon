@@ -4,6 +4,7 @@ import Register from "./pages/Register";   // <-- Trang mới
 import Login from "./pages/Login";         // <-- Trang mới
 import MyQuizzes from "./pages/MyQuizzes"; // <-- Trang mới
 import CreateQuiz from "./pages/CreateQuiz";
+import QuizPlayer from "./pages/QuizPlayer";
 export default function App() {
   return (
     <BrowserRouter>
@@ -15,6 +16,8 @@ export default function App() {
         <Route path="/myquizzes" element={<MyQuizzes />} />
         
         <Route path="/create" element={<CreateQuiz />} />
+
+        <Route path="/quiz/:quizId" element={<QuizPlayer />} />
       </Routes>
     </BrowserRouter>
   );
