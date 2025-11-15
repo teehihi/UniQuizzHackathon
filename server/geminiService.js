@@ -152,8 +152,115 @@ YÊU CẦU:
   }
 }
 
+// Hàm 3: generate lecture từ file (Hàm mới cho mentor)
+async function generateLectureFromFile(text) {
+  const prompt = `
+Chuyển đổi nội dung sau đây thành một bài giảng dễ hiểu, tự nhiên như một giảng viên thật đang giảng bài.
+
+YÊU CẦU:
+- Trả về MỘT đối tượng JSON duy nhất (không dùng markdown).
+- Bài giảng phải được chia thành các phần (sections) logic, dễ theo dõi.
+- Ngôn ngữ tự nhiên, thân thiện, như một giáo viên đang nói chuyện với học sinh.
+- Cấu trúc:
+{
+  "title": "Tiêu đề bài giảng",
+  "sections": [
+    {
+      "title": "Tiêu đề phần",
+      "content": "Nội dung phần này, viết như đang nói chuyện, tự nhiên"
+    }
+  ]
+}
+
+Nội dung:
+---
+${text}
+---
+`.trim();
+
+  let modelName = PREFERRED_MODEL;
+  let modelClient;
+  try {
+    modelClient = genAI.getGenerativeModel({ model: modelName });
+  } catch (err) {
+    console.warn('Lỗi khi tạo model client với', modelName, err);
+  }
+
+  try {
+    if (!modelClient) throw new Error('Không tạo được model client');
+    const generation = await modelClient.generateContent(prompt);
+    const response = await generation.response;
+    let textResp = await response.text();
+    textResp = textResp.replace(/```json|```/g, '').trim();
+    let jsonData;
+    try {
+      jsonData = JSON.parse(textResp);
+    } catch (e) {
+      const match = textResp.match(/\{[\s\S]*\}$/);
+      if (!match) throw new Error('AI (Lecture) trả về định dạng không parse được JSON');
+      jsonData = JSON.parse(match[0]);
+    }
+    if (!jsonData.title || !Array.isArray(jsonData.sections)) {
+      throw new Error('Định dạng AI (Lecture) trả về không hợp lệ');
+    }
+    return jsonData;
+  } catch (error) {
+    const errMsg = error?.message || String(error);
+    console.error('Lỗi khi gọi Gemini API (Lecture):', errMsg);
+    if (/not found|404|invalid/i.test(errMsg)) {
+      const models = await listAvailableModels();
+      console.error('CÓ LỖI MODEL:', `Model "${modelName}" không khả dụng.`);
+      throw new Error(`Model "${modelName}" không khả dụng.`);
+    }
+    throw new Error('Không thể tạo bài giảng từ AI: ' + errMsg);
+  }
+}
+
+// Hàm 4: generate mentor response (Hàm mới cho chat)
+async function generateMentorResponse(question, lectureContext = '') {
+  const prompt = `
+Bạn là một giảng viên thân thiện, nhiệt tình và có kiến thức sâu rộng. Học sinh của bạn vừa hỏi một câu hỏi trong lúc bạn đang giảng bài.
+
+YÊU CẦU:
+- Trả lời câu hỏi một cách rõ ràng, dễ hiểu, như một giáo viên thật đang giải thích.
+- Sử dụng ngôn ngữ tự nhiên, thân thiện.
+- Nếu câu hỏi liên quan đến bài giảng, hãy tham khảo ngữ cảnh bài giảng.
+- Trả về CHỈ nội dung câu trả lời (không cần JSON, không cần markdown, chỉ văn bản thuần).
+
+${lectureContext ? `Ngữ cảnh bài giảng hiện tại:\n${lectureContext}\n\n` : ''}
+Câu hỏi của học sinh: ${question}
+
+Trả lời:
+`.trim();
+
+  let modelName = PREFERRED_MODEL;
+  let modelClient;
+  try {
+    modelClient = genAI.getGenerativeModel({ model: modelName });
+  } catch (err) {
+    console.warn('Lỗi khi tạo model client với', modelName, err);
+  }
+
+  try {
+    if (!modelClient) throw new Error('Không tạo được model client');
+    const generation = await modelClient.generateContent(prompt);
+    const response = await generation.response;
+    let textResp = await response.text();
+    return textResp.trim();
+  } catch (error) {
+    const errMsg = error?.message || String(error);
+    console.error('Lỗi khi gọi Gemini API (Mentor Response):', errMsg);
+    if (/not found|404|invalid/i.test(errMsg)) {
+      throw new Error(`Model "${modelName}" không khả dụng.`);
+    }
+    throw new Error('Không thể tạo phản hồi từ mentor: ' + errMsg);
+  }
+}
+
 module.exports = { 
   generateQuizFromText, 
-  generateWordsFromTopic, // <-- Thêm hàm này
+  generateWordsFromTopic,
+  generateLectureFromFile,
+  generateMentorResponse,
   listAvailableModels 
 };

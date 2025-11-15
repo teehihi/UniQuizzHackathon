@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as PIXI from "pixi.js";
 import { Live2DModel } from "pixi-live2d-display/cubism4";
 
@@ -11,7 +11,7 @@ try {
   // Bỏ qua
 }
 
-export default function Live2DWidget() {
+const Live2DWidget = forwardRef((props, ref) => {
   const containerRef = useRef(null);
   const appRef = useRef(null);
   const modelRef = useRef(null); 
@@ -59,10 +59,14 @@ export default function Live2DWidget() {
           model.scale.set(scale);
 
           model.on("motionFinish", () => {
-            model.motion("Idle"); 
+            // Chỉ quay về Idle nếu không đang nói
+            if (!modelRef.current.isSpeaking) {
+              model.motion("Idle");
+            }
           });
 
           model.motion("Idle");
+          modelRef.current.isSpeaking = false;
 
         } catch (e) {
           if (!isDestroyed) {
@@ -86,14 +90,55 @@ export default function Live2DWidget() {
     };
   }, []); // Mảng rỗng đảm bảo useEffect chỉ chạy 1 lần
 
-  return (
-  <div
-    ref={containerRef}
-    style={{
-      width: "100%",
-      height: "100%",
-    }}
-  />
-);
+  // Expose methods để điều khiển từ component cha
+  useImperativeHandle(ref, () => ({
+    startSpeaking: () => {
+      if (modelRef.current) {
+        modelRef.current.isSpeaking = true;
+        // Thử các motion có thể có cho speaking
+        const speakingMotions = ["Talk", "Speaking", "Talk_Happy", "Talk_Surprised"];
+        let motionPlayed = false;
+        
+        for (const motionName of speakingMotions) {
+          try {
+            if (modelRef.current.internalModel?.motionManager?.motionGroups?.[motionName]) {
+              modelRef.current.motion(motionName, 0, PIXI.PRIORITY.HIGH);
+              motionPlayed = true;
+              break;
+            }
+          } catch (e) {
+            // Bỏ qua nếu motion không tồn tại
+          }
+        }
+        
+        // Nếu không tìm thấy motion speaking, dùng Idle nhưng đánh dấu đang nói
+        if (!motionPlayed) {
+          modelRef.current.motion("Idle");
+        }
+      }
+    },
+    stopSpeaking: () => {
+      if (modelRef.current) {
+        modelRef.current.isSpeaking = false;
+        modelRef.current.motion("Idle");
+      }
+    },
+    isSpeaking: () => {
+      return modelRef.current?.isSpeaking || false;
+    }
+  }));
 
-}
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+    />
+  );
+});
+
+Live2DWidget.displayName = "Live2DWidget";
+
+export default Live2DWidget;

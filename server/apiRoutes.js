@@ -6,7 +6,7 @@ const mammoth = require('mammoth');
 const mongoose = require('mongoose');
 
 // Import mọi thứ cần thiết
-const { generateQuizFromText, generateWordsFromTopic, listAvailableModels } = require('./geminiService'); 
+const { generateQuizFromText, generateWordsFromTopic, generateLectureFromFile, generateMentorResponse, listAvailableModels } = require('./geminiService'); 
 const Deck = require('./models/Deck'); 
 const User = require('./models/User'); 
 const Topic = require('./models/Topic');
@@ -205,6 +205,54 @@ router.get('/debug/models', async (req, res) => {
     console.log("Đang debug model list...");
     const models = await listAvailableModels();
     res.json(models);
+});
+
+// E. MENTOR ROUTES (Private - Phải có Token)
+router.post('/mentor/upload', verifyToken, upload.single('file'), async (req, res) => {
+  console.log('Đã nhận request /api/mentor/upload...');
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Chưa upload file.' });
+
+    let text;
+    try {
+      const mammothResult = await mammoth.extractRawText({ buffer: req.file.buffer });
+      text = mammothResult.value;
+    } catch (mammothError) {
+      return res.status(400).json({ message: 'Không thể đọc file .docx.' });
+    }
+    if (!text || text.trim().length < 50) return res.status(400).json({ message: 'File .docx rỗng hoặc quá ngắn.' });
+
+    console.log('Đang gọi AI (Lecture) để tạo bài giảng...');
+    const lectureData = await generateLectureFromFile(text);
+    if (!lectureData || !lectureData.title || !lectureData.sections) {
+      throw new Error('AI trả về dữ liệu không hợp lệ');
+    }
+
+    console.log('✅ Tạo bài giảng thành công!');
+    res.status(201).json(lectureData);
+  } catch (error) {
+    console.error('Lỗi /api/mentor/upload:', error);
+    res.status(500).json({ message: 'Lỗi từ server: ' + error.message });
+  }
+});
+
+router.post('/mentor/chat', verifyToken, async (req, res) => {
+  console.log('Đã nhận request /api/mentor/chat...');
+  try {
+    const { question, lectureContext } = req.body;
+    if (!question || question.trim().length === 0) {
+      return res.status(400).json({ message: 'Thiếu câu hỏi.' });
+    }
+
+    console.log('Đang gọi AI (Mentor Response)...');
+    const response = await generateMentorResponse(question, lectureContext || '');
+
+    console.log('✅ Tạo phản hồi mentor thành công!');
+    res.status(200).json({ response });
+  } catch (error) {
+    console.error('Lỗi /api/mentor/chat:', error);
+    res.status(500).json({ message: 'Lỗi từ server: ' + error.message });
+  }
 });
 
 module.exports = router; // Phải export router
