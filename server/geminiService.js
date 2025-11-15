@@ -173,7 +173,7 @@ YÊU CẦU:
             "nội dung 3",
             "nội dung 4"
         ],
-        "answer": random trong 4 cái
+        "answer": random trong 4 cái trong option
     }
   ]
 }
