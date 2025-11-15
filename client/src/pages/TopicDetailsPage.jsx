@@ -5,7 +5,7 @@ import Footer from "../components/Footer.jsx";
 import api from '../api.js'; 
 import { getAuthToken } from '../utils/auth.js'; 
 
-// --- API FUNCTIONS MỚI ---
+// ================= API GỐC ===================
 
 const fetchFlashcardSetById = async (setId) => {
     const token = getAuthToken();
@@ -27,9 +27,7 @@ const fetchTopicById = async (topicId) => {
     return response.data;
 };
 
-// ⭐️ HÀM HỢP NHẤT DỮ LIỆU (CHUẨN HÓA) ⭐️
 const normalizeData = (data) => {
-    // 1. Nếu là Topic (có trường 'words')
     if (data.words) {
         return {
             id: data._id,
@@ -43,7 +41,7 @@ const normalizeData = (data) => {
             }))
         };
     }
-    // 2. Nếu là Flashcard Set (có trường 'flashcards')
+
     if (data.flashcards) {
         return {
             id: data._id,
@@ -53,50 +51,36 @@ const normalizeData = (data) => {
             items: data.flashcards.map(item => ({
                 front: item.front,
                 back: item.back,
-                example: item.hint || '' // Sử dụng hint làm ví dụ nếu có
+                example: item.hint || ''
             }))
         };
     }
-    return null; // Dữ liệu không hợp lệ
+    return null;
 };
 
-// ⭐️ HÀM GỌI DỮ LIỆU CHUNG (ĐÃ SỬA LỖI KIỂM TRA LỖI HTTP) ⭐️
 const fetchCombinedData = async (id) => {
     try {
-        // 1. Thử tải dưới dạng Topic
         const topicData = await fetchTopicById(id);
         return normalizeData(topicData);
     } catch (topicError) {
-        
-        // Lấy mã lỗi từ Axios response
         const status = topicError.response?.status;
-
-        // ⭐️ CHỈ THỬ API THỨ HAI NẾU LỖI LÀ 404 (NOT FOUND) HOẶC 403 (FORBIDDEN) ⭐️
         if (status === 404 || status === 403) {
-            
-            // 2. Thử tải dưới dạng Flashcard Set
             try {
                 const setData = await fetchFlashcardSetById(id);
                 return normalizeData(setData);
             } catch (setError) {
-                // Nếu API Flashcard Set thất bại (401, 500, etc.), ném lỗi ra ngoài.
-                throw setError; 
+                throw setError;
             }
         }
-        
-        // Nếu lỗi Topic là 401 (Unauthorized), 500, hoặc lỗi mạng, ném lỗi ngay lập tức.
-        throw topicError; 
+        throw topicError;
     }
 };
-// --------------------------------------------------------------------------------
 
-// HÀM GIÚP LOẠI BỎ CÁC KÝ TỰ MARKDOWN (Giữ nguyên)
 const cleanMarkdown = (text) => {
     if (typeof text !== 'string') return text;
     return text.replace(/\*\*/g, '').replace(/\*/g, '');
 };
 
-// HÀM ĐỌC TỪ (TEXT-TO-SPEECH) (Giữ nguyên)
 const speakWord = (text) => {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel(); 
@@ -108,28 +92,83 @@ const speakWord = (text) => {
     }
 };
 
+// ======================================================
+// ⭐️ NEW FEATURE — ADD WORD + AI SUGGESTION
+// ======================================================
+
+// API: Thêm từ vào Topic hiện có (dựa trên endpoint POST /topics/:topicId/words)
+const addWordToTopic = async (topicId, wordData) => {
+    const token = getAuthToken();
+    // Endpoint này được gọi khi nhấn LƯU
+    const response = await api.post(
+        `/topics/${topicId}/words`,
+        wordData,
+        { headers: { Authorization: `Bearer ${token}` }}
+    );
+    return response.data;
+};
+
+// API: Lấy gợi ý từ AI (chỉ gọi AI, không lưu DB)
+const getAISuggestion = async (word) => {
+    const token = getAuthToken();
+    if (!token) throw new Error("Unauthorized: Missing token.");
+
+    const response = await api.post(
+        '/topics/generate-single',
+        { title: word },
+        { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    // ⭐️ ĐÃ SỬA LỖI: Backend trả về trực tiếp đối tượng từ vựng { word, definition, example } ⭐️
+    const suggestion = response.data;
+
+    // Kiểm tra tính hợp lệ cơ bản
+    if (!suggestion || !suggestion.definition || !suggestion.example) {
+        throw new Error('Server AI không trả về gợi ý hợp lệ (thiếu nghĩa hoặc ví dụ).');
+    }
+
+    return {
+        definition: suggestion.definition || '',
+        example: suggestion.example || ''
+    };
+};
+
+// ========================================================
+// ⭐️ COMPONENT CHÍNH
+// ========================================================
+
 function TopicDetailsPage() {
+
     const { topicId } = useParams();
     const navigate = useNavigate();
 
-    const [itemData, setItemData] = useState(null); // Sử dụng tên chung itemData
+    const [itemData, setItemData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    // State cho form thêm từ
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [newWord, setNewWord] = useState("");
+    const [newDef, setNewDef] = useState("");
+    const [newEx, setNewEx] = useState("");
+
+    // AI Suggest
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiSuggestion, setAiSuggestion] = useState(null);
+    const [aiError, setAiError] = useState(null);
+
+    // Load Data
     useEffect(() => {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                // ⭐️ GỌI HÀM KẾT HỢP DỮ LIỆU ⭐️
                 const data = await fetchCombinedData(topicId); 
                 setItemData(data);
             } catch (error) {
                 console.error("Lỗi khi tải chi tiết:", error);
-                
-                // ⭐️ SỬA LỖI REDIRECT: Xử lý lỗi 401 và lỗi không tìm thấy ⭐️
                 if (error.response?.status === 401) {
-                    navigate('/login'); // Lỗi Token -> Yêu cầu đăng nhập lại
+                    navigate('/login');
                 } else {
-                    navigate('/vocabulary'); // Lỗi không tìm thấy hoặc lỗi server -> Quay về trang tổng quan
+                    navigate('/vocabulary');
                 }
             } finally {
                 setIsLoading(false);
@@ -137,6 +176,73 @@ function TopicDetailsPage() {
         };
         loadData();
     }, [topicId, navigate]);
+
+    // ===============================================
+    // Hàm gọi AI (gợi ý)
+    // ===============================================
+    const handleAISuggest = async () => {
+        if (!newWord.trim()) {
+            setAiError("Nhập từ cần gợi ý trước.");
+            return;
+        }
+
+        setAiLoading(true);
+        setAiSuggestion(null);
+        setAiError(null);
+
+        try {
+            const suggestion = await getAISuggestion(newWord.trim());
+            setAiSuggestion(suggestion);
+        } catch (err) {
+            console.error("AI suggestion error:", err);
+            const serverMsg = err.response?.data?.message || err.message || String(err);
+            setAiError(serverMsg);
+            alert("Lỗi AI: " + serverMsg);
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    // ===============================================
+    // Lưu từ mới
+    // ===============================================
+    const handleSaveWord = async () => {
+        if (!newWord.trim() || !newDef.trim()) {
+            alert("Vui lòng nhập ít nhất từ và nghĩa.");
+            return;
+        }
+
+        try {
+            const payload = {
+                word: newWord.trim(),
+                definition: newDef.trim(),
+                example: newEx.trim()
+            };
+
+            // ⭐️ Gọi API ADD WORD (endpoint POST /topics/:topicId/words) ⭐️
+            await addWordToTopic(topicId, payload);
+
+            // reload data để cập nhật danh sách
+            const refreshed = await fetchCombinedData(topicId);
+            setItemData(refreshed);
+
+            // reset form
+            setShowAddForm(false);
+            setNewWord("");
+            setNewDef("");
+            setNewEx("");
+            setAiSuggestion(null);
+            setAiError(null);
+        } catch (err) {
+            console.error("Lỗi khi lưu từ:", err);
+            const msg = err.response?.data?.message || err.message || String(err);
+            alert("Lỗi khi lưu: " + msg);
+        }
+    };
+
+    // ===============================================
+    // Giao diện chính
+    // ===============================================
 
     if (isLoading) {
         return (
@@ -147,7 +253,7 @@ function TopicDetailsPage() {
             </div>
         );
     }
-    
+
     if (!itemData) {
         return (
             <div className="min-h-screen bg-[#fff7f0] flex flex-col">
@@ -159,8 +265,7 @@ function TopicDetailsPage() {
             </div>
         );
     }
-    
-    // Đặt tên biến ngắn gọn hơn cho dữ liệu sau khi normalize
+
     const { title, type, items } = itemData;
 
     return (
@@ -169,15 +274,43 @@ function TopicDetailsPage() {
             <div className="h-16 sm:h-24"></div> 
             
             <main className="grow max-w-4xl mx-auto px-4 pt-2 relative z-10 w-full">
-                <button 
-                    // Tùy chọn chuyển về Hub Flashcard hoặc Vocabulary
-                    onClick={() => navigate(type === 'topic' ? '/vocabulary' : '/flashcard-hub')} 
-                    className="mb-6 text-red-600 border border-red-300 bg-red-50 hover:bg-red-100 
-                               px-4 py-2 rounded-full font-semibold transition duration-200 shadow-sm"
-                >
-                    ← Trở về {type === 'topic' ? 'Chủ đề' : 'Hub Flashcard'}
-                </button>
-                
+                <div className="flex items-start justify-between mb-6">
+                    <button 
+                        onClick={() => navigate(type === 'topic' ? '/vocabulary' : '/flashcard-hub')} 
+                        className="text-red-600 border border-red-300 bg-red-50 hover:bg-red-100 
+                                   px-4 py-2 rounded-full font-semibold transition duration-200 shadow-sm"
+                    >
+                        ← Trở về {type === 'topic' ? 'Chủ đề' : 'Hub Flashcard'}
+                    </button>
+
+                    {/* ⭐️ NÚT THÊM TỪ (chỉ cho Topic) */}
+                    {type === "topic" && (
+                        <div className="flex items-center gap-3">
+                            <button 
+                                className="px-4 py-2 bg-white border rounded-lg shadow hover:shadow-md flex items-center gap-2"
+                                onClick={() => setShowAddForm(prev => !prev)}
+                                aria-expanded={showAddForm}
+                            >
+                                {/* Icon + */}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" className="h-5 w-5 text-red-600">
+                                    <path fill="currentColor" d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z"/>
+                                </svg>
+                                <span className="font-semibold text-sm text-gray-700">Thêm từ mới</span>
+                            </button>
+
+                            {/* Nút Luyện Tập (Flashcard) ngay → */}
+                            {items?.length > 0 && (
+                                <button
+                                    onClick={() => navigate(`/flashcard/${itemData.id}`)}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition shadow"
+                                >
+                                    Luyện Tập (Flashcard) ngay →
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 <h1 className="text-4xl font-extrabold mb-4 text-red-700">
                     {title} 
                     <span className="text-xl text-gray-500 ml-3">
@@ -189,33 +322,112 @@ function TopicDetailsPage() {
                     Tổng cộng: {items?.length || 0} mục.
                 </p>
 
-                {/* NÚT CHUYỂN ĐẾN TRANG LUYỆN TẬP FLASHCARD PAGE */}
-                {items?.length > 0 && (
-                    <button
-                        // ⭐️ CHUYỂN ĐẾN TRANG FLASHCARD PAGE ⭐️
-                        onClick={() => navigate(`/flashcard/${itemData.id}`)}
-                        className="mb-8 px-8 py-3 bg-green-600 text-white rounded-lg text-lg font-bold hover:bg-green-700 transition shadow-lg"
-                    >
-                        Luyện Tập (Flashcard) ngay →
-                    </button>
+                {/* =============================================
+                    ⭐️ FORM THÊM TỪ
+                ============================================= */}
+                {showAddForm && (
+                    <div className="bg-white p-5 rounded-lg shadow-lg border mb-8">
+
+                        <h2 className="text-xl font-bold mb-3">Thêm Từ Vựng</h2>
+
+                        <label className="font-semibold">Từ vựng:</label>
+                        <input 
+                            className="w-full p-2 border rounded mb-3"
+                            value={newWord}
+                            onChange={(e) => setNewWord(e.target.value)}
+                            placeholder="Ví dụ: abandon"
+                        />
+
+                        <div className="flex items-center gap-3 mb-3">
+                            <button
+                                onClick={handleAISuggest}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow"
+                            >
+                                Gợi ý bằng AI
+                            </button>
+
+                            {aiLoading && <span className="text-blue-600">AI đang xử lý...</span>}
+                            {aiError && <span className="text-sm text-red-600">{aiError}</span>}
+                        </div>
+
+                        {/* Hiển thị gợi ý AI */}
+                        {aiSuggestion && (
+                            <div className="border p-3 rounded bg-blue-50 mb-3">
+                                <h3 className="font-bold">Gợi ý từ AI:</h3>
+
+                                <p className="mt-2"><b>Nghĩa:</b> {aiSuggestion.definition}</p>
+                                <p className="mt-1"><b>Ví dụ:</b> {aiSuggestion.example}</p>
+
+                                <div className="flex gap-3 mt-3">
+                                    <button
+                                        onClick={() => {
+                                            setNewDef(aiSuggestion.definition);
+                                            setNewEx(aiSuggestion.example);
+                                        }}
+                                        className="px-3 py-2 bg-green-600 text-white rounded"
+                                    >
+                                        Dùng gợi ý
+                                    </button>
+
+                                    <button
+                                        onClick={handleAISuggest}
+                                        className="px-3 py-2 bg-yellow-600 text-white rounded"
+                                    >
+                                        Tạo lại
+                                    </button>
+
+                                    <button
+                                        onClick={() => { setAiSuggestion(null); setAiError(null); }}
+                                        className="px-3 py-2 bg-gray-500 text-white rounded"
+                                    >
+                                        Bỏ qua
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <label className="font-semibold mt-4 block">Nghĩa:</label>
+                        <input 
+                            className="w-full p-2 border rounded mb-3"
+                            value={newDef}
+                            onChange={(e) => setNewDef(e.target.value)}
+                        />
+
+                        <label className="font-semibold">Ví dụ:</label>
+                        <input 
+                            className="w-full p-2 border rounded mb-3"
+                            value={newEx}
+                            onChange={(e) => setNewEx(e.target.value)}
+                        />
+
+                        <div className="flex gap-4 mt-4">
+                            <button
+                                onClick={handleSaveWord}
+                                className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                            >
+                                Lưu
+                            </button>
+
+                            <button
+                                onClick={() => { setShowAddForm(false); setAiSuggestion(null); setAiError(null); }}
+                                className="px-5 py-2 bg-gray-600 text-white rounded"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
                 )}
 
-                {/* Danh sách Từ/Flashcard */}
-                <h2 className="text-2xl font-semibold mt-4 mb-4 text-gray-800">
-                    Danh Sách {type === 'topic' ? 'Từ Vựng' : 'Thẻ'}
-                </h2>
-                
+                {/* DANH SÁCH TỪ */}
                 <div className="space-y-3 pb-20">
                     {items?.map((item, index) => (
                         <div key={index} className="bg-white p-4 rounded-lg shadow-md border-l-4 border-red-400 flex justify-between items-center">
                             
-                            {/* Khối Nội dung Từ */}
                             <div>
                                 <div className="flex items-center space-x-3">
-                                    {/* HIỂN THỊ CẢ WORD (Topic) và FRONT (Flashcard) */}
                                     <p className="text-xl font-bold text-gray-800">{cleanMarkdown(item.front)}</p>
                                     
-                                    {/* Chỉ cho phép đọc nếu là Topic (hoặc nội dung Front là tiếng Anh) */}
+                                    {/* LOA ICON (SVG lớn) */}
                                     {type === 'topic' && (
                                         <button
                                             onClick={() => speakWord(item.front)}
@@ -232,7 +444,6 @@ function TopicDetailsPage() {
                                 <p className="text-md text-gray-600 mt-1">
                                     <span className="font-semibold">{type === 'topic' ? 'Định nghĩa:' : 'Mặt sau:'}</span> {cleanMarkdown(item.back)}
                                 </p>
-                                {/* Chỉ hiển thị Ví dụ/Hint nếu có */}
                                 {item.example && (
                                     <p className="text-sm italic text-gray-500 mt-1">
                                         <span className="font-semibold">{type === 'topic' ? 'Ví dụ:' : 'Hint/Ví dụ:'}</span> {cleanMarkdown(item.example)}

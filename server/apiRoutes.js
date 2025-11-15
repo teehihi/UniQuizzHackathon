@@ -8,6 +8,8 @@ const mongoose = require('mongoose'); // ⭐️ PHẢI IMPORT MONGOOSE
 const { 
   generateQuizFromText, 
   generateWordsFromTopic, 
+  generateSingleWordFromTopic,
+
   generateFlashcardsFromText, 
   listAvailableModels 
 } = require('./geminiService'); 
@@ -371,6 +373,73 @@ router.post('/topics/generate', verifyToken, async (req, res) => {
   }
 });
 
+// Thay đổi endpoint này để CHỈ GỌI AI và trả về word data (KHÔNG LƯU DB)
+router.post('/topics/generate-single', verifyToken, async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ message: 'Thiếu "title" của chủ đề.' });
+    }
+
+    console.log(`Đang gọi AI (Single Word) tạo từ cho chủ đề: ${title}`);
+    const aiWord = await generateSingleWordFromTopic(title);
+
+    if (!aiWord || !aiWord.word || !aiWord.definition || !aiWord.example) {
+      console.error("Lỗi: AI không trả về từ hợp lệ:", aiWord);
+      throw new Error("AI không trả về dữ liệu từ vựng hợp lệ.");
+    }
+
+    // ⭐️ SỬA LỖI: CHỈ TRẢ VỀ WORD DATA, KHÔNG TẠO NEW TOPIC ⭐️
+    // Endpoint này chỉ dùng để gợi ý nghĩa/ví dụ cho client
+    res.status(200).json(aiWord); 
+
+  } catch (error) {
+    console.error("Lỗi trong /topics/generate-single:", error.message);
+    res.status(500).json({ message: 'Lỗi từ server: ' + error.message });
+  }
+});
+
+// Endpoint MỚI: Thêm 1 từ vào Topic đã tồn tại (ĐƯỢC GỌI KHI NHẤN LƯU)
+router.post('/topics/:topicId/words', verifyToken, async (req, res) => {
+    try {
+        const { topicId } = req.params;
+        const { word, definition, example } = req.body;
+
+        if (!word || !definition) {
+            return res.status(400).json({ message: 'Từ và Định nghĩa là bắt buộc.' });
+        }
+
+        const currentUserId = new mongoose.Types.ObjectId(req.userId);
+
+        // Tìm topic (chỉ cho phép author sửa)
+        const topic = await Topic.findOne({ 
+            _id: topicId,
+            author: currentUserId 
+        });
+
+        if (!topic) {
+            return res.status(404).json({ message: 'Không tìm thấy Topic hoặc bạn không có quyền sửa.' });
+        }
+
+        // Tạo đối tượng từ mới
+        const newWordEntry = { 
+            word: word.trim(), 
+            definition: definition.trim(), 
+            example: example ? example.trim() : ''
+        };
+
+        // Thêm từ mới vào mảng 'words'
+        topic.words.push(newWordEntry);
+        await topic.save();
+
+        console.log(`✅ Đã thêm từ '${word}' vào Topic ID: ${topicId}`);
+        res.status(200).json(topic);
+
+    } catch (error) {
+        console.error('Lỗi khi thêm từ vào topic:', error);
+        res.status(500).json({ message: 'Lỗi server: ' + error.message });
+    }
+});
 
 // E. DEBUG ROUTES (Giữ nguyên)
 router.get('/test', (req, res) => {

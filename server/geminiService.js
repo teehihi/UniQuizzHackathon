@@ -68,6 +68,77 @@ YÊU CẦU:
     throw new Error('Không thể tạo bộ từ vựng từ AI: ' + errMsg);
   }
 }
+
+// Tạo 1 từ mới
+async function generateSingleWordFromTopic(topic) {
+  const prompt = `
+Tạo 1 từ vựng tiếng Anh DUY NHẤT về chủ đề "${topic}".
+YÊU CẦU:
+- Tuyệt đối KHÔNG tạo danh sách.
+- Tuyệt đối KHÔNG trả về nhiều từ.
+- Chỉ trả về MỘT đối tượng JSON DUY NHẤT (không dùng markdown).
+- Định nghĩa (definition) phải BẰNG TIẾNG VIỆT.
+- Câu ví dụ (example) phải BẰNG TIẾNG ANH.
+- Cấu trúc trả về:
+{
+  "word": "...",
+  "definition": "...",
+  "example": "..."
+}
+  `.trim();
+
+  let modelName = PREFERRED_MODEL;
+  let modelClient;
+
+  try {
+    modelClient = genAI.getGenerativeModel({ model: modelName });
+  } catch (err) {
+    console.warn("Lỗi tạo model client:", err);
+  }
+
+  try {
+    if (!modelClient) throw new Error("Không tạo được model client");
+
+    const generation = await modelClient.generateContent(prompt);
+    const response = generation.response;
+    let textResp = await response.text();
+
+    // Xóa markdown nếu có
+    textResp = textResp.replace(/```json|```/g, "").trim();
+
+    let jsonData;
+
+    try {
+      jsonData = JSON.parse(textResp);
+    } catch (e) {
+      // fallback tìm đoạn JSON đầu tiên
+      const match = textResp.match(/\{[\s\S]*\}$/);
+      if (!match) throw new Error("AI trả về sai format JSON");
+      jsonData = JSON.parse(match[0]);
+    }
+
+    // Kiểm tra đúng cấu trúc (1 từ)
+    if (!jsonData.word || !jsonData.definition || !jsonData.example) {
+      throw new Error("AI trả về sai cấu trúc cho SINGLE WORD");
+    }
+
+    return jsonData; // chỉ 1 từ duy nhất
+
+  } catch (error) {
+    const errMsg = error?.message || String(error);
+    console.error("Lỗi gọi Gemini API (Single Word):", errMsg);
+
+    if (/404|not found|invalid/i.test(errMsg)) {
+      const models = await listAvailableModels();
+      console.error("MODEL KHÔNG HỢP LỆ:", modelName);
+      console.error(models.slice(0, 30).map(m => m.name).join("\n"));
+      throw new Error(`Model "${modelName}" không khả dụng.`);
+    }
+
+    throw new Error("Không thể tạo từ vựng từ AI: " + errMsg);
+  }
+}
+
 /**
  * Tạo client model với logic fallback.
  */
@@ -162,10 +233,10 @@ YÊU CẦU:
 
 - Cấu trúc:
 {
-  "summary": ["...","...","..."],
-  "questions": [
+  "summary": ["...","...","..."],
+  "questions": [
     // ⭐️ SỬA 4: Cung cấp một ví dụ rõ ràng và không dùng "A"
-    {
+    {
         "question": "Nội dung câu hỏi 1 là gì?",
         "options": [
             "nội dung 1",
@@ -175,7 +246,7 @@ YÊU CẦU:
         ],
         "answer": random trong 4 cái trong option
     }
-  ]
+  ]
 }
 
 Văn bản:
@@ -307,5 +378,6 @@ module.exports = {
   generateQuizFromText,
   generateFlashcardsFromText,
   listAvailableModels,
-  generateWordsFromTopic // export thêm để tiện debug bên ngoài
+  generateWordsFromTopic,
+  generateSingleWordFromTopic
 };
