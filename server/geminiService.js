@@ -3,7 +3,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Sửa 'gemini-2.5-flash-lite' thành 'gemini-1.5-flash-latest' hoặc model mới hơn nếu cần
-const PREFERRED_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest'; 
+const PREFERRED_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
 
 if (!GEMINI_API_KEY) {
   throw new Error('Không tìm thấy GEMINI_API_KEY trong file .env');
@@ -18,6 +18,56 @@ const FALLBACK_MODELS = [
   'gemini-1.5-pro' // Đảm bảo model này tồn tại
 ].filter(Boolean);
 
+async function generateWordsFromTopic(topic) {
+  const prompt = `
+Tạo 10 từ vựng tiếng Anh quan trọng về chủ đề "${topic}".
+YÊU CẦU:
+- Trả về MỘT đối tượng JSON duy nhất (không dùng markdown).
+- Định nghĩa (definition) phải BẰNG TIẾNG VIỆT.
+- Câu ví dụ (example) phải BẰNG TIẾNG ANH.
+- Cấu trúc:
+{ "words": [ { "word": "...", "definition": "...", "example": "..." } ] }
+`.trim();
+
+  let modelName = PREFERRED_MODEL;
+  let modelClient;
+  try {
+    modelClient = genAI.getGenerativeModel({ model: modelName });
+  } catch (err) {
+    console.warn('Lỗi khi tạo model client với', modelName, err);
+  }
+
+  try {
+    // ... (Copy-paste code try...catch y hệt hàm trên) ...
+    if (!modelClient) throw new Error('Không tạo được model client');
+    const generation = await modelClient.generateContent(prompt);
+    const response = await generation.response;
+    let textResp = await response.text();
+    textResp = textResp.replace(/```json|```/g, '').trim();
+    let jsonData;
+    try { jsonData = JSON.parse(textResp); } catch (e) {
+      const match = textResp.match(/\{[\s\S]*\}$/);
+      if (!match) throw new Error('AI (Vocab) trả về định dạng không parse được JSON');
+      jsonData = JSON.parse(match[0]);
+    }
+    if (!Array.isArray(jsonData.words)) {
+      throw new Error('Định dạng AI (Vocab) trả về không hợp lệ');
+    }
+    return jsonData;
+
+  } catch (error) {
+    // ... (Copy-paste code xử lý lỗi y hệt hàm trên) ...
+    const errMsg = error?.message || String(error);
+    console.error('Lỗi khi gọi Gemini API (Vocab):', errMsg);
+    if (/not found|404|invalid/i.test(errMsg)) {
+      const models = await listAvailableModels();
+      console.error('CÓ LỖI MODEL:', `Model "${modelName}" không khả dụng.`);
+      console.error(models.slice(0, 30).map(m => m.name).join('\n'));
+      throw new Error(`Model "${modelName}" không khả dụng.`);
+    }
+    throw new Error('Không thể tạo bộ từ vựng từ AI: ' + errMsg);
+  }
+}
 /**
  * Tạo client model với logic fallback.
  */
@@ -45,10 +95,10 @@ async function listAvailableModels() {
     const fetch = global.fetch || (await import('node-fetch')).default;
     const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`;
     const r = await fetch(url);
-    
+
     if (!r.ok) {
-        const errorText = await r.text();
-        throw new Error(`API call failed with status ${r.status}: ${errorText}`);
+      const errorText = await r.text();
+      throw new Error(`API call failed with status ${r.status}: ${errorText}`);
     }
 
     const data = await r.json();
@@ -63,7 +113,7 @@ async function listAvailableModels() {
  * Helper: Cấu hình bắt buộc để model trả về JSON
  */
 const jsonGenerationConfig = {
-    responseMimeType: "application/json",
+  responseMimeType: "application/json",
 };
 
 /**
@@ -72,7 +122,7 @@ const jsonGenerationConfig = {
 function extractJsonFromResponse(response) {
   let textResp = response.text();
   textResp = textResp.replace(/```json|```/g, '').trim();
-  
+
   try {
     return JSON.parse(textResp);
   } catch (e) {
@@ -82,8 +132,8 @@ function extractJsonFromResponse(response) {
       try {
         return JSON.parse(match[0]);
       } catch (e2) {
-         console.error('Không thể parse JSON từ text (lần 2):', textResp);
-         throw new Error('AI trả về định dạng không parse được JSON (lần 2)');
+        console.error('Không thể parse JSON từ text (lần 2):', textResp);
+        throw new Error('AI trả về định dạng không parse được JSON (lần 2)');
       }
     }
     console.error('AI trả về không phải JSON:', textResp);
@@ -94,21 +144,38 @@ function extractJsonFromResponse(response) {
 /**
  * Hàm chính: generate quiz
  */
-async function generateQuizFromText(text) {
+// ⭐️ SỬA 1: Thêm 'numQuestions' làm tham số
+async function generateQuizFromText(text, numQuestions = 10) {
   // build prompt
   const prompt = `
 Dựa vào văn bản sau đây, hãy thực hiện 2 yêu cầu:
 1) Tóm tắt nội dung chính trong 3 gạch đầu dòng (summary).
-2) Tạo 10 câu hỏi trắc nghiệm (questions) chỉ tập trung vào nội dung văn bản.
+// ⭐️ SỬA 2: Dùng biến 'numQuestions' để prompt linh hoạt hơn
+2) Tạo ${numQuestions} câu hỏi trắc nghiệm (questions) chỉ tập trung vào nội dung văn bản.
 
 YÊU CẦU:
 - Trả về duy nhất 1 đối tượng JSON (không dùng markdown).
+
+// ⭐️ SỬA 3: Thêm chỉ dẫn RẤT RÕ RÀNG về trường "answer"
+- Trong mỗi câu hỏi, trường "answer" PHẢI là chữ cái (A, B, C, hoặc D) tương ứng với đáp án ĐÚNG.
+- Đáp án đúng PHẢI nằm trong mảng "options".
+
 - Cấu trúc:
 {
-  "summary": ["...","...","..."],
-  "questions": [
-    {"question":"...","options":["A","B","C","D"],"answer":"A"}
-  ]
+  "summary": ["...","...","..."],
+  "questions": [
+    // ⭐️ SỬA 4: Cung cấp một ví dụ rõ ràng và không dùng "A"
+    {
+        "question": "Nội dung câu hỏi 1 là gì?",
+        "options": [
+            "nội dung 1",
+            "nội dung 2",
+            "nội dung 3",
+            "nội dung 4"
+        ],
+        "answer": random trong 4 cái option
+    }
+  ]
 }
 
 Văn bản:
@@ -119,7 +186,7 @@ ${text}
 
   let modelName = PREFERRED_MODEL;
   let modelClient;
-  
+
   try {
     const picked = await getModelClient();
     modelClient = picked.client;
@@ -132,16 +199,29 @@ ${text}
   try {
     // Gửi prompt và yêu cầu JSON
     const generation = await modelClient.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: jsonGenerationConfig 
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: jsonGenerationConfig
     });
-    
+
     const response = await generation.response;
     const jsonData = extractJsonFromResponse(response);
 
     if (!jsonData || !Array.isArray(jsonData.summary) || !Array.isArray(jsonData.questions)) {
       console.error('Định dạng JSON không đúng:', jsonData);
       throw new Error('Định dạng AI trả về không hợp lệ');
+    }
+
+    // ⭐️ SỬA 5 (Tùy chọn): Thêm kiểm tra logic đáp án (nếu cẩn thận)
+    for (const q of jsonData.questions) {
+      const validAnswers = ['A', 'B', 'C', 'D'];
+      if (!q.answer || !validAnswers.includes(String(q.answer).toUpperCase())) {
+        console.warn(`AI trả về đáp án không hợp lệ: "${q.answer}" cho câu hỏi: "${q.question}"`);
+        // Có thể gán tạm một đáp án mặc định nếu muốn, hoặc báo lỗi
+        // q.answer = 'A'; 
+      }
+      if (!q.options || q.options.length !== 4) {
+        console.warn(`AI trả về số lượng options không hợp lệ cho câu hỏi: "${q.question}"`);
+      }
     }
 
     return jsonData;
@@ -190,8 +270,8 @@ ${text}
     const { client: modelClient, name: modelName } = await getModelClient();
 
     const result = await modelClient.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: jsonGenerationConfig
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: jsonGenerationConfig
     });
 
     const response = await result.response;
@@ -226,5 +306,6 @@ ${text}
 module.exports = {
   generateQuizFromText,
   generateFlashcardsFromText,
-  listAvailableModels // export thêm để tiện debug bên ngoài
+  listAvailableModels,
+  generateWordsFromTopic // export thêm để tiện debug bên ngoài
 };
