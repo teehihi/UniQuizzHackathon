@@ -25,32 +25,72 @@ function ChatPanel({
   }, [messages]);
 
   return (
-    <div className="flex flex-col gap-3 p-4 border rounded-xl bg-white shadow-lg h-full">
-      <h2 className="font-semibold text-lg">Chat & Materials</h2>
+    <div className="flex flex-col gap-4 p-6 border border-gray-200 rounded-xl bg-white shadow-lg h-full">
+      <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+          <span className="text-white text-lg">🎓</span>
+        </div>
+        <div>
+          <h2 className="font-bold text-lg text-gray-800">Chat với Mentor</h2>
+          <p className="text-xs text-gray-500">Hỏi đáp trực tiếp với AI</p>
+        </div>
+      </div>
 
-      <div className="flex-1 border rounded p-2 overflow-y-auto bg-gray-50 min-h-[200px]">
+      <div className="flex-1 border border-gray-200 rounded-lg p-4 overflow-y-auto bg-gradient-to-b from-gray-50 to-white min-h-[300px] max-h-[400px]">
         {messages.length === 0 ? (
-          <p className="text-gray-500 text-sm">Chưa có tin nhắn nào...</p>
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+              <span className="text-2xl">💬</span>
+            </div>
+            <p className="text-gray-500 text-sm">Chưa có tin nhắn nào...</p>
+            <p className="text-gray-400 text-xs mt-1">Tạm dừng bài giảng để bắt đầu chat</p>
+          </div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`p-2 rounded-lg ${
-                  msg.type === "user"
-                    ? "bg-blue-100 ml-auto text-right max-w-[80%]"
-                    : "bg-green-100 mr-auto max-w-[80%]"
+                className={`flex gap-2 ${
+                  msg.type === "user" ? "flex-row-reverse" : "flex-row"
                 }`}
               >
-                <p className="text-sm text-gray-800">{msg.text}</p>
-                {msg.type === "mentor" && (
-                  <span className="text-xs text-gray-500">Mentor AI</span>
-                )}
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  msg.type === "user" 
+                    ? "bg-blue-500" 
+                    : "bg-gradient-to-br from-red-500 to-red-600"
+                }`}>
+                  <span className="text-white text-xs">
+                    {msg.type === "user" ? "👤" : "🎓"}
+                  </span>
+                </div>
+                <div className={`flex flex-col max-w-[75%] ${
+                  msg.type === "user" ? "items-end" : "items-start"
+                }`}>
+                  <div className={`px-4 py-2.5 rounded-2xl shadow-sm ${
+                    msg.type === "user"
+                      ? "bg-blue-500 text-white rounded-tr-none"
+                      : "bg-white border border-gray-200 text-gray-800 rounded-tl-none"
+                  }`}>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                  </div>
+                  {msg.type === "mentor" && (
+                    <span className="text-xs text-gray-400 mt-1 px-2">Mentor AI</span>
+                  )}
+                </div>
               </div>
             ))}
             {isProcessing && (
-              <div className="bg-green-100 p-2 rounded-lg mr-auto max-w-[80%]">
-                <p className="text-sm text-gray-600">Mentor đang suy nghĩ...</p>
+              <div className="flex gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs">🎓</span>
+                </div>
+                <div className="bg-white border border-gray-200 px-4 py-2.5 rounded-2xl rounded-tl-none shadow-sm">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -60,34 +100,36 @@ function ChatPanel({
 
       {/* Chat input - hiển thị khi có bài giảng và (đang tạm dừng hoặc chưa phát) */}
       {lecture && (isPaused || !isPlaying) && (
-        <div className="flex flex-col gap-2">
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter" && !isProcessing && chatInput.trim()) {
-                onSendMessage();
-              }
-            }}
-            placeholder={isPaused ? "Nhập câu hỏi của bạn (đang tạm dừng)..." : "Nhập câu hỏi của bạn..."}
-            className="border rounded px-3 py-2 text-sm"
-            disabled={isProcessing}
-          />
-          <button
-            onClick={onSendMessage}
-            disabled={isProcessing || !chatInput.trim()}
-            className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isProcessing ? "Đang gửi..." : "Gửi câu hỏi"}
-          </button>
+        <div className="flex flex-col gap-2 pt-3 border-t border-gray-200">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !isProcessing && chatInput.trim()) {
+                  onSendMessage();
+                }
+              }}
+              placeholder={isPaused ? "Nhập câu hỏi của bạn (đang tạm dừng)..." : "Nhập câu hỏi của bạn..."}
+              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent text-sm"
+              disabled={isProcessing}
+            />
+            <button
+              onClick={onSendMessage}
+              disabled={isProcessing || !chatInput.trim()}
+              className="px-6 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              {isProcessing ? "..." : "Gửi"}
+            </button>
+          </div>
         </div>
       )}
       
       {/* Thông báo khi đang phát */}
       {lecture && isPlaying && !isPaused && (
-        <div className="text-sm text-gray-500 text-center p-2 bg-yellow-50 rounded">
-          ⏸️ Tạm dừng để chat với mentor
+        <div className="text-sm text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+          <span className="font-medium">⏸️ Tạm dừng</span> để chat với mentor
         </div>
       )}
     </div>
@@ -418,125 +460,174 @@ export default function MentorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fff7f0] relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#fff7f0] relative overflow-x-hidden flex flex-col">
       <Header />
 
       {/* MAIN WRAPPER */}
-      <section className="px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-10 relative z-10">
-        {/* LEFT: Live2D Area – chiếm 2 cột */}
-        <div className="md:col-span-2 flex flex-col items-center justify-center gap-4">
-          <div
-            className="w-full h-[360px] lg:h-[430px] rounded-xl overflow-hidden shadow-xl 
-                       relative flex items-end justify-center"
-            style={{
-              backgroundImage: "url('/bgWaifu.png')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          >
-            {/* Model luôn đứng chính giữa đáy */}
-            <div className="flex justify-center items-center mb-[-5px] scale-[90%] md:scale-100">
-              <Live2DWidget ref={live2dRef} />
-            </div>
+      <main className="grow px-4 md:px-8 py-8 md:py-12">
+        <div className="max-w-7xl mx-auto">
+          {/* Page Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-extrabold text-red-700 mb-2">
+              🎓 Mentor AI - Giảng viên thông minh
+            </h1>
+            <p className="text-lg text-gray-600">
+              Tải tài liệu lên, mentor sẽ giảng bài cho bạn nghe và trả lời câu hỏi
+            </p>
           </div>
 
-          {/* Controls và Lecture Display */}
-          <div className="w-full bg-white rounded-xl shadow-lg p-4">
-            <div className="flex flex-col gap-4">
-              {/* File Upload */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold">Upload tài liệu (.docx)</label>
-                <input
-                  type="file"
-                  accept=".docx"
-                  onChange={handleFileUpload}
-                  disabled={isLoading}
-                  className="border rounded px-2 py-1 text-sm"
-                />
-                {isLoading && (
-                  <p className="text-sm text-blue-600">Đang xử lý file...</p>
-                )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* LEFT: Live2D Area – chiếm 2 cột */}
+            <div className="lg:col-span-2 flex flex-col gap-6">
+              {/* Live2D Model Card */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div
+                  className="w-full h-[400px] lg:h-[500px] relative flex items-end justify-center bg-gradient-to-b from-red-50 to-red-100"
+                  style={{
+                    backgroundImage: "url('/bgWaifu.png')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  {/* Model luôn đứng chính giữa đáy */}
+                  <div className="flex justify-center items-center mb-[-5px] scale-[90%] lg:scale-100">
+                    <Live2DWidget ref={live2dRef} />
+                  </div>
+                </div>
               </div>
 
-              {/* Lecture Display */}
-              {lecture && (
-                <div className="border rounded p-3 bg-gray-50 max-h-[200px] overflow-y-auto">
-                  <h3 className="font-semibold text-lg mb-2">{lecture.title}</h3>
-                  {lecture.sections.map((section, idx) => (
-                    <div
-                      key={idx}
-                      className={`mb-2 ${
-                        idx === currentSectionIndex
-                          ? "bg-yellow-100 p-2 rounded"
-                          : ""
-                      }`}
-                    >
-                      <h4 className="font-semibold text-sm">{section.title}</h4>
-                      {idx === currentSectionIndex && (
-                        <p className="text-sm text-gray-700 mt-1">
-                          {section.content}
-                        </p>
-                      )}
+              {/* File Upload Card */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                    <span className="text-white text-lg">📄</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800">Upload tài liệu</h3>
+                    <p className="text-xs text-gray-500">Chỉ hỗ trợ file .docx</p>
+                  </div>
+                </div>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".docx"
+                    onChange={handleFileUpload}
+                    disabled={isLoading}
+                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 transition cursor-pointer hover:border-red-300"
+                  />
+                  {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
+                      <div className="flex items-center gap-2 text-red-600">
+                        <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-medium">Đang xử lý file...</span>
+                      </div>
                     </div>
-                  ))}
+                  )}
+                </div>
+              </div>
+
+              {/* Lecture Display Card */}
+              {lecture && (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                      <span className="text-white text-lg">📚</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800">Bài giảng</h3>
+                      <p className="text-xs text-gray-500">Nội dung đã được xử lý</p>
+                    </div>
+                  </div>
+                  <div className="border border-gray-200 rounded-lg p-4 bg-gradient-to-b from-gray-50 to-white max-h-[300px] overflow-y-auto">
+                    <h4 className="font-bold text-xl text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                      {lecture.title}
+                    </h4>
+                    <div className="space-y-4">
+                      {lecture.sections.map((section, idx) => (
+                        <div
+                          key={idx}
+                          className={`p-4 rounded-lg transition-all ${
+                            idx === currentSectionIndex
+                              ? "bg-yellow-50 border-2 border-yellow-400 shadow-md"
+                              : "bg-white border border-gray-200"
+                          }`}
+                        >
+                          <h5 className="font-semibold text-base text-gray-800 mb-2">
+                            {idx + 1}. {section.title}
+                          </h5>
+                          {idx === currentSectionIndex && (
+                            <p className="text-sm text-gray-700 leading-relaxed mt-2">
+                              {section.content}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Control Buttons */}
               {lecture && (
-                <div className="flex gap-2 justify-center">
-                  {!isPlaying && !isPaused && (
-                    <button
-                      onClick={startLecture}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                    >
-                      ▶️ Bắt đầu giảng
-                    </button>
-                  )}
-                  {isPlaying && !isPaused && (
-                    <button
-                      onClick={pauseLecture}
-                      className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition"
-                    >
-                      ⏸️ Tạm dừng
-                    </button>
-                  )}
-                  {isPaused && (
-                    <button
-                      onClick={resumeLecture}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                    >
-                      ▶️ Tiếp tục
-                    </button>
-                  )}
-                  {(isPlaying || isPaused) && (
-                    <button
-                      onClick={stopLecture}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-                    >
-                      ⏹️ Dừng
-                    </button>
-                  )}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {!isPlaying && !isPaused && (
+                      <button
+                        onClick={startLecture}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition shadow-md hover:shadow-lg"
+                      >
+                        <span>▶️</span>
+                        <span>Bắt đầu giảng</span>
+                      </button>
+                    )}
+                    {isPlaying && !isPaused && (
+                      <button
+                        onClick={pauseLecture}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg font-semibold hover:from-yellow-600 hover:to-yellow-700 transition shadow-md hover:shadow-lg"
+                      >
+                        <span>⏸️</span>
+                        <span>Tạm dừng</span>
+                      </button>
+                    )}
+                    {isPaused && (
+                      <button
+                        onClick={resumeLecture}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition shadow-md hover:shadow-lg"
+                      >
+                        <span>▶️</span>
+                        <span>Tiếp tục</span>
+                      </button>
+                    )}
+                    {(isPlaying || isPaused) && (
+                      <button
+                        onClick={stopLecture}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition shadow-md hover:shadow-lg"
+                      >
+                        <span>⏹️</span>
+                        <span>Dừng</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
+
+            {/* RIGHT: Chat panel – chiếm 1 cột */}
+            <div className="lg:col-span-1 w-full">
+              <ChatPanel
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                chatInput={chatInput}
+                setChatInput={setChatInput}
+                isPaused={isPaused}
+                isProcessing={isProcessingChat}
+                lecture={lecture}
+                isPlaying={isPlaying}
+              />
+            </div>
           </div>
         </div>
-
-        {/* RIGHT: Chat panel – chiếm 1 cột */}
-        <div className="md:col-span-1 w-full">
-          <ChatPanel
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-            isPaused={isPaused}
-            isProcessing={isProcessingChat}
-            lecture={lecture}
-            isPlaying={isPlaying}
-          />
-        </div>
-      </section>
+      </main>
 
       <Footer />
     </div>
