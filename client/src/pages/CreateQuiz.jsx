@@ -184,14 +184,22 @@ export default function CreateQuiz() {
                 Số lượng câu hỏi
               </label>
               <input
-                type="number"
+                type="text"
                 id="questionCount"
-                min="1"
-                max="50"
                 value={questionCount}
                 onChange={(e) => {
-                  const value = parseInt(e.target.value) || 10;
-                  setQuestionCount(Math.max(1, Math.min(50, value)));
+                  const raw = e.target.value;
+                  const parsed = parseInt(raw);
+
+                  // Nếu không phải số → không set
+                  if (isNaN(parsed)) {
+                    setQuestionCount("");
+                    return;
+                  }
+
+                  // Giới hạn từ 1 đến 50
+                  const value = Math.max(1, Math.min(50, parsed));
+                  setQuestionCount(value);
                 }}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                 placeholder="Mặc định: 10"
