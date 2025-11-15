@@ -1,24 +1,21 @@
+// server/apiRoutes.js
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const mammoth = require('mammoth');
 const mongoose = require('mongoose');
+const Voice = require('./models/voice');
+const { synthesizeWithGoogleTranslate } = require('./services/ttsService');
 
 // Import mọi thứ cần thiết
-const { 
-  generateQuizFromText, 
-  generateWordsFromTopic, 
-  generateFlashcardsFromText, 
-  listAvailableModels 
-} = require('./geminiService'); 
-const Deck = require('./models/Deck'); 
-const User = require('./models/User'); 
+const { generateQuizFromText, generateWordsFromTopic, generateLectureFromFile, generateMentorResponse, listAvailableModels } = require('./geminiService');
+const Deck = require('./models/Deck');
+const User = require('./models/User');
 const Topic = require('./models/Topic');
-const FlashcardSet = require('./models/FlashcardSet'); 
 
 const router = express.Router();
 
-// --- 1. MIDDLEWARE (Giữ nguyên) ---
+// --- 1. MIDDLEWARE (Nằm luôn ở đây) ---
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1] || req.headers.authorization;
   if (!token) {
@@ -34,28 +31,28 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// --- 2. MULTER (Giữ nguyên) ---
+// --- 2. MULTER (Cấu hình Upload) ---
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
 // --- 3. API ROUTES ---
 
-// A. AUTH ROUTES (Giữ nguyên)
+// A. AUTH ROUTES (Public)
 router.post('/auth/register', async (req, res) => {
   try {
-      const { email, password, fullName } = req.body;
-      if (!email || !password) return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
-      if (password.length < 6) return res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự' });
-      const existingUser = await User.findOne({ email });
-      if (existingUser) return res.status(400).json({ message: 'Email này đã được sử dụng' });
-      const user = new User({ email, password, fullName: fullName || '' });
-      await user.save();
-      const token = jwt.sign( { userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' } );
-      console.log('✅ Đăng ký thành công:', email);
-      res.status(201).json({ message: 'Đăng ký thành công', token, user: { id: user._id, email: user.email, fullName: user.fullName || '' } });
+    const { email, password, fullName } = req.body;
+    if (!email || !password) return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
+    if (password.length < 6) return res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự' });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: 'Email này đã được sử dụng' });
+    const user = new User({ email, password, fullName: fullName || '' });
+    await user.save();
+    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    console.log('✅ Đăng ký thành công:', email);
+    res.status(201).json({ message: 'Đăng ký thành công', token, user: { id: user._id, email: user.email, fullName: user.fullName || '' } });
   } catch (error) {
     console.error('❌ Lỗi khi đăng ký:', error);
     res.status(500).json({ message: 'Lỗi server: ' + error.message });
@@ -64,22 +61,22 @@ router.post('/auth/register', async (req, res) => {
 
 router.post('/auth/login', async (req, res) => {
   try {
-      const { email, password } = req.body;
-      if (!email || !password) return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
-      const user = await User.findOne({ email: email.toLowerCase() });
-      if (!user) return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
-      const isPasswordValid = await user.comparePassword(password);
-      if (!isPasswordValid) return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
-      const token = jwt.sign( { userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' } );
-      console.log('✅ Đăng nhập thành công:', email);
-      res.json({ message: 'Đăng nhập thành công', token, user: { id: user._id, email: user.email, fullName: user.fullName || '' } });
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
+    const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    console.log('✅ Đăng nhập thành công:', email);
+    res.json({ message: 'Đăng nhập thành công', token, user: { id: user._id, email: user.email, fullName: user.fullName || '' } });
   } catch (error) {
     console.error('❌ Lỗi khi đăng nhập:', error);
     res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 });
 
-// B. DECK ROUTES (Áp dụng ép kiểu cho tất cả truy vấn theo userId)
+// B. DECK ROUTES (Private - Phải có Token)
 router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   console.log('Đã nhận request /api/upload...');
   try {
@@ -99,7 +96,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
     if (!text || text.trim().length < 50) return res.status(400).json({ message: 'File .docx rỗng hoặc quá ngắn.' });
 
     console.log(`Đang gọi AI (Quiz) để tạo ${numQuestions} câu hỏi...`);
-    const aiData = await generateQuizFromText(text, numQuestions); 
+    const aiData = await generateQuizFromText(text, numQuestions);
     if (!aiData || !aiData.summary || !aiData.questions) throw new Error('AI trả về dữ liệu không hợp lệ');
 
     const newDeck = new Deck({
@@ -108,7 +105,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
       summary: aiData.summary,
       questions: aiData.questions,
       userId: req.userId,
-    }); 
+    });
     const savedDeck = await newDeck.save();
     console.log('✅ Tạo quiz thành công! ID:', savedDeck._id);
     res.status(201).json(savedDeck);
@@ -120,8 +117,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
 
 router.get('/decks', verifyToken, async (req, res) => {
   try {
-    // ⭐️ SỬA: Ép kiểu userId ⭐️
-    const decks = await Deck.find({ userId: new mongoose.Types.ObjectId(req.userId) }).sort({ createdAt: -1 });
+    const decks = await Deck.find({ userId: req.userId }).sort({ createdAt: -1 });
     res.json(decks);
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server' });
@@ -130,8 +126,7 @@ router.get('/decks', verifyToken, async (req, res) => {
 
 router.get('/decks/:id', verifyToken, async (req, res) => {
   try {
-    // ⭐️ SỬA: Ép kiểu userId ⭐️
-    const deck = await Deck.findOne({ _id: req.params.id, userId: new mongoose.Types.ObjectId(req.userId) });
+    const deck = await Deck.findOne({ _id: req.params.id, userId: req.userId });
     if (!deck) return res.status(404).json({ message: 'Không tìm thấy bộ quiz' });
     res.json(deck);
   } catch (error) {
@@ -141,8 +136,7 @@ router.get('/decks/:id', verifyToken, async (req, res) => {
 
 router.delete('/decks/:id', verifyToken, async (req, res) => {
   try {
-    // ⭐️ SỬA: Ép kiểu userId ⭐️
-    const deck = await Deck.findOne({ _id: req.params.id, userId: new mongoose.Types.ObjectId(req.userId) });
+    const deck = await Deck.findOne({ _id: req.params.id, userId: req.userId });
     if (!deck) return res.status(404).json({ message: 'Không tìm thấy bộ quiz để xóa' });
     await Deck.findByIdAndDelete(req.params.id);
     console.log('✅ Đã xóa quiz:', deck._id);
@@ -152,162 +146,14 @@ router.delete('/decks/:id', verifyToken, async (req, res) => {
   }
 });
 
-
-// C. FLASHCARD ROUTES (Áp dụng ép kiểu và logic truy vấn Topics)
-
-// AI generate flashcards từ text hoặc file .docx (Giữ nguyên)
-router.post('/flashcards/generate', verifyToken, upload.single('file'), async (req, res) => {
-  console.log('Đã nhận request /api/flashcards/generate...');
-  try {
-    const { title, courseCode, text, count } = req.body;
-    if (!title) return res.status(400).json({ message: 'Thiếu title' });
-
-    let sourceText = '';
-    if (text && String(text).trim().length > 0) {
-      sourceText = String(text);
-    } else if (req.file) {
-      const { value } = await mammoth.extractRawText({ buffer: req.file.buffer });
-      sourceText = value || '';
-    } else {
-      return res.status(400).json({ message: 'Thiếu text hoặc file' });
-    }
-
-    if (sourceText.trim().length < 50) {
-      return res.status(400).json({ message: 'Nội dung quá ngắn (>= 50 ký tự)' });
-    }
-
-    console.log(`Đang gọi AI (Flashcard) tạo ${count || 'mặc định'} flashcards...`);
-    const ai = await generateFlashcardsFromText(sourceText, { count });
-
-    const setDoc = await FlashcardSet.create({
-      title,
-      courseCode: courseCode || '',
-      flashcards: ai.flashcards,
-      userId: req.userId 
-    });
-
-    console.log('✅ Tạo flashcard set thành công! ID:', setDoc._id);
-    return res.status(201).json(setDoc);
-  } catch (e) {
-    console.error('Lỗi /api/flashcards/generate:', e);
-    return res.status(500).json({ message: 'Lỗi nội bộ: ' + e.message });
-  }
-});
-
-// Tạo flashcard set thủ công (Giữ nguyên)
-router.post('/flashcards', verifyToken, async (req, res) => {
-  console.log('Đã nhận request POST /api/flashcards...');
-  try {
-    const { title, courseCode, flashcards } = req.body;
-    if (!title) return res.status(400).json({ message: 'Thiếu title' });
-    if (!Array.isArray(flashcards) || flashcards.length === 0) {
-      return res.status(400).json({ message: 'Thiếu flashcards' });
-    }
-    const cleaned = flashcards
-      .filter(fc => fc && fc.front && fc.back)
-      .map(fc => ({
-        front: String(fc.front).trim(),
-        back: String(fc.back).trim(),
-        hint: fc.hint ? String(fc.hint).trim() : undefined,
-        tags: Array.isArray(fc.tags) ? fc.tags.map(String) : undefined
-      }));
-
-    const setDoc = await FlashcardSet.create({ 
-        title, 
-        courseCode: courseCode || '', 
-        flashcards: cleaned, 
-        userId: req.userId 
-    });
-    console.log('✅ Tạo flashcard set thủ công thành công! ID:', setDoc._id);
-    return res.status(201).json(setDoc);
-  } catch (e) {
-    console.error('Lỗi POST /api/flashcards:', e);
-    return res.status(500).json({ message: 'Lỗi nội bộ: ' + e.message });
-  }
-});
-
-// Danh sách flashcard sets
-router.get('/flashcards', verifyToken, async (req, res) => {
-  try {
-    const currentUserId = new mongoose.Types.ObjectId(req.userId);
-    
-    const sets = await FlashcardSet.find({
-      $or: [
-        { userId: currentUserId }, // ⭐️ ĐIỀU KIỆN 1: ID khớp (Cho dữ liệu mới/đúng) ⭐️
-        
-        // ⭐️ ĐIỀU KIỆN 2: Tài liệu không có userId hoặc userId là null (CHO DỮ LIỆU CŨ LỖI) ⭐️
-        // (Chỉ dùng tạm nếu bạn muốn hiển thị data cũ bị lỗi)
-        { userId: { $exists: false } }, 
-        { userId: null }
-      ]
-    }).sort({ createdAt: -1 });
-    
-    console.log(`✅ Flashcards fetched for User ID: ${req.userId}. Count: ${sets.length}`);
-    
-    res.json(sets);
-  } catch (error) {
-     console.error('❌ Lỗi khi lấy danh sách flashcard sets:', error);
-     res.status(500).json({ message: 'Lỗi server' });
-  }
-});
-// Chi tiết 1 set
-router.get('/flashcards/:id', verifyToken, async (req, res) => {
-    try {
-        const setId = req.params.id;
-        // Đảm bảo chỉ lấy của user hiện tại
-        const set = await FlashcardSet.findOne({ 
-            _id: setId, 
-            userId: req.userId 
-        });
-
-        if (!set) {
-            return res.status(404).json({ message: 'Không tìm thấy bộ Flashcard này.' });
-        }
-        
-        res.json(set);
-    } catch (error) {
-        console.error('Lỗi khi lấy chi tiết Flashcard Set:', error);
-        res.status(500).json({ message: 'Lỗi server khi truy vấn chi tiết Flashcard Set.' });
-    }
-});
-
-// Xóa 1 set flashcard
-router.delete('/flashcards/:id', verifyToken, async (req, res) => {
-    try {
-        // ⭐️ SỬA: Ép kiểu userId ⭐️
-        const setDoc = await FlashcardSet.findOne({ 
-            _id: req.params.id, 
-            userId: new mongoose.Types.ObjectId(req.userId) 
-        });
-        if (!setDoc) return res.status(404).json({ message: 'Không tìm thấy bộ flashcard để xóa' });
-        
-        await FlashcardSet.findByIdAndDelete(req.params.id);
-        console.log('✅ Đã xóa flashcard set:', setDoc._id);
-        res.json({ message: 'Đã xóa flashcard set thành công', deletedId: setDoc._id });
-    } catch (error) {
-        res.status(500).json({ message: 'Lỗi server: ' + error.message });
-    }
-});
-
-
-// D. TOPIC ROUTES (Đã sửa để dùng ép kiểu)
+// C. TOPIC ROUTES (Private - Phải có Token)
 router.get('/topics', verifyToken, async (req, res) => {
   try {
-    // ⭐️ SỬA: Ép kiểu req.userId thành ObjectId cho truy vấn ⭐️
-    const currentUserId = new mongoose.Types.ObjectId(req.userId);
-    
     const topics = await Topic.find({
-      $or: [ 
-        { isSystem: true },           // Lấy Chủ đề Hệ thống
-        { author: currentUserId }     // Lấy Chủ đề do người dùng hiện tại tạo (Đã ép kiểu)
-      ]
+      $or: [{ isSystem: true }, { author: req.userId }]
     }).sort({ isSystem: -1, createdAt: -1 });
-    
-    console.log(`✅ Topics fetched for User ID: ${req.userId}. Count: ${topics.length}`);
-    
     res.json(topics);
   } catch (error) {
-    console.error('❌ Lỗi khi lấy danh sách topics:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
@@ -315,15 +161,12 @@ router.get('/topics', verifyToken, async (req, res) => {
 router.get('/topics/:id', verifyToken, async (req, res) => {
   try {
     const topic = await Topic.findById(req.params.id);
-    
-    // Ép kiểu ID để so sánh an toàn
-    const currentUserId = new mongoose.Types.ObjectId(req.userId);
-    
-    // Kiểm tra quyền truy cập: System hoặc Author (Dùng .equals() để so sánh ObjectId)
-    if (!topic || (!topic.isSystem && topic.author.equals(currentUserId) === false)) {
+
+    // Kiểm tra quyền truy cập: System hoặc Author
+    if (!topic || (!topic.isSystem && topic.author.toString() !== req.userId)) {
       return res.status(404).json({ message: 'Không tìm thấy chủ đề hoặc bạn không có quyền truy cập.' });
     }
-    
+
     res.json(topic);
   } catch (error) {
     console.error('❌ Lỗi khi lấy chi tiết chủ đề:', error);
@@ -355,15 +198,166 @@ router.post('/topics/generate', verifyToken, async (req, res) => {
 });
 
 
-// E. DEBUG ROUTES (Giữ nguyên)
+// D. DEBUG ROUTES
 router.get('/test', (req, res) => {
   res.json({ status: 'OK', message: 'API Routes đang chạy!' });
 });
 
 router.get('/debug/models', async (req, res) => {
-    console.log("Đang debug model list...");
-    const models = await listAvailableModels();
-    res.json(models);
+  console.log("Đang debug model list...");
+  const models = await listAvailableModels();
+  res.json(models);
 });
 
-module.exports = router;
+// E. MENTOR ROUTES (Private - Phải có Token)
+router.post('/mentor/upload', verifyToken, upload.single('file'), async (req, res) => {
+  console.log('Đã nhận request /api/mentor/upload...');
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Chưa upload file.' });
+
+    let text;
+    try {
+      const mammothResult = await mammoth.extractRawText({ buffer: req.file.buffer });
+      text = mammothResult.value;
+    } catch (mammothError) {
+      return res.status(400).json({ message: 'Không thể đọc file .docx.' });
+    }
+    if (!text || text.trim().length < 50) return res.status(400).json({ message: 'File .docx rỗng hoặc quá ngắn.' });
+
+    console.log('Đang gọi AI (Lecture) để tạo bài giảng...');
+    const lectureData = await generateLectureFromFile(text);
+    if (!lectureData || !lectureData.title || !lectureData.sections) {
+      throw new Error('AI trả về dữ liệu không hợp lệ');
+    }
+
+    console.log('✅ Tạo bài giảng thành công!');
+    res.status(201).json(lectureData);
+  } catch (error) {
+    console.error('Lỗi /api/mentor/upload:', error);
+    res.status(500).json({ message: 'Lỗi từ server: ' + error.message });
+  }
+});
+
+router.post('/mentor/chat', verifyToken, async (req, res) => {
+  console.log('Đã nhận request /api/mentor/chat...');
+  try {
+    const { question, lectureContext } = req.body;
+    if (!question || question.trim().length === 0) {
+      return res.status(400).json({ message: 'Thiếu câu hỏi.' });
+    }
+
+    console.log('Đang gọi AI (Mentor Response)...');
+    const response = await generateMentorResponse(question, lectureContext || '');
+
+    console.log('✅ Tạo phản hồi mentor thành công!');
+    res.status(200).json({ response });
+  } catch (error) {
+    console.error('Lỗi /api/mentor/chat:', error);
+    res.status(500).json({ message: 'Lỗi từ server: ' + error.message });
+  }
+});
+
+// F. TTS ROUTES (Private - Phải có Token) - Chỉ sử dụng Google Translate TTS
+// Lấy hoặc tạo cấu hình voice của user
+router.get('/mentor/voice-config', verifyToken, async (req, res) => {
+  try {
+    let voiceConfig = await Voice.findOne({ userId: req.userId });
+    if (!voiceConfig) {
+      voiceConfig = new Voice({
+        userId: req.userId,
+        gender: 'female',
+        language: 'vi',
+        rate: 1.0,
+        volume: 1.0
+      });
+      await voiceConfig.save();
+    }
+    res.json(voiceConfig);
+  } catch (error) {
+    console.error('Lỗi khi lấy voice config:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Cập nhật cấu hình voice
+router.put('/mentor/voice-config', verifyToken, async (req, res) => {
+  try {
+    const { gender, language, rate, volume } = req.body;
+
+    let voiceConfig = await Voice.findOne({ userId: req.userId });
+    if (!voiceConfig) {
+      voiceConfig = new Voice({ userId: req.userId });
+    }
+
+    // Cập nhật các trường
+    if (gender !== undefined) voiceConfig.gender = gender;
+    if (language !== undefined) voiceConfig.language = language;
+    if (rate !== undefined) voiceConfig.rate = rate;
+    if (volume !== undefined) voiceConfig.volume = volume;
+
+    await voiceConfig.save();
+    res.json(voiceConfig);
+  } catch (error) {
+    console.error('Lỗi khi cập nhật voice config:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Chuyển text sang audio bằng Google Translate TTS
+// options: { language, gender, rate, volume }
+router.post('/mentor/tts/synthesize', verifyToken, async (req, res) => {
+  try {
+    const { text, options } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ message: 'Thiếu text' });
+    }
+
+    // Kiểm tra độ dài text
+    if (typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ message: 'Text không hợp lệ' });
+    }
+
+    // Giới hạn độ dài text - Google Translate TTS: ~200 ký tự (tự động chia nhỏ)
+    const maxTextLength = 5000;
+    const textToProcess = text.length > maxTextLength ? text.substring(0, maxTextLength) : text;
+
+    // Merge options với defaults
+    const ttsOptions = {
+      language: options?.language || 'vi',
+      gender: options?.gender || 'female', // 'male' hoặc 'female'
+      rate: options?.rate || 1.0,
+      volume: options?.volume || 1.0
+    };
+
+    // Sử dụng Google Translate TTS
+    const audioBuffer = await synthesizeWithGoogleTranslate(textToProcess, ttsOptions);
+
+    if (!audioBuffer || audioBuffer.length === 0) {
+      return res.status(500).json({ message: 'Không thể tạo audio từ text' });
+    }
+
+    // Đảm bảo audioBuffer là Buffer
+    const buffer = Buffer.isBuffer(audioBuffer) ? audioBuffer : Buffer.from(audioBuffer);
+
+    // Kiểm tra buffer hợp lệ
+    if (!buffer || buffer.length === 0) {
+      return res.status(500).json({ message: 'Audio buffer không hợp lệ' });
+    }
+
+    // Set headers cho audio response - Google Translate TTS trả về audio/webm
+    res.setHeader('Content-Type', 'audio/webm');
+    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'no-cache');
+
+    // Gửi buffer
+    res.send(buffer);
+  } catch (error) {
+    console.error('Lỗi khi synthesize TTS:', error);
+    const errorMessage = error.message || 'Lỗi không xác định';
+    res.status(500).json({ message: 'Lỗi server: ' + errorMessage });
+  }
+});
+
+module.exports = router; // Phải export router
