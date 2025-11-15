@@ -15,7 +15,7 @@ const FeedbackCard = ({ quote, name, role, bgColor }) => (
                 className={`w-12 h-12 ${bgColor} rounded-full flex items-center justify-center mr-4 overflow-hidden shrink-0`}
             >
                 <img
-                    src="public/avatar-placeholder.jpg"
+                    src="/avatar-placeholder.jpg"
                     alt={`Avatar của ${name}`}
                     className="w-full h-full object-cover"
                 />
