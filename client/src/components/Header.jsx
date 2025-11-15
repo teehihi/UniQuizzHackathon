@@ -3,17 +3,19 @@ import { useState, useEffect } from "react";
 
 export default function Header() {
   const [user, setUser] = useState(null);
+
+  const [showHeader, setShowHeader] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Hàm để cập nhật user từ localStorage
     const updateUser = () => {
       const userData = localStorage.getItem("user");
       if (userData) {
         try {
           setUser(JSON.parse(userData));
         } catch (e) {
-          console.error("Lỗi khi parse user data:", e);
           setUser(null);
         }
       } else {
@@ -21,12 +23,8 @@ export default function Header() {
       }
     };
 
-    // Kiểm tra user khi component mount
     updateUser();
-
-    // Lắng nghe sự kiện storage để cập nhật khi login/logout
     window.addEventListener("storage", updateUser);
-    // Lắng nghe custom event từ cùng tab
     window.addEventListener("userUpdate", updateUser);
 
     return () => {
@@ -35,83 +33,99 @@ export default function Header() {
     };
   }, []);
 
+  // ẨN KHI CUỘN XUỐNG – HIỆN KHI CUỘN LÊN
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+
+      if (currentY > lastScrollY && currentY > 50) {
+        // cuộn xuống -> ẩn
+        setShowHeader(false);
+      } else {
+        // cuộn lên -> hiện
+        setShowHeader(true);
+      }
+
+      setLastScrollY(currentY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-    // Dispatch event để cập nhật (nếu có Header khác)
     window.dispatchEvent(new Event("userUpdate"));
     navigate("/");
   };
 
   return (
-    // ⭐️ THAY ĐỔI: Thêm sticky top-0, bg-white/95, backdrop-blur-sm và shadow-md ⭐️
-    <header className="w-full py-5 px-8 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur-sm shadow-md z-50">
-      
-      {/* Logo */}
-      <Link to="/">
-        <img
-          src="/logo.png"
-          alt="UniQuizz Logo"
-          className="w-30 h-auto object-contain"
-        />
-      </Link>
+    <>
+      {/* 1. HEADER CHÍNH (FIXED) */}
+      <header
+        className={`
+          w-full py-5 px-8 flex justify-between items-center
+          fixed top-0 left-0 right-0 z-50
+          bg-white/95 backdrop-blur-sm shadow-md
+          transition-transform duration-300
+          ${showHeader ? "translate-y-0" : "-translate-y-full"}
+        `}
+      >
+        {/* Logo */}
+        <Link to="/">
+          <img src="/logo.png" alt="UniQuizz Logo" className="w-30 h-auto" />
+        </Link>
 
-      {/* Khối Nav và Nút bấm */}
-      <div className="flex items-center gap-8">
-        {/* Nav */}
-        <nav className="flex gap-6 text-gray-700">
-          <Link to="/" className="hover:text-red-600 transition">
-            Trang chủ
-          </Link>
-          <Link to="/create" className="hover:text-red-600 transition">
-            Tạo Quiz
-          </Link>
-          <Link to="/myquizzes" className="hover:text-red-600 transition">
-            Quiz của tôi
-          </Link>
-        </nav>
+        {/* Navigation */}
+        <div className="flex items-center gap-8">
+          <nav className="flex gap-6 text-gray-700">
+            <Link to="/" className="hover:text-red-600 transition">Trang chủ</Link>
+            <Link to="/create" className="hover:text-red-600 transition">Tạo Quiz</Link>
+            <Link to="/vocabulary" className="hover:text-green-600 font-semibold transition">
+              Học Từ Vựng
+            </Link>
+            <Link to="/myquizzes" className="hover:text-red-600 transition">Quiz của tôi</Link>
+          </nav>
 
-        {/* Vạch ngăn cách */}
-        <div className="w-px h-6 bg-gray-300 hidden md:block"></div>
+          <div className="w-px h-6 bg-gray-300 hidden md:block"></div>
 
-        {/* Hiển thị user info hoặc nút Đăng nhập/Đăng ký */}
-        {user ? (
-          <div className="flex items-center gap-4">
-            {/* User info */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-semibold text-sm">
-                {(user.fullName || user.email).charAt(0).toUpperCase()}
+          {user ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center">
+                  {(user.fullName || user.email).charAt(0).toUpperCase()}
+                </div>
+                <span className="text-gray-700 font-medium hidden md:block">
+                  {user.fullName || user.email}
+                </span>
               </div>
-              <span className="text-gray-700 font-medium hidden md:block">
-                {user.fullName || user.email}
-              </span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+              >
+                Đăng xuất
+              </button>
             </div>
-            {/* Nút đăng xuất */}
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
-            >
-              Đăng xuất
-            </button>
-          </div>
-        ) : (
-          <div className="flex gap-4 items-center">
-            <Link
-              to="/login"
-              className="text-gray-700 font-medium hover:text-red-600 transition"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              to="/register"
-              className="px-5 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition shadow-sm"
-            >
-              Đăng ký
-            </Link>
-          </div>
-        )}
-      </div>
-    </header>
+          ) : (
+            <div className="flex gap-4 items-center">
+              <Link to="/login" className="text-gray-700 hover:text-red-600">Đăng nhập</Link>
+              <Link
+                to="/register"
+                className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-sm"
+              >
+                Đăng ký
+              </Link>
+            </div>
+          )}
+        </div>
+      </header>
+      
+      {/* 2. DỰ PHÒNG (PLACEHOLDER): Đẩy nội dung xuống */}
+      {/* Chiều cao của Header là py-5 (padding top và bottom), nên ta dùng h-20 để dự phòng */}
+      <div className="h-20 sm:h-24"></div> 
+      {/* Chiều cao này có thể cần điều chỉnh thêm dựa trên chính xác kích thước logo và padding của bạn */}
+    </>
   );
 }

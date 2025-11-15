@@ -8,6 +8,7 @@ import QuizPlayer from "./pages/QuizPlayer";
 import MentorPage from "./pages/MentorPage";
 import VocabularyPage from './pages/VocabularyPage'; 
 import FlashcardPage from './pages/FlashcardPage';
+import TopicDetailsPage from './pages/TopicDetailsPage';
 
 export default function App() {
   return (
@@ -26,7 +27,10 @@ export default function App() {
 
         {/* ⚠️ Routes mới cho Học Từ Vựng */}
         <Route path="/vocabulary" element={<VocabularyPage />} />
+        <Route path="/topic-details/:topicId" element={<TopicDetailsPage />} />
         <Route path="/flashcard/:topicId" element={<FlashcardPage />} />
+
+        
       </Routes>
     </BrowserRouter>
   );
