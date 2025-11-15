@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from "../components/Header.jsx"; // <-- THÊM
 import Footer from "../components/Footer.jsx"; // <-- THÊM
-
+import { getAuthToken } from '../utils/auth.js';
 // ⚠️ MOCK/INLINE LOGIC: Tích hợp Auth và API Services cơ bản
-const mockToken = 'mock-jwt-token'; 
-const API_BASE_URL = 'http://localhost:3001/api';
+const mockToken = getAuthToken(); 
+const API_BASE_URL = 'http://localhost:5001/api';
 
 const fetchTopics = async (token) => {
     const response = await fetch(`${API_BASE_URL}/topics`, {

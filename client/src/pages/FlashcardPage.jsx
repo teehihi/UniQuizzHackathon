@@ -2,34 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from "../components/Header.jsx"; // <-- THÊM
-import Footer from "../components/Footer.jsx"; // <-- THÊM
+import Header from "../components/Header.jsx"; 
+import Footer from "../components/Footer.jsx"; 
 
-// ⚠️ MOCK/INLINE LOGIC: Tích hợp Auth và API Services cơ bản
-const mockToken = 'mock-jwt-token';
-const API_BASE_URL = 'http://localhost:3001/api';
+// 1. IMPORT API THẬT
+import api from '../api.js'; // <-- IMPORT API đã có Interceptor (Tự gắn Token)
 
-const fetchTopicById = async (topicId, token) => {
-    // ⚠️ Vì BE chưa có endpoint /api/topics/:id, ta vẫn dùng mock data
-    console.log(`[MOCK] Đang giả lập dữ liệu cho Topic ID: ${topicId}`);
-    return {
-        _id: topicId,
-        title: "Technology (Giả lập)",
-        words: [
-          { word: "Algorithm", definition: "Thuật toán", example: "This is a complex algorithm." },
-          { word: "Database", definition: "Cơ sở dữ liệu", example: "We store data in a database." },
-          { word: "Innovation", definition: "Sự đổi mới", example: "We must encourage innovation." },
-          { word: "Cybersecurity", definition: "An ninh mạng", example: "Cybersecurity is crucial for online safety." },
-          { word: "Artificial Intelligence", definition: "Trí tuệ nhân tạo", example: "AI is transforming many industries." }
-        ]
-    };
+// 2. ĐỊNH NGHĨA HÀM GỌI API THẬT
+const fetchTopicById = async (topicId) => {
+    // Dùng api.js (interceptor), không cần truyền token
+    const response = await api.get(`/topics/${topicId}`);
+    return response.data; // Trả về data thật từ server
 };
-// --------------------------------------------------------------------------------
+// --- XÓA HẾT MOCK DATA VÀ LOGIC CŨ ---
 
 function FlashcardPage() {
     const { topicId } = useParams();
     const navigate = useNavigate();
-    const token = mockToken; 
+    // (Xóa const token = mockToken;)
 
     const [topic, setTopic] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -39,16 +29,21 @@ function FlashcardPage() {
     useEffect(() => {
         const loadTopic = async () => {
             try {
-                const data = await fetchTopicById(topicId, token); 
+                // Gọi hàm fetchTopicById thật
+                const data = await fetchTopicById(topicId); 
                 setTopic(data);
             } catch (error) {
                 console.error("Lỗi khi tải từ vựng:", error);
+                // Nếu lỗi 404 (Không tìm thấy) hoặc 401 (Unauthorized), ta đẩy về danh sách chủ đề
+                if (error.response && (error.response.status === 404 || error.response.status === 401)) {
+                     navigate('/vocabulary'); // Quay lại trang danh sách chủ đề
+                }
             } finally {
                 setIsLoading(false);
             }
         };
         loadTopic();
-    }, [topicId, token]);
+    }, [topicId, navigate]); // <-- Chỉ còn topicId và navigate
 
     if (isLoading) {
         return (
@@ -104,8 +99,8 @@ function FlashcardPage() {
                 <div 
                     onClick={flipCard} 
                     className={`w-full h-80 bg-white border-4 border-purple-500 rounded-2xl shadow-xl 
-                                flex items-center justify-center cursor-pointer transition-transform duration-500 
-                                transform perspective-1000 ${isFlipped ? 'rotate-y-180' : ''}`}
+                            flex items-center justify-center cursor-pointer transition-transform duration-500 
+                            transform perspective-1000 ${isFlipped ? 'rotate-y-180' : ''}`}
                     style={{ position: 'relative' }}
                 >
                     {/* Mặt trước: Từ vựng */}
