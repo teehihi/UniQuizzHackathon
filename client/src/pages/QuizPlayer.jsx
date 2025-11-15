@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion"; // <-- Cài đặt framer-motion
+import { AnimatePresence, motion } from "framer-motion";
 
 // === DỮ LIỆU MẪU (Sử dụng JSON bạn đã cung cấp) ===
 const mockQuizData = {
@@ -37,6 +37,12 @@ const mockQuizData = {
 };
 // === KẾT THÚC DỮ LIỆU MẪU ===
 
+// === 1. TẠO ĐỐI TƯỢNG ÂM THANH ===
+// (Đảm bảo file đã nằm trong thư mục /public)
+const correctSound = new Audio('/correct.mp3');
+const wrongSound = new Audio('/wrong.mp3');
+// ===================================
+
 export default function QuizPlayer() {
   const { quizId } = useParams();
   const navigate = useNavigate();
@@ -48,8 +54,6 @@ export default function QuizPlayer() {
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
-
-  // Thêm state cho key của motion để kích hoạt lại animation khi câu hỏi thay đổi
   const [questionKey, setQuestionKey] = useState(0);
 
   useEffect(() => {
@@ -67,16 +71,21 @@ export default function QuizPlayer() {
     setSelectedAnswer(option);
   };
 
+  // === 2. CẬP NHẬT HÀM CHECK ANSWER ===
   const handleCheckAnswer = () => {
-    if (!selectedAnswer) return;
+    if (!selectedAnswer) return; 
     setIsAnswered(true);
+
     if (selectedAnswer === currentQuestion.answer) {
       setScore(score + 1);
+      correctSound.play(); // <-- PHÁT ÂM THANH ĐÚNG
+    } else {
+      wrongSound.play(); // <-- PHÁT ÂM THANH SAI
     }
   };
+  // ===================================
 
   const handleNextQuestion = () => {
-    // Tăng key để framer-motion biết đây là một element mới và re-render animation
     setQuestionKey(prevKey => prevKey + 1); 
 
     if (currentQuestionIndex < quiz.questions.length - 1) {
@@ -93,24 +102,22 @@ export default function QuizPlayer() {
     let iconClass = "";
 
     if (!isAnswered) {
-      // Trạng thái chưa kiểm tra
       if (selectedAnswer === option) {
-        baseClasses += " bg-red-100 border-red-400 text-red-800 shadow-md scale-105"; // Đã chọn
+        baseClasses += " bg-red-100 border-red-400 text-red-800 shadow-md scale-105"; 
         iconClass = "bg-red-600";
       } else {
-        baseClasses += " bg-white border-gray-200 text-gray-700 hover:bg-red-50 hover:border-red-200"; // Chưa chọn
+        baseClasses += " bg-white border-gray-200 text-gray-700 hover:bg-red-50 hover:border-red-200"; 
         iconClass = "bg-gray-300";
       }
     } else {
-      // Trạng thái đã kiểm tra
       if (option === currentQuestion.answer) {
-        baseClasses += " bg-green-100 border-green-500 text-green-800 shadow-lg"; // Đáp án đúng
+        baseClasses += " bg-green-100 border-green-500 text-green-800 shadow-lg"; 
         iconClass = "bg-green-600";
       } else if (option === selectedAnswer && option !== currentQuestion.answer) {
-        baseClasses += " bg-red-100 border-red-500 text-red-800 shadow-lg"; // Chọn sai
+        baseClasses += " bg-red-100 border-red-500 text-red-800 shadow-lg"; 
         iconClass = "bg-red-600";
       } else {
-        baseClasses += " bg-gray-50 border-gray-200 text-gray-600 opacity-70"; // Các đáp án sai khác
+        baseClasses += " bg-gray-50 border-gray-200 text-gray-600 opacity-70"; 
         iconClass = "bg-gray-300";
       }
     }
@@ -118,6 +125,8 @@ export default function QuizPlayer() {
     return { baseClasses, iconClass };
   };
 
+  // ... (Phần code JSX (return) giữ nguyên, không thay đổi)
+  // ...
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#fff7f0] flex items-center justify-center">
@@ -248,10 +257,10 @@ export default function QuizPlayer() {
                   whileTap={{ scale: 0.98 }}
                   className={baseClasses}
                 >
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white mr-3 shrink-0 ${iconClass}`}>
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white mr-3 flex-shrink-0 ${iconClass}`}>
                     {String.fromCharCode(65 + index)} {/* A, B, C, D */}
                   </span>
-                  <span className="grow">{option}</span>
+                  <span className="flex-grow">{option}</span>
                   {isAnswered && option === currentQuestion.answer && (
                     <motion.div
                       initial={{ scale: 0 }}
