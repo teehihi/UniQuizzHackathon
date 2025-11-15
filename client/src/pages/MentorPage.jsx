@@ -24,8 +24,20 @@ function ChatPanel({
     scrollToBottom();
   }, [messages]);
 
+  // Hàm format markdown text thành HTML
+  const formatText = (text) => {
+    if (!text) return '';
+    // Chuyển **text** thành <strong>text</strong>
+    let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Chuyển *text* thành <em>text</em> (italic)
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Chuyển xuống dòng thành <br>
+    formatted = formatted.replace(/\n/g, '<br>');
+    return formatted;
+  };
+
   return (
-    <div className="flex flex-col gap-4 p-6 border border-gray-200 rounded-xl bg-white shadow-lg h-full">
+    <div className="flex flex-col gap-4 p-6 border border-gray-200 rounded-xl bg-white shadow-lg">
       <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
           <span className="text-white text-lg">🎓</span>
@@ -36,7 +48,7 @@ function ChatPanel({
         </div>
       </div>
 
-      <div className="flex-1 border border-gray-200 rounded-lg p-4 overflow-y-auto bg-gradient-to-b from-gray-50 to-white min-h-[300px] max-h-[400px]">
+      <div className="flex-1 border border-gray-200 rounded-lg p-4 overflow-y-auto bg-gradient-to-b from-gray-50 to-white" style={{ minHeight: '300px', maxHeight: '400px' }}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
@@ -71,7 +83,14 @@ function ChatPanel({
                       ? "bg-blue-500 text-white rounded-tr-none"
                       : "bg-white border border-gray-200 text-gray-800 rounded-tl-none"
                   }`}>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    {msg.type === "mentor" ? (
+                      <p 
+                        className="text-sm leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: formatText(msg.text) }}
+                      />
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    )}
                   </div>
                   {msg.type === "mentor" && (
                     <span className="text-xs text-gray-400 mt-1 px-2">Mentor AI</span>
