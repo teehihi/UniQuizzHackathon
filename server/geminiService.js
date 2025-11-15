@@ -244,7 +244,7 @@ YÊU CẦU:
             "nội dung 3",
             "nội dung 4"
         ],
-        "answer": random trong 4 cái trong option
+        "answer": random trong 4 nội dung của 4 đáp án phía trên
     }
   ]
 }
