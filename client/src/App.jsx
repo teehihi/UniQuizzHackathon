@@ -9,7 +9,8 @@ import MentorPage from "./pages/MentorPage";
 import VocabularyPage from './pages/VocabularyPage'; 
 import FlashcardPage from './pages/FlashcardPage';
 import TopicDetailsPage from './pages/TopicDetailsPage';
-
+import FlashcardHubPage from './pages/FlashcardHubPage';
+import CreateFlashcardPage from './pages/CreateFlashcardPage';
 export default function App() {
   return (
     <BrowserRouter>
@@ -26,8 +27,15 @@ export default function App() {
         <Route path="/mentor" element={<MentorPage />} />
 
         {/* ⚠️ Routes mới cho Học Từ Vựng */}
+        <Route path="/flashcard-hub" element={<FlashcardHubPage />} />
+        <Route path="/create-flashcard" element={<CreateFlashcardPage />} />
         <Route path="/vocabulary" element={<VocabularyPage />} />
-        <Route path="/topic-details/:topicId" element={<TopicDetailsPage />} />
+        <Route 
+          path="/topic-details/:topicId" 
+          element={<TopicDetailsPage />} 
+          // ⭐️ THÊM KEY ĐỂ BUỘC COMPONENT RENDER LẠI KHI topicId THAY ĐỔI ⭐️
+          key={location.pathname} 
+        />
         <Route path="/flashcard/:topicId" element={<FlashcardPage />} />
 
         

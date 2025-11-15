@@ -83,8 +83,8 @@ export default function Header() {
           <nav className="flex gap-6 text-gray-700">
             <Link to="/" className="hover:text-red-600 transition">Trang chủ</Link>
             <Link to="/create" className="hover:text-red-600 transition">Tạo Quiz</Link>
-            <Link to="/vocabulary" className="hover:text-green-600 font-semibold transition">
-              Học Từ Vựng
+            <Link to="/flashcard-hub" className="hover:text-green-600 font-semibold transition">
+              Flash Card
             </Link>
             <Link to="/myquizzes" className="hover:text-red-600 transition">Quiz của tôi</Link>
           </nav>

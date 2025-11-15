@@ -44,12 +44,12 @@ export default function Home() {
             Tạo Quiz mới
           </Link>
           
-          {/* ⭐️ THÊM NÚT HỌC TỪ VỰNG MỚI ⭐️ */}
+          {/* ⭐️ Tạo FC ⭐️ */}
           <Link
-            to="/vocabulary"
+            to="/flashcard-hub"
             className="px-8 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition shadow-md"
           >
-            Học Từ Vựng
+            Flash Card
           </Link>
           
           <Link

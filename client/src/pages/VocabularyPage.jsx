@@ -56,7 +56,7 @@ const NotificationModal = ({ message, type, onClose }) => {
         <AnimatePresence>
             {message && (
                 <motion.div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]"
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-1000"
                     variants={backdropVariants}
                     initial="hidden"
                     animate="visible"
