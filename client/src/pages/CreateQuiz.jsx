@@ -139,8 +139,8 @@ export default function CreateQuiz() {
 
       {/* Phần nội dung chính */}
       <main className="grow flex items-center justify-center py-12">
-        <div className="max-w-2xl w-full mx-auto p-8">
-          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
+        <div className="max-w-2xl w-full mx-auto p-8 bg-white rounded-2xl shadow-lg border-t-4 border-red-700">
+          <h1 className="text-3xl font-bold text-center text-red-700 mb-2">
             Tạo Quiz mới
           </h1>
           <p className="text-center text-gray-600 mb-8">
