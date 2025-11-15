@@ -104,7 +104,7 @@ export default function CreateQuiz() {
       const res = await fetch(API_ENDPOINTS.UPLOAD, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         // Không cần 'Content-Type', FormData sẽ tự đặt
         body: formData,
@@ -119,14 +119,15 @@ export default function CreateQuiz() {
       console.log("Tạo quiz thành công:", newQuiz);
       setIsLoading(false);
       navigate("/myquizzes"); // Chuyển hướng khi thành công
-
     } catch (err) {
-      console.error('Lỗi khi tạo quiz:', err);
+      console.error("Lỗi khi tạo quiz:", err);
       // Hiển thị lỗi chi tiết hơn
-      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
-        setError(`Không thể kết nối đến server. Vui lòng kiểm tra xem server đã chạy chưa (${API_ENDPOINTS.TEST})`);
+      if (err.message === "Failed to fetch" || err.name === "TypeError") {
+        setError(
+          `Không thể kết nối đến server. Vui lòng kiểm tra xem server đã chạy chưa (${API_ENDPOINTS.TEST})`
+        );
       } else {
-        setError(err.message || 'Có lỗi xảy ra khi tạo quiz');
+        setError(err.message || "Có lỗi xảy ra khi tạo quiz");
       }
       setIsLoading(false);
     }
@@ -140,7 +141,7 @@ export default function CreateQuiz() {
       <main className="grow flex items-center justify-center py-12">
         <div className="max-w-2xl w-full mx-auto p-8">
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            ✨ Tạo Quiz mới
+            Tạo Quiz mới
           </h1>
           <p className="text-center text-gray-600 mb-8">
             Tải lên file .docx và để AI làm phần còn lại.
@@ -149,7 +150,10 @@ export default function CreateQuiz() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Tiêu đề */}
             <div>
-              <label className="block text-gray-700 mb-2 font-medium" htmlFor="title">
+              <label
+                className="block text-gray-700 mb-2 font-medium"
+                htmlFor="title"
+              >
                 Tiêu đề Quiz*
               </label>
               <input
@@ -165,7 +169,10 @@ export default function CreateQuiz() {
 
             {/* Mã học phần (Tùy chọn) */}
             <div>
-              <label className="block text-gray-700 mb-2 font-medium" htmlFor="courseCode">
+              <label
+                className="block text-gray-700 mb-2 font-medium"
+                htmlFor="courseCode"
+              >
                 Mã học phần (Tùy chọn)
               </label>
               <input
@@ -180,7 +187,10 @@ export default function CreateQuiz() {
 
             {/* Số lượng câu hỏi */}
             <div>
-              <label className="block text-gray-700 mb-2 font-medium" htmlFor="questionCount">
+              <label
+                className="block text-gray-700 mb-2 font-medium"
+                htmlFor="questionCount"
+              >
                 Số lượng câu hỏi
               </label>
               <input
@@ -211,7 +221,10 @@ export default function CreateQuiz() {
 
             {/* File Upload */}
             <div>
-              <label className="block text-gray-700 mb-2 font-medium" htmlFor="file">
+              <label
+                className="block text-gray-700 mb-2 font-medium"
+                htmlFor="file"
+              >
                 Tài liệu (.docx)*
               </label>
               <div
@@ -220,34 +233,33 @@ export default function CreateQuiz() {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors cursor-pointer ${isDragging
-                  ? "border-red-500 bg-red-50"
-                  : "border-gray-300 hover:border-red-400"
-                  }`}
+                className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors cursor-pointer ${
+                  isDragging
+                    ? "border-red-500 bg-red-50"
+                    : "border-gray-300 hover:border-red-400"
+                }`}
               >
                 <div className="space-y-1 text-center">
                   <svg
-                    className={`mx-auto h-12 w-12 transition-colors ${isDragging ? "text-red-500" : "text-gray-400"
-                      }`}
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
+                    className={`mx-auto h-12 w-12 transition-colors ${
+                      isDragging ? "text-red-500" : "text-gray-400"
+                    }`}
+                    // Thay thế toàn bộ nội dung của SVG cũ bằng SVG bạn cung cấp
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 640 640"
                     aria-hidden="true"
+                    fill="currentColor" // Thêm fill để sử dụng màu từ className
                   >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
+                    {/* Biểu tượng Mũi tên chỉ xuống (Tải xuống) */}
+                    <path d="M342.6 73.4C330.1 60.9 309.8 60.9 297.3 73.4L169.3 201.4C156.8 213.9 156.8 234.2 169.3 246.7C181.8 259.2 202.1 259.2 214.6 246.7L288 173.3L288 384C288 401.7 302.3 416 320 416C337.7 416 352 401.7 352 384L352 173.3L425.4 246.7C437.9 259.2 458.2 259.2 470.7 246.7C483.2 234.2 483.2 213.9 470.7 201.4L342.7 73.4zM160 416C160 398.3 145.7 384 128 384C110.3 384 96 398.3 96 416L96 480C96 533 139 576 192 576L448 576C501 576 544 533 544 480L544 416C544 398.3 529.7 384 512 384C494.3 384 480 398.3 480 416L480 480C480 497.7 465.7 512 448 512L192 512C174.3 512 160 497.7 160 480L160 416z" />
                   </svg>
                   <div className="flex text-sm text-gray-600 justify-center">
-                    <span className="font-medium text-red-600">Tải lên file</span>
+                    <span className="font-medium text-red-600">
+                      Tải lên file
+                    </span>
                     <span className="pl-1">hoặc kéo thả</span>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Chỉ hỗ trợ file .docx
-                  </p>
+                  <p className="text-xs text-gray-500">Chỉ hỗ trợ file .docx</p>
                 </div>
               </div>
               <input
@@ -282,7 +294,6 @@ export default function CreateQuiz() {
             {error && (
               <p className="text-red-500 text-sm text-center">{error}</p>
             )}
-
           </form>
         </div>
       </main>
