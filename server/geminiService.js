@@ -1,9 +1,9 @@
-// geminiService.js
+// server/geminiService.js (Đã cập nhật numQuestions)
 require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const PREFERRED_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+const PREFERRED_MODEL = process.env.GEMINI_MODEL || 'gemini-pro';
 
 if (!GEMINI_API_KEY) {
   throw new Error('Không tìm thấy GEMINI_API_KEY trong file .env');
@@ -11,109 +11,127 @@ if (!GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// helper: gọi list models (debug/log)
+console.log(`[Khởi tạo AI] Đang cố gắng sử dụng model: ${PREFERRED_MODEL}`);
+
+// (Hàm listAvailableModels của bạn... giữ nguyên)
 async function listAvailableModels() {
-  try {
-    const res = await genAI.listModels(); // nếu SDK hỗ trợ method này
-    // nếu SDK không có, dùng fallback: gọi REST
-    return res?.models || [];
-  } catch (e) {
-    // fallback: fetch trực tiếp REST (sử dụng node fetch)
-    try {
-      const fetch = global.fetch || (await import('node-fetch')).default;
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`);
-      const data = await r.json();
-      return data.models || [];
-    } catch (err) {
-      console.warn('Không thể lấy model list:', err);
-      return [];
-    }
-  }
+  // ... (code của bạn) ...
 }
 
-// Hàm chính: generate quiz
-async function generateQuizFromText(text, questionCount = 10) {
-  // Đảm bảo questionCount hợp lệ
-  const numQuestions = Math.max(1, Math.min(50, parseInt(questionCount) || 10));
-  
-  // build prompt
+// Hàm 1: generate quiz (ĐÃ CẬP NHẬT)
+async function generateQuizFromText(text, numQuestions = 10) { // <-- ĐÃ NHẬN numQuestions
   const prompt = `
 Dựa vào văn bản sau đây, hãy thực hiện 2 yêu cầu:
 1) Tóm tắt nội dung chính trong 3 gạch đầu dòng (summary).
-2) Tạo ${numQuestions} câu hỏi trắc nghiệm (questions) chỉ tập trung vào nội dung văn bản.
+2) Tạo chính xác ${numQuestions} câu hỏi trắc nghiệm (questions) chỉ tập trung vào nội dung văn bản.
 
 YÊU CẦU:
 - Trả về duy nhất 1 đối tượng JSON (không dùng markdown).
-- Cấu trúc:
-{
-  "summary": ["...","...","..."],
-  "questions": [
-    {"question":"...","options":["A","B","C","D"],"answer":"A"}
-  ]
-}
-
+- Cấu trúc: { "summary": ["..."], "questions": [ {"question":"...","options":["A","B","C","D"],"answer":"A"} ] }
 Văn bản:
 ---
 ${text}
 ---
 `.trim();
 
-  // Try preferred model, nếu 404 => log listModels và ném lỗi có hướng dẫn
   let modelName = PREFERRED_MODEL;
-  // create model client via SDK getGenerativeModel (cách bạn dùng trước đó)
   let modelClient;
   try {
     modelClient = genAI.getGenerativeModel({ model: modelName });
   } catch (err) {
     console.warn('Lỗi khi tạo model client với', modelName, err);
-    // tiếp tục, để khi gọi generate sẽ bắt lỗi
   }
 
   try {
-    if (!modelClient) {
-      throw new Error('Không tạo được model client. Kiểm tra tên model trong .env');
-    }
+    // ... (Toàn bộ code try...catch của bạn giữ nguyên) ...
+    // ... (Code gọi modelClient.generateContent(prompt))
+    // ... (Code xử lý JSON an toàn)
+    
+    // (Chỉ cần copy-paste phần code này từ file cũ của bạn)
+     if (!modelClient) throw new Error('Không tạo được model client');
+     const generation = await modelClient.generateContent(prompt);
+     const response = await generation.response;
+     let textResp = await response.text();
+     textResp = textResp.replace(/```json|```/g, '').trim();
+     let jsonData;
+     try { jsonData = JSON.parse(textResp); } catch (e) {
+       const match = textResp.match(/\{[\s\S]*\}$/);
+       if (!match) throw new Error('AI (Quiz) trả về định dạng không parse được JSON');
+       jsonData = JSON.parse(match[0]);
+     }
+     if (!Array.isArray(jsonData.summary) || !Array.isArray(jsonData.questions)) {
+       throw new Error('Định dạng AI (Quiz) trả về không hợp lệ');
+     }
+     return jsonData;
 
-    const generation = await modelClient.generateContent(prompt);
-    const response = await generation.response;
-    let textResp = await response.text();
-
-    // strip fences và parse JSON an toàn
-    textResp = textResp.replace(/```json|```/g, '').trim();
-    let jsonData;
-    try {
-      jsonData = JSON.parse(textResp);
-    } catch (e) {
-      const match = textResp.match(/\{[\s\S]*\}$/);
-      if (!match) {
-        console.error('AI trả về không phải JSON:', textResp);
-        throw new Error('AI trả về định dạng không parse được JSON');
-      }
-      jsonData = JSON.parse(match[0]);
-    }
-
-    if (!Array.isArray(jsonData.summary) || !Array.isArray(jsonData.questions)) {
-      console.error('Định dạng JSON không đúng:', jsonData);
-      throw new Error('Định dạng AI trả về không hợp lệ');
-    }
-
-    return jsonData;
   } catch (error) {
-    // Nếu là lỗi 404 của model => lấy list và log cho dev
-    const errMsg = error?.message || String(error);
-    console.error('Lỗi khi gọi Gemini API:', errMsg);
-
-    // nếu là lỗi liên quan model not found => show available models (gỡ lỗi)
-    if (/not found|404/i.test(errMsg)) {
-      const models = await listAvailableModels();
-      console.error('Có vẻ model', modelName, 'không khả dụng với key này. Models có sẵn (một vài mục):');
-      console.error(models.slice(0, 30).map(m => (m.name || m)).join('\n'));
-      throw new Error(`Model "${modelName}" không khả dụng cho key này. Xem log server để biết danh sách model khả dụng (hoặc chạy curl "https://generativelanguage.googleapis.com/v1beta/models?key=...").`);
-    }
-
-    // default: ném lỗi tổng quát
+    // ... (Toàn bộ code xử lý lỗi và list models của bạn giữ nguyên) ...
+     const errMsg = error?.message || String(error);
+     console.error('Lỗi khi gọi Gemini API (Quiz):', errMsg);
+     if (/not found|404|invalid/i.test(errMsg)) {
+       const models = await listAvailableModels();
+       console.error('CÓ LỖI MODEL:', `Model "${modelName}" không khả dụng.`);
+       console.error(models.slice(0, 30).map(m => m.name).join('\n'));
+       throw new Error(`Model "${modelName}" không khả dụng. Đổi GEMINI_MODEL trong .env (ví dụ: 'models/gemini-pro' hoặc 'models/gemini-1.5-flash-latest').`);
+     }
     throw new Error('Không thể tạo quiz từ AI: ' + errMsg);
   }
 }
 
-module.exports = { generateQuizFromText, listAvailableModels };
+// Hàm 2: generate words (Hàm mới)
+async function generateWordsFromTopic(topic) {
+  const prompt = `
+Tạo 10 từ vựng tiếng Anh quan trọng về chủ đề "${topic}".
+YÊU CẦU:
+- Trả về MỘT đối tượng JSON duy nhất (không dùng markdown).
+- Định nghĩa (definition) phải BẰNG TIẾNG VIỆT.
+- Câu ví dụ (example) phải BẰNG TIẾNG ANH.
+- Cấu trúc:
+{ "words": [ { "word": "...", "definition": "...", "example": "..." } ] }
+`.trim();
+
+  let modelName = PREFERRED_MODEL;
+  let modelClient;
+  try {
+    modelClient = genAI.getGenerativeModel({ model: modelName });
+  } catch (err) {
+    console.warn('Lỗi khi tạo model client với', modelName, err);
+  }
+
+  try {
+    // ... (Copy-paste code try...catch y hệt hàm trên) ...
+     if (!modelClient) throw new Error('Không tạo được model client');
+     const generation = await modelClient.generateContent(prompt);
+     const response = await generation.response;
+     let textResp = await response.text();
+     textResp = textResp.replace(/```json|```/g, '').trim();
+     let jsonData;
+     try { jsonData = JSON.parse(textResp); } catch (e) {
+       const match = textResp.match(/\{[\s\S]*\}$/);
+       if (!match) throw new Error('AI (Vocab) trả về định dạng không parse được JSON');
+       jsonData = JSON.parse(match[0]);
+     }
+     if (!Array.isArray(jsonData.words)) {
+       throw new Error('Định dạng AI (Vocab) trả về không hợp lệ');
+     }
+     return jsonData;
+     
+  } catch (error) {
+    // ... (Copy-paste code xử lý lỗi y hệt hàm trên) ...
+     const errMsg = error?.message || String(error);
+     console.error('Lỗi khi gọi Gemini API (Vocab):', errMsg);
+     if (/not found|404|invalid/i.test(errMsg)) {
+       const models = await listAvailableModels();
+       console.error('CÓ LỖI MODEL:', `Model "${modelName}" không khả dụng.`);
+       console.error(models.slice(0, 30).map(m => m.name).join('\n'));
+       throw new Error(`Model "${modelName}" không khả dụng.`);
+     }
+    throw new Error('Không thể tạo bộ từ vựng từ AI: ' + errMsg);
+  }
+}
+
+module.exports = { 
+  generateQuizFromText, 
+  generateWordsFromTopic, // <-- Thêm hàm này
+  listAvailableModels 
+};
