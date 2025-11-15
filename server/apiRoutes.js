@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const mammoth = require('mammoth');
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); // ⭐️ PHẢI IMPORT MONGOOSE
 
 // Import mọi thứ cần thiết
 const { 
@@ -79,7 +79,7 @@ router.post('/auth/login', async (req, res) => {
   }
 });
 
-// B. DECK ROUTES (Áp dụng ép kiểu cho tất cả truy vấn theo userId)
+// B. DECK ROUTES (Đã sửa ép kiểu)
 router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   console.log('Đã nhận request /api/upload...');
   try {
@@ -120,7 +120,6 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
 
 router.get('/decks', verifyToken, async (req, res) => {
   try {
-    // ⭐️ SỬA: Ép kiểu userId ⭐️
     const decks = await Deck.find({ userId: new mongoose.Types.ObjectId(req.userId) }).sort({ createdAt: -1 });
     res.json(decks);
   } catch (error) {
@@ -130,7 +129,6 @@ router.get('/decks', verifyToken, async (req, res) => {
 
 router.get('/decks/:id', verifyToken, async (req, res) => {
   try {
-    // ⭐️ SỬA: Ép kiểu userId ⭐️
     const deck = await Deck.findOne({ _id: req.params.id, userId: new mongoose.Types.ObjectId(req.userId) });
     if (!deck) return res.status(404).json({ message: 'Không tìm thấy bộ quiz' });
     res.json(deck);
@@ -141,7 +139,6 @@ router.get('/decks/:id', verifyToken, async (req, res) => {
 
 router.delete('/decks/:id', verifyToken, async (req, res) => {
   try {
-    // ⭐️ SỬA: Ép kiểu userId ⭐️
     const deck = await Deck.findOne({ _id: req.params.id, userId: new mongoose.Types.ObjectId(req.userId) });
     if (!deck) return res.status(404).json({ message: 'Không tìm thấy bộ quiz để xóa' });
     await Deck.findByIdAndDelete(req.params.id);
@@ -153,9 +150,9 @@ router.delete('/decks/:id', verifyToken, async (req, res) => {
 });
 
 
-// C. FLASHCARD ROUTES (Áp dụng ép kiểu và logic truy vấn Topics)
+// C. FLASHCARD ROUTES (ĐÃ SỬA LỖI)
 
-// AI generate flashcards từ text hoặc file .docx (Giữ nguyên)
+// AI generate flashcards
 router.post('/flashcards/generate', verifyToken, upload.single('file'), async (req, res) => {
   console.log('Đã nhận request /api/flashcards/generate...');
   try {
@@ -179,6 +176,12 @@ router.post('/flashcards/generate', verifyToken, upload.single('file'), async (r
     console.log(`Đang gọi AI (Flashcard) tạo ${count || 'mặc định'} flashcards...`);
     const ai = await generateFlashcardsFromText(sourceText, { count });
 
+    // Đảm bảo AI trả về đúng key 'flashcards'
+    if (!ai || !Array.isArray(ai.flashcards)) {
+        console.error("Lỗi: geminiService.generateFlashcardsFromText không trả về { flashcards: [...] }");
+        throw new Error("AI không trả về dữ liệu flashcards hợp lệ.");
+    }
+
     const setDoc = await FlashcardSet.create({
       title,
       courseCode: courseCode || '',
@@ -194,7 +197,7 @@ router.post('/flashcards/generate', verifyToken, upload.single('file'), async (r
   }
 });
 
-// Tạo flashcard set thủ công (Giữ nguyên)
+// Tạo flashcard set thủ công
 router.post('/flashcards', verifyToken, async (req, res) => {
   console.log('Đã nhận request POST /api/flashcards...');
   try {
@@ -231,15 +234,9 @@ router.get('/flashcards', verifyToken, async (req, res) => {
   try {
     const currentUserId = new mongoose.Types.ObjectId(req.userId);
     
+    // Chỉ tìm các set CÓ userId khớp
     const sets = await FlashcardSet.find({
-      $or: [
-        { userId: currentUserId }, // ⭐️ ĐIỀU KIỆN 1: ID khớp (Cho dữ liệu mới/đúng) ⭐️
-        
-        // ⭐️ ĐIỀU KIỆN 2: Tài liệu không có userId hoặc userId là null (CHO DỮ LIỆU CŨ LỖI) ⭐️
-        // (Chỉ dùng tạm nếu bạn muốn hiển thị data cũ bị lỗi)
-        { userId: { $exists: false } }, 
-        { userId: null }
-      ]
+        userId: currentUserId 
     }).sort({ createdAt: -1 });
     
     console.log(`✅ Flashcards fetched for User ID: ${req.userId}. Count: ${sets.length}`);
@@ -250,14 +247,23 @@ router.get('/flashcards', verifyToken, async (req, res) => {
      res.status(500).json({ message: 'Lỗi server' });
   }
 });
+
+// ⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️
+// ⭐️ ĐÂY LÀ CHỖ SỬA (LỖI TYPO CỦA TÔI) ⭐️
+// ⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️
+
 // Chi tiết 1 set
 router.get('/flashcards/:id', verifyToken, async (req, res) => {
     try {
         const setId = req.params.id;
+        
+        // ⭐️ BƯỚC 1: Ép kiểu req.userId sang ObjectId ⭐️
+        const currentUserId = new mongoose.Types.ObjectId(req.userId);
+
         // Đảm bảo chỉ lấy của user hiện tại
         const set = await FlashcardSet.findOne({ 
             _id: setId, 
-            userId: req.userId 
+            userId: currentUserId // ⭐️ BƯỚC 2: Dùng biến 'currentUserId' đã tạo (ĐÂY LÀ CHỖ SỬA) ⭐️
         });
 
         if (!set) {
@@ -270,11 +276,14 @@ router.get('/flashcards/:id', verifyToken, async (req, res) => {
         res.status(500).json({ message: 'Lỗi server khi truy vấn chi tiết Flashcard Set.' });
     }
 });
+// ⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️
+// ⭐️ KẾT THÚC CHỖ SỬA ⭐️
+// ⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️
 
 // Xóa 1 set flashcard
 router.delete('/flashcards/:id', verifyToken, async (req, res) => {
     try {
-        // ⭐️ SỬA: Ép kiểu userId ⭐️
+        // ⭐️ Đã sửa đúng (giữ nguyên)
         const setDoc = await FlashcardSet.findOne({ 
             _id: req.params.id, 
             userId: new mongoose.Types.ObjectId(req.userId) 
@@ -293,13 +302,12 @@ router.delete('/flashcards/:id', verifyToken, async (req, res) => {
 // D. TOPIC ROUTES (Đã sửa để dùng ép kiểu)
 router.get('/topics', verifyToken, async (req, res) => {
   try {
-    // ⭐️ SỬA: Ép kiểu req.userId thành ObjectId cho truy vấn ⭐️
     const currentUserId = new mongoose.Types.ObjectId(req.userId);
     
     const topics = await Topic.find({
       $or: [ 
         { isSystem: true },           // Lấy Chủ đề Hệ thống
-        { author: currentUserId }     // Lấy Chủ đề do người dùng hiện tại tạo (Đã ép kiểu)
+        { author: currentUserId }     // Lấy Chủ đề do người dùng hiện tại tạo
       ]
     }).sort({ isSystem: -1, createdAt: -1 });
     
@@ -316,12 +324,15 @@ router.get('/topics/:id', verifyToken, async (req, res) => {
   try {
     const topic = await Topic.findById(req.params.id);
     
-    // Ép kiểu ID để so sánh an toàn
     const currentUserId = new mongoose.Types.ObjectId(req.userId);
     
-    // Kiểm tra quyền truy cập: System hoặc Author (Dùng .equals() để so sánh ObjectId)
-    if (!topic || (!topic.isSystem && topic.author.equals(currentUserId) === false)) {
-      return res.status(404).json({ message: 'Không tìm thấy chủ đề hoặc bạn không có quyền truy cập.' });
+    if (!topic) {
+        return res.status(404).json({ message: 'Không tìm thấy chủ đề.' });
+    }
+    
+    // Kiểm tra quyền truy cập (Dùng .equals() để so sánh ObjectId)
+    if (topic.isSystem === false && topic.author.equals(currentUserId) === false) {
+      return res.status(403).json({ message: 'Bạn không có quyền truy cập chủ đề này.' });
     }
     
     res.json(topic);
@@ -339,6 +350,12 @@ router.post('/topics/generate', verifyToken, async (req, res) => {
     }
     console.log(`Đang gọi AI (Vocab) tạo chủ đề: ${title}`);
     const aiData = await generateWordsFromTopic(title);
+
+    // Đảm bảo AI trả về đúng key 'words'
+     if (!aiData || !Array.isArray(aiData.words)) {
+        console.error("Lỗi: geminiService.generateWordsFromTopic không trả về { words: [...] }");
+        throw new Error("AI không trả về dữ liệu words hợp lệ.");
+    }
 
     const newTopic = new Topic({
       title: title,
