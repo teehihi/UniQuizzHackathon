@@ -236,31 +236,50 @@ export default function CreateQuiz() {
                 className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors cursor-pointer ${
                   isDragging
                     ? "border-red-500 bg-red-50"
+                    : file
+                    ? "border-green-400 bg-green-50"
                     : "border-gray-300 hover:border-red-400"
                 }`}
               >
-                <div className="space-y-1 text-center">
-                  <svg
-                    className={`mx-auto h-12 w-12 transition-colors ${
-                      isDragging ? "text-red-500" : "text-gray-400"
-                    }`}
-                    // Thay thế toàn bộ nội dung của SVG cũ bằng SVG bạn cung cấp
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 640 640"
-                    aria-hidden="true"
-                    fill="currentColor" // Thêm fill để sử dụng màu từ className
-                  >
-                    {/* Biểu tượng Mũi tên chỉ xuống (Tải xuống) */}
-                    <path d="M342.6 73.4C330.1 60.9 309.8 60.9 297.3 73.4L169.3 201.4C156.8 213.9 156.8 234.2 169.3 246.7C181.8 259.2 202.1 259.2 214.6 246.7L288 173.3L288 384C288 401.7 302.3 416 320 416C337.7 416 352 401.7 352 384L352 173.3L425.4 246.7C437.9 259.2 458.2 259.2 470.7 246.7C483.2 234.2 483.2 213.9 470.7 201.4L342.7 73.4zM160 416C160 398.3 145.7 384 128 384C110.3 384 96 398.3 96 416L96 480C96 533 139 576 192 576L448 576C501 576 544 533 544 480L544 416C544 398.3 529.7 384 512 384C494.3 384 480 398.3 480 416L480 480C480 497.7 465.7 512 448 512L192 512C174.3 512 160 497.7 160 480L160 416z" />
-                  </svg>
-                  <div className="flex text-sm text-gray-600 justify-center">
-                    <span className="font-medium text-red-600">
-                      Tải lên file
-                    </span>
-                    <span className="pl-1">hoặc kéo thả</span>
+                {file ? (
+                  <div className="space-y-2 text-center w-full">
+                    <svg
+                      className="mx-auto h-12 w-12 text-green-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                    </svg>
+                    <p className="text-sm text-green-600 font-medium">
+                      ✓ Đã chọn: {file.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Click để chọn file khác hoặc kéo thả file mới
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500">Chỉ hỗ trợ file .docx</p>
-                </div>
+                ) : (
+                  <div className="space-y-1 text-center">
+                    <svg
+                      className={`mx-auto h-12 w-12 transition-colors ${
+                        isDragging ? "text-red-500" : "text-gray-400"
+                      }`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 640 640"
+                      aria-hidden="true"
+                      fill="currentColor"
+                    >
+                      <path d="M342.6 73.4C330.1 60.9 309.8 60.9 297.3 73.4L169.3 201.4C156.8 213.9 156.8 234.2 169.3 246.7C181.8 259.2 202.1 259.2 214.6 246.7L288 173.3L288 384C288 401.7 302.3 416 320 416C337.7 416 352 401.7 352 384L352 173.3L425.4 246.7C437.9 259.2 458.2 259.2 470.7 246.7C483.2 234.2 483.2 213.9 470.7 201.4L342.7 73.4zM160 416C160 398.3 145.7 384 128 384C110.3 384 96 398.3 96 416L96 480C96 533 139 576 192 576L448 576C501 576 544 533 544 480L544 416C544 398.3 529.7 384 512 384C494.3 384 480 398.3 480 416L480 480C480 497.7 465.7 512 448 512L192 512C174.3 512 160 497.7 160 480L160 416z" />
+                    </svg>
+                    <div className="flex text-sm text-gray-600 justify-center">
+                      <span className="font-medium text-red-600">
+                        Tải lên file
+                      </span>
+                      <span className="pl-1">hoặc kéo thả</span>
+                    </div>
+                    <p className="text-xs text-gray-500">Chỉ hỗ trợ file .docx</p>
+                  </div>
+                )}
               </div>
               <input
                 ref={fileInputRef}
@@ -271,12 +290,6 @@ export default function CreateQuiz() {
                 onChange={handleFileChange}
                 accept=".docx"
               />
-              {/* Hiển thị tên file đã chọn */}
-              {file && (
-                <p className="text-sm text-green-600 mt-2 font-medium">
-                  ✓ Đã chọn: {file.name}
-                </p>
-              )}
             </div>
 
             {/* Nút Submit */}
