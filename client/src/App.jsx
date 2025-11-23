@@ -1,23 +1,64 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import ThemeToggle from "./components/ThemeToggle";
+import ScrollToTop from "./components/ScrollToTop";
+import Analytics from "./components/Analytics";
+import ErrorBoundary from "./components/ErrorBoundary";
+import InstallPWA from "./components/InstallPWA";
+import { useEffect } from "react";
+import { registerServiceWorker } from "./utils/pwa";
 import Home from "./pages/Home";
-import Register from "./pages/Register"; // <-- Trang mới
-import Login from "./pages/Login"; // <-- Trang mới
-import MyQuizzes from "./pages/MyQuizzes"; // <-- Trang mới
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import MyQuizzes from "./pages/MyQuizzes";
 import CreateQuiz from "./pages/CreateQuiz";
 import QuizPlayer from "./pages/QuizPlayer";
 import MentorPage from "./pages/MentorPage";
+import Dashboard from "./pages/Dashboard";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import VerifyEmail from "./pages/VerifyEmail";
 import VocabularyPage from './pages/VocabularyPage'; 
 import FlashcardPage from './pages/FlashcardPage';
 import TopicDetailsPage from './pages/TopicDetailsPage';
 import FlashcardHubPage from './pages/FlashcardHubPage';
 import CreateFlashcardPage from './pages/CreateFlashcardPage';
+import ForgotPassword from './pages/ForgotPassword';
 export default function App() {
+  // Register Service Worker for PWA
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
-    <BrowserRouter>
-      <Routes>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Analytics />
+          <ThemeToggle />
+          <ScrollToTop />
+          <InstallPWA />
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
+          <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/dashboard" element={<Dashboard />} />
 
         <Route path="/myquizzes" element={<MyQuizzes />} />
 
@@ -25,6 +66,8 @@ export default function App() {
 
         <Route path="/quiz/:quizId" element={<QuizPlayer />} />
         <Route path="/mentor" element={<MentorPage />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
 
         {/* ⚠️ Routes mới cho Học Từ Vựng */}
         <Route path="/flashcard-hub" element={<FlashcardHubPage />} />
@@ -39,7 +82,9 @@ export default function App() {
         <Route path="/flashcard/:topicId" element={<FlashcardPage />} />
 
         
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

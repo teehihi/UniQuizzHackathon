@@ -4,7 +4,7 @@ import FAQItem from "./FAQItem";
 export default function FAQSection({ baseFadeInVariants }) {
   return (
     <motion.section
-      className="mt-10 px-8 pb-10 relative z-10"
+      className="mt-10 px-8 pb-10 relative z-10 bg-white dark:bg-gray-900"
       variants={baseFadeInVariants}
       initial="hidden"
       whileInView="visible"
@@ -12,7 +12,7 @@ export default function FAQSection({ baseFadeInVariants }) {
       custom={4}
     >
       <div className="max-w-6xl mx-auto">
-        <h3 className="text-2xl font-bold text-center text-gray-800">
+        <h3 className="text-2xl font-bold text-center text-gray-800 dark:text-gray-100">
           Câu hỏi thường gặp
         </h3>
 

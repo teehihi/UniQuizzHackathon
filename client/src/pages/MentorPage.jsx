@@ -228,36 +228,93 @@ export default function MentorPage() {
   const [chatInput, setChatInput] = useState("");
   const [isProcessingChat, setIsProcessingChat] = useState(false);
 
-  // TTS states - Chỉ sử dụng Google Translate TTS
+  // TTS states - Web Speech API
   const [ttsConfig, setTtsConfig] = useState({
-    gender: "female", // 'male' hoặc 'female'
+    engine: "web-speech", // 'web-speech', 'google-translate', 'google-cloud'
+    gender: "female", // 'female' hoặc 'male'
+    voiceName: "", // Tên giọng cụ thể (auto nếu rỗng)
     rate: 1.0,
+    pitch: 1.0, // Web Speech API: 0-2
     volume: 1.0,
   });
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState([]);
+  const [webSpeechVoices, setWebSpeechVoices] = useState([]);
+  const [googleCloudAvailable, setGoogleCloudAvailable] = useState(false);
+  const [webSpeechAvailable, setWebSpeechAvailable] = useState(false);
 
   const lectureContextRef = useRef("");
   const live2dRef = useRef(null);
   const audioRef = useRef(null);
 
-  // Load voice config khi component mount
+  // Load Web Speech API voices
+  useEffect(() => {
+    // Check Web Speech API support
+    if ('speechSynthesis' in window) {
+      setWebSpeechAvailable(true);
+      console.log("✅ Web Speech API available");
+
+      // Load voices
+      const loadVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        // Filter Vietnamese voices
+        const viVoices = voices.filter(voice => 
+          voice.lang.startsWith('vi') || 
+          voice.lang.includes('VN') ||
+          voice.name.toLowerCase().includes('vietnam')
+        );
+        setWebSpeechVoices(viVoices.length > 0 ? viVoices : voices);
+        console.log(`📋 Loaded ${viVoices.length} Vietnamese voices`);
+      };
+
+      // Load immediately
+      loadVoices();
+
+      // Also load when voices change (some browsers load async)
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+    } else {
+      console.warn("⚠️ Web Speech API not supported");
+      setWebSpeechAvailable(false);
+    }
+  }, []);
+
+  // Load voice config và check Google Cloud TTS status
   useEffect(() => {
     const loadVoiceConfig = async () => {
       try {
+        // Check Google Cloud TTS status
+        const statusResponse = await api.get("/mentor/tts/status");
+        setGoogleCloudAvailable(statusResponse.data.googleCloudTTS);
+        console.log("🎤 TTS Status:", statusResponse.data);
+
+        // Load voice config
         const response = await api.get("/mentor/voice-config");
         const config = response.data;
         setTtsConfig({
+          engine: webSpeechAvailable ? "web-speech" : "google-translate",
           gender: config.gender || "female",
+          voiceName: config.voiceName || "",
           rate: config.rate || 1.0,
+          pitch: config.pitch || 1.0,
           volume: config.volume || 1.0,
         });
+
+        // Load available voices nếu Google Cloud TTS có sẵn
+        if (statusResponse.data.googleCloudTTS) {
+          const voicesResponse = await api.get("/mentor/tts/voices?language=vi-VN");
+          setAvailableVoices(voicesResponse.data.voices || []);
+          console.log(`📋 Loaded ${voicesResponse.data.voices?.length || 0} Google Cloud voices`);
+        }
       } catch (error) {
         console.error("Lỗi khi load voice config:", error);
+        setGoogleCloudAvailable(false);
       }
     };
 
     loadVoiceConfig();
-  }, []);
+  }, [webSpeechAvailable]);
 
   // Hàm lưu voice config
   const saveVoiceConfig = async () => {
@@ -280,8 +337,70 @@ export default function MentorPage() {
     }
   };
 
-  // ĐỌC TEST GOOGLE TRANSLATE TTS
-  const speakText = async (text, onEnd) => {
+  // Web Speech API (Browser TTS)
+  const speakWithWebSpeech = (text, onEnd) => {
+    if (!webSpeechAvailable) {
+      console.error("Web Speech API not available");
+      return;
+    }
+
+    // Stop any current speech
+    window.speechSynthesis.cancel();
+
+    // Start animation
+    if (live2dRef.current) {
+      live2dRef.current.startSpeaking();
+    }
+
+    // Create utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Configure
+    utterance.lang = 'vi-VN';
+    utterance.rate = ttsConfig.rate; // 0.1 - 10
+    utterance.pitch = ttsConfig.pitch; // 0 - 2
+    utterance.volume = ttsConfig.volume; // 0 - 1
+
+    // Select voice
+    if (ttsConfig.voiceName && webSpeechVoices.length > 0) {
+      const selectedVoice = webSpeechVoices.find(v => v.name === ttsConfig.voiceName);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+    } else {
+      // Auto-select Vietnamese voice
+      const viVoice = webSpeechVoices.find(v => v.lang.startsWith('vi'));
+      if (viVoice) {
+        utterance.voice = viVoice;
+      }
+    }
+
+    // Events
+    utterance.onstart = () => {
+      console.log("🎤 Web Speech started");
+    };
+
+    utterance.onend = () => {
+      console.log("✅ Web Speech ended");
+      if (live2dRef.current) {
+        live2dRef.current.stopSpeaking();
+      }
+      if (onEnd) onEnd();
+    };
+
+    utterance.onerror = (error) => {
+      console.error("❌ Web Speech error:", error);
+      if (live2dRef.current) {
+        live2dRef.current.stopSpeaking();
+      }
+    };
+
+    // Speak
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // TTS với Google Cloud/Translate (Server-side)
+  const speakWithServerTTS = async (text, onEnd) => {
     if (!text) return;
 
     // Dừng bất kỳ audio nào đang phát
@@ -296,33 +415,89 @@ export default function MentorPage() {
     }
 
     try {
-      // Sử dụng Google Translate TTS
-      const response = await api.post(
-        "/mentor/tts/synthesize",
-        {
-          text,
-          options: {
-            language: "vi",
-            gender: ttsConfig.gender,
-            rate: ttsConfig.rate,
-            volume: ttsConfig.volume,
-          },
-        },
-        {
-          responseType: "arraybuffer",
-          headers: {
-            Accept: "audio/webm, audio/*",
-          },
+      let response;
+      let contentType;
+
+      // Thử Google Cloud TTS trước nếu có sẵn
+      if (googleCloudAvailable && ttsConfig.useGoogleCloud) {
+        try {
+          console.log("🎤 Using Google Cloud TTS...");
+          response = await api.post(
+            "/mentor/tts/google-synthesize",
+            {
+              text,
+              options: {
+                language: "vi-VN",
+                gender: ttsConfig.gender === "female" ? "FEMALE" : "MALE",
+                voiceName: ttsConfig.voiceName || null,
+                rate: ttsConfig.rate,
+                pitch: ttsConfig.pitch,
+                volume: 0.0, // Volume trong dB, sẽ điều chỉnh sau
+              },
+            },
+            {
+              responseType: "arraybuffer",
+              headers: {
+                Accept: "audio/mpeg",
+              },
+            }
+          );
+          contentType = "audio/mpeg";
+          console.log("✅ Google Cloud TTS success");
+        } catch (error) {
+          console.warn("⚠️ Google Cloud TTS failed, falling back to Google Translate TTS");
+          console.error(error);
+          // Fallback to Google Translate TTS
+          response = await api.post(
+            "/mentor/tts/synthesize",
+            {
+              text,
+              options: {
+                language: "vi",
+                gender: ttsConfig.gender,
+                rate: ttsConfig.rate,
+                volume: ttsConfig.volume,
+              },
+            },
+            {
+              responseType: "arraybuffer",
+              headers: {
+                Accept: "audio/webm, audio/*",
+              },
+            }
+          );
+          contentType = response.headers["content-type"] || "audio/webm";
         }
-      );
+      } else {
+        // Sử dụng Google Translate TTS
+        console.log("🎤 Using Google Translate TTS...");
+        response = await api.post(
+          "/mentor/tts/synthesize",
+          {
+            text,
+            options: {
+              language: "vi",
+              gender: ttsConfig.gender,
+              rate: ttsConfig.rate,
+              volume: ttsConfig.volume,
+            },
+          },
+          {
+            responseType: "arraybuffer",
+            headers: {
+              Accept: "audio/webm, audio/*",
+            },
+          }
+        );
+        contentType = response.headers["content-type"] || "audio/webm";
+      }
 
       // Kiểm tra response
       if (!response.data || response.data.byteLength === 0) {
         throw new Error("Audio response rỗng");
       }
 
-      // Kiểm tra Content-Type
-      const contentType = response.headers["content-type"] || "audio/webm";
+      // Log thông tin
       console.log("Audio Content-Type:", contentType);
       console.log("Audio size:", response.data.byteLength, "bytes");
 
@@ -390,6 +565,17 @@ export default function MentorPage() {
       if (live2dRef.current) {
         live2dRef.current.stopSpeaking();
       }
+    }
+  };
+
+  // Main TTS function - chọn engine
+  const speakText = (text, onEnd) => {
+    if (ttsConfig.engine === 'web-speech' && webSpeechAvailable) {
+      console.log("🎤 Using Web Speech API");
+      speakWithWebSpeech(text, onEnd);
+    } else {
+      console.log("🎤 Using Server TTS");
+      speakWithServerTTS(text, onEnd);
     }
   };
 
@@ -476,7 +662,13 @@ export default function MentorPage() {
 
   // Hàm dừng bài giảng
   const pauseLecture = () => {
-    if (audioRef.current && !audioRef.current.paused) {
+    // Web Speech API
+    if (ttsConfig.engine === 'web-speech' && webSpeechAvailable) {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+    }
+    // Server TTS
+    else if (audioRef.current && !audioRef.current.paused) {
       audioRef.current.pause();
       setIsPaused(true);
     }
@@ -488,7 +680,22 @@ export default function MentorPage() {
 
   // Hàm tiếp tục bài giảng
   const resumeLecture = () => {
-    if (audioRef.current && audioRef.current.paused) {
+    // Web Speech API
+    if (ttsConfig.engine === 'web-speech' && webSpeechAvailable) {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+        setIsPaused(false);
+        if (live2dRef.current) {
+          live2dRef.current.startSpeaking();
+        }
+      } else {
+        // Bắt đầu lại từ section hiện tại
+        speakCurrentSection();
+        setIsPaused(false);
+      }
+    }
+    // Server TTS
+    else if (audioRef.current && audioRef.current.paused) {
       audioRef.current.play();
       setIsPaused(false);
     } else if (!audioRef.current) {
@@ -500,6 +707,11 @@ export default function MentorPage() {
 
   // Hàm dừng hoàn toàn
   const stopLecture = () => {
+    // Web Speech API
+    if (ttsConfig.engine === 'web-speech' && webSpeechAvailable) {
+      window.speechSynthesis.cancel();
+    }
+    // Server TTS
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -676,6 +888,122 @@ export default function MentorPage() {
 
                   {showVoiceSettings && (
                     <div className="space-y-4 pt-4 border-t border-gray-200">
+                      {/* TTS Engine Selector */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Chọn công cụ đọc
+                        </label>
+                        <select
+                          value={ttsConfig.engine}
+                          onChange={(e) =>
+                            setTtsConfig({
+                              ...ttsConfig,
+                              engine: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        >
+                          {webSpeechAvailable && (
+                            <option value="web-speech">🎤 Web Speech API (Browser) - Khuyến nghị</option>
+                          )}
+                          <option value="google-translate">🔊 Google Translate TTS (Server)</option>
+                          {googleCloudAvailable && (
+                            <option value="google-cloud">🌟 Google Cloud TTS (WaveNet)</option>
+                          )}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {ttsConfig.engine === 'web-speech' && '✅ Giọng tự nhiên, chạy trên browser'}
+                          {ttsConfig.engine === 'google-translate' && '⚡ Miễn phí, chạy trên server'}
+                          {ttsConfig.engine === 'google-cloud' && '⭐ Chất lượng cao nhất (WaveNet)'}
+                        </p>
+                      </div>
+
+                      {/* TTS Engine Status */}
+                      <div className={`border rounded-lg p-3 ${
+                        ttsConfig.engine === 'web-speech' ? 'bg-green-50 border-green-200' :
+                        ttsConfig.engine === 'google-cloud' ? 'bg-blue-50 border-blue-200' :
+                        'bg-yellow-50 border-yellow-200'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${
+                            ttsConfig.engine === 'web-speech' ? 'bg-green-500' :
+                            ttsConfig.engine === 'google-cloud' ? 'bg-blue-500' :
+                            'bg-yellow-500'
+                          }`}></span>
+                          <span className="text-sm font-medium text-gray-700">
+                            {ttsConfig.engine === 'web-speech' && '🎤 Web Speech API'}
+                            {ttsConfig.engine === 'google-translate' && '🔊 Google Translate TTS'}
+                            {ttsConfig.engine === 'google-cloud' && '🌟 Google Cloud TTS'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {ttsConfig.engine === 'web-speech' && 'Giọng đọc tự nhiên, không cần server'}
+                          {ttsConfig.engine === 'google-translate' && 'Giọng đọc cơ bản, miễn phí'}
+                          {ttsConfig.engine === 'google-cloud' && 'Giọng đọc WaveNet, chất lượng cao'}
+                        </p>
+                      </div>
+
+                      {/* Chọn giọng Web Speech API */}
+                      {ttsConfig.engine === 'web-speech' && webSpeechVoices.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Chọn giọng đọc
+                          </label>
+                          <select
+                            value={ttsConfig.voiceName}
+                            onChange={(e) =>
+                              setTtsConfig({
+                                ...ttsConfig,
+                                voiceName: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
+                          >
+                            <option value="">Tự động (Khuyến nghị)</option>
+                            {webSpeechVoices.map((voice) => (
+                              <option key={voice.name} value={voice.name}>
+                                {voice.name} ({voice.lang})
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {webSpeechVoices.length} giọng có sẵn
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Chọn giọng cụ thể (chỉ hiện khi có Google Cloud TTS) */}
+                      {ttsConfig.engine === 'google-cloud' && googleCloudAvailable && availableVoices.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Chọn giọng cụ thể
+                          </label>
+                          <select
+                            value={ttsConfig.voiceName}
+                            onChange={(e) =>
+                              setTtsConfig({
+                                ...ttsConfig,
+                                voiceName: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
+                          >
+                            <option value="">Tự động (Khuyến nghị)</option>
+                            {availableVoices.map((voice) => (
+                              <option key={voice.name} value={voice.name}>
+                                {voice.name}
+                                {voice.name.includes('Wavenet') && ' ⭐ WaveNet'}
+                                {voice.name.includes('Neural') && ' 🌟 Neural2'}
+                                {' - ' + voice.ssmlGender}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-gray-500 mt-1">
+                            WaveNet/Neural2 = Giọng tự nhiên nhất
+                          </p>
+                        </div>
+                      )}
+
                       {/* Chọn giọng nam/nữ */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -696,11 +1024,11 @@ export default function MentorPage() {
                         </select>
                       </div>
 
-                      {/* Cấu hình Tốc độ và Âm lượng */}
+                      {/* Cấu hình Tốc độ, Cao độ và Âm lượng */}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Tốc độ: {ttsConfig.rate.toFixed(1)}
+                            Tốc độ: {ttsConfig.rate.toFixed(1)}x
                           </label>
                           <input
                             type="range"
@@ -737,6 +1065,34 @@ export default function MentorPage() {
                           />
                         </div>
                       </div>
+
+                      {/* Pitch control */}
+                      {(ttsConfig.engine === 'web-speech' || ttsConfig.engine === 'google-cloud') && (
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Cao độ (Pitch): {ttsConfig.pitch.toFixed(1)}
+                            {ttsConfig.engine === 'web-speech' && ' (0-2)'}
+                            {ttsConfig.engine === 'google-cloud' && ' (-20 to +20)'}
+                          </label>
+                          <input
+                            type="range"
+                            min={ttsConfig.engine === 'web-speech' ? "0" : "-20"}
+                            max={ttsConfig.engine === 'web-speech' ? "2" : "20"}
+                            step={ttsConfig.engine === 'web-speech' ? "0.1" : "1"}
+                            value={ttsConfig.pitch}
+                            onChange={(e) =>
+                              setTtsConfig({
+                                ...ttsConfig,
+                                pitch: parseFloat(e.target.value),
+                              })
+                            }
+                            className="w-full"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            {ttsConfig.engine === 'web-speech' ? 'Âm cao hơn (>1) hoặc thấp hơn (<1)' : 'Âm cao hơn (+) hoặc thấp hơn (-)'}
+                          </p>
+                        </div>
+                      )}
 
                       {/* Nút lưu */}
                       <button
@@ -781,18 +1137,43 @@ export default function MentorPage() {
                       {lecture.sections.map((section, idx) => (
                         <div
                           key={idx}
-                          className={`p-4 rounded-lg transition-all ${
+                          onClick={() => {
+                            // Jump to section khi click
+                            if (audioRef.current) {
+                              audioRef.current.pause();
+                              audioRef.current = null;
+                            }
+                            if (live2dRef.current) {
+                              live2dRef.current.stopSpeaking();
+                            }
+                            setCurrentSectionIndex(idx);
+                            setIsPaused(true);
+                            setIsPlaying(false);
+                          }}
+                          className={`p-4 rounded-lg transition-all cursor-pointer hover:shadow-md ${
                             idx === currentSectionIndex
                               ? "bg-yellow-50 border-2 border-yellow-400 shadow-md"
-                              : "bg-white border border-gray-200"
+                              : "bg-white border border-gray-200 hover:border-yellow-300"
                           }`}
                         >
-                          <h5 className="font-semibold text-base text-gray-800 mb-2">
-                            {idx + 1}. {section.title}
-                          </h5>
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-semibold text-base text-gray-800 mb-2">
+                              {idx + 1}. {section.title}
+                            </h5>
+                            {idx === currentSectionIndex && (
+                              <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full font-medium">
+                                Đang chọn
+                              </span>
+                            )}
+                          </div>
                           {idx === currentSectionIndex && (
                             <p className="text-sm text-gray-700 leading-relaxed mt-2">
                               {section.content}
+                            </p>
+                          )}
+                          {idx !== currentSectionIndex && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Click để nhảy đến phần này
                             </p>
                           )}
                         </div>
@@ -807,18 +1188,39 @@ export default function MentorPage() {
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex flex-wrap gap-3 justify-center">
                     {!isPlaying && !isPaused && (
-                      <button
-                        onClick={startLecture}
-                        className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition shadow-md hover:shadow-lg"
-                      >
-                        <span>Bắt đầu giảng</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={startLecture}
+                          className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition shadow-md hover:shadow-lg"
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                          <span>Bắt đầu từ đầu</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsPlaying(true);
+                            setIsPaused(false);
+                            speakCurrentSection();
+                          }}
+                          className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition shadow-md hover:shadow-lg"
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                          <span>Đọc phần đã chọn</span>
+                        </button>
+                      </>
                     )}
                     {isPlaying && !isPaused && (
                       <button
                         onClick={pauseLecture}
                         className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-yellow-500 to-yellow-600 text-white rounded-lg font-semibold hover:from-yellow-600 hover:to-yellow-700 transition shadow-md hover:shadow-lg"
                       >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                        </svg>
                         <span>Tạm dừng</span>
                       </button>
                     )}
@@ -827,6 +1229,9 @@ export default function MentorPage() {
                         onClick={resumeLecture}
                         className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition shadow-md hover:shadow-lg"
                       >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
                         <span>Tiếp tục</span>
                       </button>
                     )}
@@ -835,10 +1240,16 @@ export default function MentorPage() {
                         onClick={stopLecture}
                         className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition shadow-md hover:shadow-lg"
                       >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M6 6h12v12H6z"/>
+                        </svg>
                         <span>Dừng</span>
                       </button>
                     )}
                   </div>
+                  <p className="text-xs text-center text-gray-500 mt-3">
+                    💡 Tip: Click vào bất kỳ phần nào trong bài giảng để nhảy đến phần đó
+                  </p>
                 </div>
               )}
             </div>

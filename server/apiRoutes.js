@@ -1032,7 +1032,7 @@ router.put('/mentor/voice-config', verifyToken, async (req, res) => {
   }
 });
 
-// TTS generate
+// TTS generate - Google Translate (Fallback)
 router.post('/mentor/tts/synthesize', verifyToken, async (req, res) => {
   try {
     const { text, options } = req.body;
@@ -1067,6 +1067,103 @@ router.post('/mentor/tts/synthesize', verifyToken, async (req, res) => {
   }
 });
 
+// TTS generate - Google Cloud TTS (Premium)
+const googleTTSService = require('./services/googleTTSService');
+
+router.post('/mentor/tts/google-synthesize', verifyToken, async (req, res) => {
+  try {
+    const { text, options } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ message: 'Text is required' });
+    }
+
+    // Kiểm tra Google Cloud TTS có sẵn không
+    if (!googleTTSService.isAvailable()) {
+      return res.status(503).json({ 
+        message: 'Google Cloud TTS not available. Please check credentials.',
+        fallback: true 
+      });
+    }
+
+    const maxLength = 5000;
+    const processedText = text.length > maxLength ? text.substring(0, maxLength) : text;
+
+    // Cấu hình TTS
+    const ttsOptions = {
+      language: options?.language || 'vi-VN',
+      gender: options?.gender || 'FEMALE',
+      voiceName: options?.voiceName || null,
+      rate: options?.rate || 1.0,
+      pitch: options?.pitch || 0.0,
+      volume: options?.volume || 0.0,
+    };
+
+    // Synthesize với Google Cloud TTS
+    const audioBuffer = await googleTTSService.synthesizeSpeech(processedText, ttsOptions);
+
+    // Trả về audio
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': audioBuffer.length,
+      'Cache-Control': 'public, max-age=3600', // Cache 1 hour
+    });
+    res.send(audioBuffer);
+  } catch (error) {
+    console.error('❌ Google Cloud TTS Error:', error);
+    res.status(500).json({
+      message: 'Lỗi khi tạo giọng đọc',
+      error: error.message,
+      fallback: true // Client có thể fallback về Google Translate TTS
+    });
+  }
+});
+
+// Lấy danh sách giọng đọc
+router.get('/mentor/tts/voices', verifyToken, async (req, res) => {
+  try {
+    if (!googleTTSService.isAvailable()) {
+      return res.status(503).json({ 
+        message: 'Google Cloud TTS not available',
+        voices: [] 
+      });
+    }
+
+    const { language = 'vi-VN' } = req.query;
+    const voices = await googleTTSService.listVoices(language);
+    
+    // Sắp xếp: WaveNet/Neural2 trước, Standard sau
+    const sortedVoices = voices.sort((a, b) => {
+      const aScore = a.name.includes('Wavenet') ? 3 : a.name.includes('Neural') ? 2 : 1;
+      const bScore = b.name.includes('Wavenet') ? 3 : b.name.includes('Neural') ? 2 : 1;
+      return bScore - aScore;
+    });
+
+    res.json({ 
+      voices: sortedVoices,
+      count: sortedVoices.length 
+    });
+  } catch (error) {
+    console.error('❌ Error listing voices:', error);
+    res.status(500).json({ 
+      message: 'Lỗi khi lấy danh sách giọng',
+      error: error.message 
+    });
+  }
+});
+
+// Kiểm tra trạng thái Google Cloud TTS
+router.get('/mentor/tts/status', verifyToken, (req, res) => {
+  const isAvailable = googleTTSService.isAvailable();
+  res.json({
+    googleCloudTTS: isAvailable,
+    fallbackTTS: true, // Google Translate TTS luôn có
+    message: isAvailable 
+      ? 'Google Cloud TTS is available' 
+      : 'Using fallback TTS (Google Translate)'
+  });
+});
+
 /* =======================================================
    9. DEBUG ROUTES
 ======================================================= */
@@ -1079,5 +1176,13 @@ router.get('/debug/models', async (req, res) => {
   const models = await listAvailableModels();
   res.json(models);
 });
+
+// User Dashboard Routes
+const userRoutes = require('./routes/userRoutes');
+router.use('/user', userRoutes);
+
+// Email Verification Routes
+const emailRoutes = require('./routes/emailRoutes');
+router.use('/email', emailRoutes);
 
 module.exports = router;

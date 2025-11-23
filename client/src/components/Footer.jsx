@@ -2,13 +2,13 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-white border-t border-red-100 py-8 px-4 relative z-10 mt-20">
+    <footer className="w-full bg-white dark:bg-gray-800 border-t border-red-100 dark:border-gray-700 py-8 px-4 relative z-10 mt-20">
       {/*
         THAY ĐỔI 1:
         - Đổi 'md:grid-cols-4' thành 'md:grid-cols-6'
         - Đổi 'gap-12' thành 'gap-8' để cân đối hơn
       */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-6 gap-8 text-gray-700 items-start">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-6 gap-8 text-gray-700 dark:text-gray-300 items-start">
         
         {/* Cột 1: Thêm 'md:col-span-2' */}
         <div className="flex flex-col py-4 px-4 md:col-span-2">
@@ -17,11 +17,11 @@ export default function Footer() {
             alt="UniQuizz Logo"
             className="w-32 h-auto object-contain mb-4 drop-shadow-lg"
           />
-          <h1 className="text-2xl font-extrabold text-red-500 mb-2 tracking-wide">
-            UniQuizz <span className="text-gray-700">x Đom Đóm 71</span>
+          <h1 className="text-2xl font-extrabold text-red-500 dark:text-red-400 mb-2 tracking-wide">
+            UniQuizz <span className="text-gray-700 dark:text-gray-300">x Đom Đóm 71</span>
           </h1>
           {/* Bỏ 'max-w-xs' để text tự động căn theo cột mới */}
-          <p className="text-base text-gray-600 font-medium leading-relaxed">
+          <p className="text-base text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
             Học nhanh, nhớ lâu, tiết kiệm thời gian.
           </p>
         </div>
@@ -29,13 +29,13 @@ export default function Footer() {
         {/* Cột 2: (Mặc định là col-span-1) */}
         <div className="flex flex-col py-4 px-4">
           <nav className="flex flex-col gap-2 text-sm">
-            <Link to="/" className="hover:text-red-600 transition">
+            <Link to="/" className="hover:text-red-600 dark:hover:text-red-400 transition">
               Trang chủ
             </Link>
-            <Link to="/create" className="hover:text-red-600 transition">
+            <Link to="/create" className="hover:text-red-600 dark:hover:text-red-400 transition">
               Tạo Quiz
             </Link>
-            <Link to="/myquizzes" className="hover:text-red-600 transition">
+            <Link to="/myquizzes" className="hover:text-red-600 dark:hover:text-red-400 transition">
               Quiz của tôi
             </Link>
           </nav>
@@ -43,23 +43,26 @@ export default function Footer() {
 
         {/* Cột 3: (Mặc định là col-span-1) */}
         <div className="flex flex-col py-4 px-4">
-          <h5 className="font-semibold text-gray-800 mb-3">Liên hệ</h5>
+          <h5 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Liên hệ</h5>
           <nav className="flex flex-col gap-2 text-sm">
             <a
               href="https://www.facebook.com/nhatthien.nguyen.566"
-              className="hover:text-red-600 transition"
+              className="hover:text-red-600 dark:hover:text-red-400 transition"
             >
               Facebook
             </a>
             <a
               href="mailto:teeforwork21@gmail.com"
-              className="hover:text-red-600 transition"
+              className="hover:text-red-600 dark:hover:text-red-400 transition"
             >
               Email
             </a>
-            <a href="#" className="hover:text-red-600 transition">
+            <Link to="/terms" className="hover:text-red-600 dark:hover:text-red-400 transition">
               Điều khoản
-            </a>
+            </Link>
+            <Link to="/privacy" className="hover:text-red-600 dark:hover:text-red-400 transition">
+              Bảo mật
+            </Link>
           </nav>
         </div>
 
@@ -80,7 +83,7 @@ export default function Footer() {
       </div>
 
       {/* Dòng Copyright ở dưới cùng */}
-      <div className="max-w-6xl mx-auto border-t border-gray-200 mt-8 pt-6 text-center text-sm text-gray-500">
+      <div className="max-w-6xl mx-auto border-t border-gray-200 dark:border-gray-700 mt-8 pt-6 text-center text-sm text-gray-500 dark:text-gray-400">
         <p>© {new Date().getFullYear()} UniQuizz. Phát triển bởi Đom Đóm 71.</p>
       </div>
     </footer>

@@ -65,8 +65,6 @@ const feedbackData = [
   },
 ];
 
-const ITEMS_PER_PAGE = 3;
-
 export default function Home() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -109,7 +107,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fff7f0] relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#fff7f0] dark:bg-gray-900 relative overflow-x-hidden">
       <FallingBlossoms />
 
       <Header />
@@ -131,10 +129,10 @@ export default function Home() {
           src="/tet_right.png"
           className="absolute right-5 top-5 w-28 opacity-90"
         />
-        <h2 className="text-4xl font-extrabold text-red-700 drop-shadow">
+        <h2 className="text-4xl font-extrabold text-red-700 dark:text-red-500 drop-shadow">
           Học Tết - Nhớ Nhà - Nhưng Vẫn Hiệu Quả
         </h2>
-        <p className="mt-4 text-lg text-gray-700 max-w-2xl">
+        <p className="mt-4 text-lg text-gray-700 dark:text-gray-300 max-w-2xl">
           Tạo quiz tự động từ file .docx bằng AI. Học nhanh, nhớ lâu, tiết kiệm
           thời gian - để bạn có thêm những phút giây đoàn tụ cùng gia đình dịp
           Tết.
@@ -154,7 +152,7 @@ export default function Home() {
           </Link>
           <Link
             to="/myquizzes"
-            className="px-8 py-3 rounded-xl bg-white text-red-600 border border-red-400 font-semibold hover:bg-red-50 transition"
+            className="px-8 py-3 rounded-xl bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border border-red-400 dark:border-red-600 font-semibold hover:bg-red-50 dark:hover:bg-gray-700 transition"
           >
             Quiz của tôi
           </Link>
@@ -170,32 +168,32 @@ export default function Home() {
         viewport={{ once: true, amount: 0.2 }}
         custom={1}
       >
-        <h3 className="text-2xl font-bold text-center text-gray-800">
+        <h3 className="text-2xl font-bold text-center text-gray-800 dark:text-gray-100">
           Tại sao UniQuizz sẽ giúp bạn học tốt hơn?
         </h3>
         {/* ... (Nội dung Features) ... */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 max-w-5xl mx-auto">
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-red-50 hover:shadow-xl transition">
-            <h4 className="text-lg font-semibold text-red-600">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-red-50 dark:border-gray-700 hover:shadow-xl transition">
+            <h4 className="text-lg font-semibold text-red-600 dark:text-red-400">
               AI tạo câu hỏi tự động
             </h4>
-            <p className="text-sm mt-2 text-gray-600">
+            <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">
               Tải file .docx → nhận quiz đầy đủ chỉ sau vài giây.
             </p>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-red-50 hover:shadow-xl transition">
-            <h4 className="text-lg font-semibold text-red-600">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-red-50 dark:border-gray-700 hover:shadow-xl transition">
+            <h4 className="text-lg font-semibold text-red-600 dark:text-red-400">
               Giao diện học đẹp - dễ tập trung
             </h4>
-            <p className="text-sm mt-2 text-gray-600">
+            <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">
               Tinh tế, tối giản, lấy cảm hứng từ không khí Tết ấm áp.
             </p>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-red-50 hover:shadow-xl transition">
-            <h4 className="text-lg font-semibold text-red-600">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-red-50 dark:border-gray-700 hover:shadow-xl transition">
+            <h4 className="text-lg font-semibold text-red-600 dark:text-red-400">
               Theo dõi tiến độ học
             </h4>
-            <p className="text-sm mt-2 text-gray-600">
+            <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">
               Lưu quiz, xem kết quả mỗi lần luyện tập.
             </p>
           </div>
@@ -204,36 +202,36 @@ export default function Home() {
 
       {/* Mentor AI (index 2) */}
       <motion.section
-        className="relative z-10 py-24 px-8 bg-linear-to-b from-red-50 to-white overflow-hidden"
+        className="relative z-10 py-24 px-8 bg-linear-to-b from-red-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden"
         variants={baseFadeInVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
         custom={2}
       >
-        {/* Particle floating */}
+        {/* Particle floating - sáng hơn trong dark mode */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute w-2 h-2 bg-yellow-300 rounded-full top-10 left-1/4 animate-bounce" />
-          <div className="absolute w-2 h-2 bg-yellow-300 rounded-full top-1/2 left-10 animate-ping" />
-          <div className="absolute w-2 h-2 bg-yellow-300 rounded-full bottom-16 right-1/3 animate-bounce" />
+          <div className="absolute w-2 h-2 bg-yellow-300 dark:bg-yellow-400 rounded-full top-10 left-1/4 animate-bounce opacity-70 dark:opacity-90" />
+          <div className="absolute w-2 h-2 bg-yellow-300 dark:bg-yellow-400 rounded-full top-1/2 left-10 animate-ping opacity-70 dark:opacity-90" />
+          <div className="absolute w-2 h-2 bg-yellow-300 dark:bg-yellow-400 rounded-full bottom-16 right-1/3 animate-bounce opacity-70 dark:opacity-90" />
         </div>
 
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           {/* LEFT TEXT */}
           <div className="text-center md:text-left">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
-              Gặp gỡ <span className="text-red-600">Miku Mentor</span>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight">
+              Gặp gỡ <span className="text-red-600 dark:text-red-400">Miku Mentor</span>
             </h2>
 
-            <p className="mt-5 text-lg text-gray-700 max-w-md">
+            <p className="mt-5 text-lg text-gray-700 dark:text-gray-300 max-w-md">
               Tính năng mới! Củng cố kiến thức của bạn với một mentor 2D. Tải
               tài liệu lên và để Miku giảng bài cho bạn theo phong cách dễ hiểu.
             </p>
 
             <Link
               to="/mentor"
-              className="mt-8 inline-block px-10 py-4 rounded-xl bg-red-600 text-white font-semibold 
-          hover:bg-red-700 transition-all shadow-lg text-lg hover:shadow-red-300/50 hover:scale-[1.03]"
+              className="mt-8 inline-block px-10 py-4 rounded-xl bg-red-600 dark:bg-red-500 text-white font-semibold 
+          hover:bg-red-700 dark:hover:bg-red-600 transition-all shadow-lg dark:shadow-red-500/30 text-lg hover:shadow-red-300/50 dark:hover:shadow-red-400/50 hover:scale-[1.03]"
             >
               Trải nghiệm ngay
             </Link>
@@ -247,19 +245,23 @@ export default function Home() {
             className="flex justify-center"
           >
             <div className="relative">
-              {/* Glow */}
-              <div className="absolute inset-0 bg-red-200 blur-3xl opacity-40 rounded-full" />
+              {/* Simple glow effect - chỉ 1 layer, không blur nhiều */}
+              <div className="absolute -inset-8 bg-red-400/20 dark:bg-red-500/30 rounded-full blur-2xl" />
 
-              {/* <img
-                src="/miku.png"
-                alt="Miku Mentor"
-                className="relative w-72 md:w-96 drop-shadow-xl animate-float"
-              /> */}
+              {/* Miku image - KHÔNG có background container, KHÔNG có backdrop-blur */}
               <img
                 src="https://media.tenor.com/UATloqaC3aAAAAAi/hatsune-miku.gif"
                 alt="Miku Dance"
-                className="relative w-72 md:w-96 drop-shadow-xl animate-float"
+                className="relative w-72 md:w-96 animate-float
+                drop-shadow-2xl dark:drop-shadow-[0_20px_40px_rgba(239,68,68,0.4)]
+                brightness-100 dark:brightness-110
+                contrast-100 dark:contrast-105
+                saturate-100 dark:saturate-110"
               />
+
+              {/* Decorative sparkles - ít hơn, đơn giản hơn */}
+              <div className="absolute top-5 right-5 w-2 h-2 bg-yellow-400 rounded-full animate-ping opacity-60" />
+              <div className="absolute bottom-10 left-5 w-2 h-2 bg-pink-400 rounded-full animate-bounce opacity-60" />
             </div>
           </motion.div>
         </div>
@@ -267,7 +269,7 @@ export default function Home() {
 
       {/* Cách Hoạt Động (index 3) */}
       <motion.section
-        className="mt-10 px-8 pb-20 relative z-10 bg-white"
+        className="mt-10 px-8 pb-20 relative z-10 bg-white dark:bg-gray-900"
         variants={baseFadeInVariants}
         initial="hidden"
         whileInView="visible"
@@ -275,43 +277,43 @@ export default function Home() {
         custom={3}
       >
         <div className="max-w-5xl mx-auto py-16">
-          <h3 className="text-2xl font-bold text-center text-gray-800">
+          <h3 className="text-2xl font-bold text-center text-gray-800 dark:text-gray-100">
             Hoạt động như thế nào?
           </h3>
-          <p className="text-center text-gray-600 mt-2">
+          <p className="text-center text-gray-600 dark:text-gray-400 mt-2">
             Chỉ 3 bước đơn giản để có ngay bộ câu hỏi ôn tập.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
             {/* Step 1, 2, 3 giữ nguyên */}
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-red-100 text-red-700 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
                 1
               </div>
-              <h4 className="text-lg font-semibold text-gray-800">
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 Tải lên tài liệu
               </h4>
-              <p className="text-sm mt-1 text-gray-600">
+              <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
                 Chỉ cần tải lên file .docx chứa nội dung bài học của bạn.
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-red-100 text-red-700 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
                 2
               </div>
-              <h4 className="text-lg font-semibold text-gray-800">AI xử lý</h4>
-              <p className="text-sm mt-1 text-gray-600">
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">AI xử lý</h4>
+              <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
                 UniQuizz AI sẽ đọc, hiểu và tạo ra các câu hỏi trắc nghiệm liên
                 quan.
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-red-100 text-red-700 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-bold text-2xl rounded-full flex items-center justify-center mb-4">
                 3
               </div>
-              <h4 className="text-lg font-semibold text-gray-800">
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 Bắt đầu học
               </h4>
-              <p className="text-sm mt-1 text-gray-600">
+              <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
                 Làm quiz, xem lại đáp án và theo dõi tiến độ của bạn ngay lập
                 tức.
               </p>
@@ -336,10 +338,10 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/60"></div>
 
         <div className="max-w-2xl mx-auto text-center px-8 relative z-20">
-          <h2 className="text-3xl font-extrabold text-white">
+          <h2 className="text-3xl font-extrabold text-white dark:text-gray-100">
             Sẵn sàng học tập hiệu quả dịp Tết?
           </h2>
-          <p className="mt-4 text-lg text-gray-200">
+          <p className="mt-4 text-lg text-gray-200 dark:text-gray-300">
             {isLoggedIn
               ? "Bắt đầu tạo quiz đầu tiên của bạn ngay."
               : "Tạo tài khoản miễn phí và bắt đầu tạo quiz đầu tiên của bạn chỉ trong vài giây."}
@@ -355,7 +357,7 @@ export default function Home() {
 
       {/* ⭐ FEEDBACK CAROUSEL ⭐ */}
       <motion.section
-        className="py-20 relative z-10 bg-gray-50 overflow-hidden mt-12"
+        className="py-20 relative z-10 bg-gray-50 dark:bg-gray-800 overflow-hidden mt-12"
         variants={baseFadeInVariants}
         initial="hidden"
         whileInView="visible"
@@ -363,10 +365,10 @@ export default function Home() {
         custom={6}
       >
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <h3 className="text-3xl font-extrabold text-gray-800 mb-2">
+          <h3 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 mb-2">
             Khách Hàng Nói Gì Về UniQuizz?
           </h3>
-          <p className="text-gray-600 mb-10">
+          <p className="text-gray-600 dark:text-gray-400 mb-10">
             Phản hồi từ cộng đồng sinh viên.
           </p>
 
@@ -374,7 +376,7 @@ export default function Home() {
             {/* Prev */}
             <button
               onClick={prevSlide}
-              className="absolute left-0 top-1/2 -mt-6 z-20 p-3 rounded-full bg-white shadow-xl text-red-600 hover:bg-red-100 md:-ml-8"
+              className="absolute left-0 top-1/2 -mt-6 z-20 p-3 rounded-full bg-white dark:bg-gray-700 shadow-xl text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-gray-600 md:-ml-8"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -409,7 +411,7 @@ export default function Home() {
             {/* Next */}
             <button
               onClick={nextSlide}
-              className="absolute right-0 top-1/2 -mt-6 z-20 p-3 rounded-full bg-white shadow-xl text-red-600 hover:bg-red-100 md:-mr-8"
+              className="absolute right-0 top-1/2 -mt-6 z-20 p-3 rounded-full bg-white dark:bg-gray-700 shadow-xl text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-gray-600 md:-mr-8"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -431,11 +433,13 @@ export default function Home() {
           {/* Pagination dots */}
           <div className="flex justify-center mt-8 space-x-2">
             {feedbackData.map((_, i) => (
-              <div
+              <button
                 key={i}
-                className={`h-2 w-2 rounded-full transition-all duration-300 
-                ${i === startIndex ? "bg-red-600 w-6" : "bg-gray-400"}`}
-              ></div>
+                onClick={() => setStartIndex(i)}
+                className={`h-2 w-2 rounded-full transition-all duration-300 hover:scale-125 cursor-pointer
+                ${i === startIndex ? "bg-red-600 dark:bg-red-500 w-6" : "bg-gray-400 dark:bg-gray-600"}`}
+                aria-label={`Chuyển đến feedback ${i + 1}`}
+              ></button>
             ))}
           </div>
         </div>
