@@ -1,18 +1,16 @@
 // Service Worker for UniQuizz PWA
-const CACHE_NAME = 'uniquizz-v1';
+const CACHE_VERSION = 'v2'; // Increment this on each deploy
+const CACHE_NAME = `uniquizz-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
-  '/index.html',
   '/logo.png',
   '/favicon.png',
-  '/bgHome.png',
-  '/bgCTA.jpg',
-  '/bgWaifu.png',
+  '/manifest.json',
 ];
 
 // Install event - cache assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
+  console.log('[SW] Installing version:', CACHE_VERSION);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -25,7 +23,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
+  console.log('[SW] Activating version:', CACHE_VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -40,44 +38,75 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
   // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  if (url.origin !== location.origin) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
+  // For JS/CSS assets - Network first (always get fresh)
+  if (request.url.includes('/assets/')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Don't cache if not successful
+          if (!response || response.status !== 200) {
+            return response;
+          }
+          
+          // Cache the new version
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+          
           return response;
+        })
+        .catch(() => {
+          // Fallback to cache only if network fails
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+
+  // For other requests - Cache first
+  event.respondWith(
+    caches.match(request)
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          // Return cached version but update in background
+          fetch(request).then((response) => {
+            if (response && response.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, response);
+              });
+            }
+          });
+          return cachedResponse;
         }
 
-        // Clone the request
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest).then((response) => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+        // Not in cache - fetch from network
+        return fetch(request).then((response) => {
+          if (!response || response.status !== 200) {
             return response;
           }
 
-          // Clone the response
           const responseToCache = response.clone();
-
-          // Cache the fetched response
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
 
           return response;
-        }).catch(() => {
-          // Offline fallback
-          return caches.match('/index.html');
         });
+      })
+      .catch(() => {
+        // Offline fallback
+        return caches.match('/');
       })
   );
 });

@@ -6,11 +6,18 @@ export default function ShareButton({ quiz, type = "quiz" }) {
   const [showMenu, setShowMenu] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Validate quiz ID
+  const quizId = quiz._id || quiz.id;
+  if (!quizId) {
+    console.error('ShareButton: Quiz ID is missing', quiz);
+    return null; // Don't render if no ID
+  }
+
   // Generate share URL - Sử dụng production URL nếu có
   const baseUrl = APP_CONFIG.getBaseUrl();
   const shareUrl = type === "quiz" 
-    ? `${baseUrl}/quiz/${quiz._id}`
-    : `${baseUrl}/flashcard/${quiz._id}`;
+    ? `${baseUrl}/quiz/${quizId}`
+    : `${baseUrl}/flashcard/${quizId}`;
 
   const shareTitle = quiz.title || `${APP_INFO.name} - ${APP_INFO.tagline}`;
   const shareDescription = `Tham gia làm quiz "${quiz.title}" trên ${APP_INFO.name}! 🎓✨`;
