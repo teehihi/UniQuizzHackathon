@@ -40,12 +40,12 @@ export default function Dashboard() {
         
         // Fallback to mock data if API fails
         setStats({
-          totalQuizzes: 5,
-          completedQuizzes: 3,
-          averageScore: 85,
-          totalFlashcards: 120,
-          studyStreak: 7,
-          totalStudyTime: 12,
+          totalQuizzes: 2,
+          completedQuizzes: 2,
+          averageScore: 75,
+          totalFlashcards: 0,
+          studyStreak: 5,
+          totalStudyTime: 1,
           recentActivity: [
             { type: 'quiz', title: 'Quiz mẫu 1', date: new Date(), questionCount: 10 },
             { type: 'quiz', title: 'Quiz mẫu 2', date: new Date(), questionCount: 15 },
@@ -182,10 +182,12 @@ export default function Dashboard() {
                     {stats.completedQuizzes}/{stats.totalQuizzes}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                   <div
                     className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${(stats.completedQuizzes / stats.totalQuizzes) * 100 || 0}%` }}
+                    style={{ 
+                      width: `${Math.min(100, (stats.completedQuizzes / (stats.totalQuizzes || 1)) * 100)}%` 
+                    }}
                   ></div>
                 </div>
               </div>
@@ -198,10 +200,10 @@ export default function Dashboard() {
                     {stats.totalStudyTime}h / 50h
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                   <div
                     className="bg-green-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${(stats.totalStudyTime / 50) * 100}%` }}
+                    style={{ width: `${Math.min(100, (stats.totalStudyTime / 50) * 100)}%` }}
                   ></div>
                 </div>
               </div>
@@ -211,13 +213,13 @@ export default function Dashboard() {
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Flashcard đã thuộc</span>
                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                    {Math.round(stats.totalFlashcards * 0.7)}/{stats.totalFlashcards}
+                    {stats.totalFlashcards > 0 ? Math.round(stats.totalFlashcards * 0.7) : 0}/{stats.totalFlashcards}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                   <div
                     className="bg-purple-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: "70%" }}
+                    style={{ width: stats.totalFlashcards > 0 ? "70%" : "0%" }}
                   ></div>
                 </div>
               </div>

@@ -27,9 +27,17 @@ import FlashcardHubPage from './pages/FlashcardHubPage';
 import CreateFlashcardPage from './pages/CreateFlashcardPage';
 import ForgotPassword from './pages/ForgotPassword';
 export default function App() {
-  // Register Service Worker for PWA
+  // Unregister Service Worker to fix white screen issue
   useEffect(() => {
-    registerServiceWorker();
+    // Unregister all service workers
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister();
+          console.log('✅ Service Worker unregistered');
+        });
+      });
+    }
   }, []);
 
   return (
