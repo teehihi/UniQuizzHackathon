@@ -6,6 +6,7 @@ import { getAuthToken } from "../utils/auth.js";
 import Confetti from "../components/Confetti";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import CircularTimer from "../components/CircularTimer";
+import SEOHead, { getQuizMeta } from "../components/SEOHead";
 
 // Sound effects
 const correctSound = new Audio('/correct.mp3');
@@ -36,25 +37,28 @@ export default function QuizPlayer() {
         setError("");
         
         const token = getAuthToken();
-        if (!token) {
-          setError("Vui lòng đăng nhập để làm quiz");
-          setIsLoading(false);
-          return;
+        
+        // Thử fetch public quiz trước (không cần token)
+        let res = await fetch(API_ENDPOINTS.DECK_PUBLIC(quizId));
+        
+        // Nếu không phải public quiz, thử với token (quiz của chính user)
+        if (!res.ok && token) {
+          res = await fetch(API_ENDPOINTS.DECK_BY_ID(quizId), {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+            },
+          });
         }
-
-        const res = await fetch(API_ENDPOINTS.DECK_BY_ID(quizId), {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-          },
-        });
 
         if (!res.ok) {
           if (res.status === 401) {
-            setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            window.dispatchEvent(new Event("userUpdate"));
-            navigate("/login");
+            setError("Vui lòng đăng nhập để xem quiz này");
+            setIsLoading(false);
+            return;
+          }
+          if (res.status === 404) {
+            setError("Quiz không tồn tại hoặc chưa được chia sẻ công khai");
+            setIsLoading(false);
             return;
           }
           const errData = await res.json();
@@ -298,6 +302,7 @@ export default function QuizPlayer() {
   // Quiz Interface
   return (
     <>
+      <SEOHead {...getQuizMeta(quiz)} />
       <Confetti trigger={showConfetti} />
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         {/* Header */}

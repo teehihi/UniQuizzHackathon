@@ -36,6 +36,10 @@ const DeckSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  isPublic: {
+    type: Boolean,
+    default: false, // Mặc định là private
+  },
   createdAt: {
     type: Date,
     default: Date.now,

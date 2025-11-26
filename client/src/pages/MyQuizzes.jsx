@@ -54,6 +54,7 @@ export default function MyQuizzes() {
         title: deck.title,
         questionCount: deck.questions?.length || 0,
         courseCode: deck.courseCode,
+        isPublic: deck.isPublic || false,
       }));
       
       setQuizzes(formattedQuizzes);
@@ -146,7 +147,17 @@ export default function MyQuizzes() {
         {!isLoading && !error && quizzes.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {quizzes.map((quiz) => (
-              <QuizCard key={quiz.id} quiz={quiz} onDelete={handleDeleteQuiz} />
+              <QuizCard 
+                key={quiz.id} 
+                quiz={quiz} 
+                onDelete={handleDeleteQuiz}
+                onPublicToggle={(quizId, isPublic) => {
+                  // Update local state
+                  setQuizzes(prev => prev.map(q => 
+                    q.id === quizId ? { ...q, isPublic } : q
+                  ));
+                }}
+              />
             ))}
           </div>
         )}

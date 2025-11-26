@@ -25,6 +25,7 @@ import FlashcardPage from './pages/FlashcardPage';
 import TopicDetailsPage from './pages/TopicDetailsPage';
 import FlashcardHubPage from './pages/FlashcardHubPage';
 import CreateFlashcardPage from './pages/CreateFlashcardPage';
+import MyFlashcards from './pages/MyFlashcards';
 import ForgotPassword from './pages/ForgotPassword';
 export default function App() {
   // Unregister Service Worker to fix white screen issue
@@ -80,6 +81,7 @@ export default function App() {
         {/* ⚠️ Routes mới cho Học Từ Vựng */}
         <Route path="/flashcard-hub" element={<FlashcardHubPage />} />
         <Route path="/create-flashcard" element={<CreateFlashcardPage />} />
+        <Route path="/my-flashcards" element={<MyFlashcards />} />
         <Route path="/vocabulary" element={<VocabularyPage />} />
         <Route 
           path="/topic-details/:topicId" 

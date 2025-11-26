@@ -735,7 +735,7 @@ router.get('/decks', verifyToken, async (req, res) => {
   }
 });
 
-// GET SINGLE DECK
+// GET SINGLE DECK (Authenticated - for owner)
 router.get('/decks/:id', verifyToken, async (req, res) => {
   try {
     const deck = await Deck.findOne({
@@ -749,6 +749,49 @@ router.get('/decks/:id', verifyToken, async (req, res) => {
     res.json(deck);
   } catch {
     res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// GET PUBLIC DECK (No authentication required - for shared links)
+router.get('/decks/public/:id', async (req, res) => {
+  try {
+    const deck = await Deck.findOne({
+      _id: req.params.id,
+      isPublic: true
+    });
+
+    if (!deck)
+      return res.status(404).json({ message: 'Quiz không tồn tại hoặc chưa được chia sẻ công khai' });
+
+    res.json(deck);
+  } catch (error) {
+    console.error('Error fetching public deck:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// UPDATE DECK PUBLIC STATUS
+router.patch('/decks/:id/public', verifyToken, async (req, res) => {
+  try {
+    const { isPublic } = req.body;
+    
+    const deck = await Deck.findOne({
+      _id: req.params.id,
+      userId: new mongoose.Types.ObjectId(req.userId)
+    });
+
+    if (!deck)
+      return res.status(404).json({ message: 'Không tìm thấy deck' });
+
+    deck.isPublic = isPublic;
+    await deck.save();
+
+    res.json({ 
+      message: isPublic ? 'Quiz đã được chia sẻ công khai' : 'Quiz đã được đặt về riêng tư',
+      deck 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 });
 
@@ -1034,6 +1077,49 @@ router.get('/flashcards/:id', verifyToken, async (req, res) => {
 // ⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️
 // ⭐️ KẾT THÚC CHỖ SỬA ⭐️
 // ⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️
+
+// GET PUBLIC FLASHCARD SET (No authentication required - for shared links)
+router.get('/flashcards/public/:id', async (req, res) => {
+  try {
+    const set = await FlashcardSet.findOne({
+      _id: req.params.id,
+      isPublic: true
+    });
+
+    if (!set)
+      return res.status(404).json({ message: 'Flashcard set không tồn tại hoặc chưa được chia sẻ công khai' });
+
+    res.json(set);
+  } catch (error) {
+    console.error('Error fetching public flashcard set:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// UPDATE FLASHCARD SET PUBLIC STATUS
+router.patch('/flashcards/:id/public', verifyToken, async (req, res) => {
+  try {
+    const { isPublic } = req.body;
+    
+    const set = await FlashcardSet.findOne({
+      _id: req.params.id,
+      userId: new mongoose.Types.ObjectId(req.userId)
+    });
+
+    if (!set)
+      return res.status(404).json({ message: 'Không tìm thấy flashcard set' });
+
+    set.isPublic = isPublic;
+    await set.save();
+
+    res.json({ 
+      message: isPublic ? 'Flashcard set đã được chia sẻ công khai' : 'Flashcard set đã được đặt về riêng tư',
+      set 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
 
 // Xóa 1 set flashcard
 router.delete('/flashcards/:id', verifyToken, async (req, res) => {

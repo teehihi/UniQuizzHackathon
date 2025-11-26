@@ -12,10 +12,15 @@ export const API_ENDPOINTS = {
   FLASHCARD_SETS: `${API_BASE_URL}/api/flashcards`, 
   // ⭐️ TẠO FLASHCARD TỪ FILE (Cần cho trang CreateFlashcardPage) ⭐️
   FLASHCARD_GENERATE: `${API_BASE_URL}/api/flashcards/generate`,
+  FLASHCARD_BY_ID: (id) => `${API_BASE_URL}/api/flashcards/${id}`,
+  FLASHCARD_PUBLIC: (id) => `${API_BASE_URL}/api/flashcards/public/${id}`,
+  FLASHCARD_UPDATE_PUBLIC: (id) => `${API_BASE_URL}/api/flashcards/${id}/public`,
   
   // Các Deck/Flashcard cũ đã có
   DECKS: `${API_BASE_URL}/api/decks`,
   DECK_BY_ID: (id) => `${API_BASE_URL}/api/decks/${id}`,
+  DECK_PUBLIC: (id) => `${API_BASE_URL}/api/decks/public/${id}`,
+  DECK_UPDATE_PUBLIC: (id) => `${API_BASE_URL}/api/decks/${id}/public`,
   DELETE_DECK: (id) => `${API_BASE_URL}/api/decks/${id}`,
 
   // --- Topic/Vocabulary Endpoints ---
