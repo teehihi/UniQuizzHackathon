@@ -4,6 +4,10 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import api from "../api";
 import { motion } from "framer-motion";
+import StudyStreakCalendar from "../components/StudyStreakCalendar";
+import AchievementBadge from "../components/AchievementBadge";
+import ProgressChart from "../components/ProgressChart";
+import Leaderboard from "../components/Leaderboard";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -162,104 +166,96 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Charts & Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Progress Chart */}
+        {/* Progress Chart & Leaderboard */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
           >
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-              Tiến Độ Học Tập
-            </h2>
-            <div className="space-y-4">
-              {/* Quiz Progress */}
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Quiz hoàn thành</span>
-                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                    {stats.completedQuizzes}/{stats.totalQuizzes}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-                    style={{ 
-                      width: `${Math.min(100, (stats.completedQuizzes / (stats.totalQuizzes || 1)) * 100)}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Study Time */}
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Thời gian học (giờ)</span>
-                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                    {stats.totalStudyTime}h / 50h
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="bg-green-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(100, (stats.totalStudyTime / 50) * 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Flashcard Mastery */}
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Flashcard đã thuộc</span>
-                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                    {stats.totalFlashcards > 0 ? Math.round(stats.totalFlashcards * 0.7) : 0}/{stats.totalFlashcards}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="bg-purple-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: stats.totalFlashcards > 0 ? "70%" : "0%" }}
-                  ></div>
-                </div>
-              </div>
-            </div>
+            <ProgressChart />
           </motion.div>
 
-          {/* Achievements */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
           >
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-              Thành Tích
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <span className="text-3xl">🏆</span>
-                <div>
-                  <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">Quiz Master</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Hoàn thành 10 quiz</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <span className="text-3xl">🔥</span>
-                <div>
-                  <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">Streak Warrior</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Học 7 ngày liên tục</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <span className="text-3xl">⭐</span>
-                <div>
-                  <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">Perfect Score</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Đạt 100% trong quiz</p>
-                </div>
-              </div>
-            </div>
+            <Leaderboard />
           </motion.div>
         </div>
+
+        {/* Study Streak Calendar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <StudyStreakCalendar />
+        </motion.div>
+
+        {/* Achievements Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+              Thành Tích & Huy Hiệu 🏅
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <AchievementBadge
+                icon="🏆"
+                title="Quiz Master"
+                description="Hoàn thành 10 quiz"
+                unlocked={true}
+                color="yellow"
+              />
+              <AchievementBadge
+                icon="🔥"
+                title="Streak Warrior"
+                description="Học 7 ngày liên tục"
+                unlocked={true}
+                progress={5}
+                total={7}
+                color="red"
+              />
+              <AchievementBadge
+                icon="⭐"
+                title="Perfect Score"
+                description="Đạt 100% trong quiz"
+                unlocked={false}
+                progress={8}
+                total={10}
+                color="blue"
+              />
+              <AchievementBadge
+                icon="📚"
+                title="Bookworm"
+                description="Học 100 flashcard"
+                unlocked={false}
+                progress={45}
+                total={100}
+                color="green"
+              />
+              <AchievementBadge
+                icon="⚡"
+                title="Speed Demon"
+                description="Hoàn thành quiz < 5 phút"
+                unlocked={true}
+                color="purple"
+              />
+              <AchievementBadge
+                icon="🎯"
+                title="Sharpshooter"
+                description="10 câu đúng liên tiếp"
+                unlocked={false}
+                progress={7}
+                total={10}
+                color="red"
+              />
+            </div>
+          </div>
+        </motion.div>
 
         {/* Quick Actions */}
         <motion.div

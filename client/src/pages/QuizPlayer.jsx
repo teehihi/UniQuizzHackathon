@@ -3,12 +3,14 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { API_ENDPOINTS } from "../config/api.js";
 import { getAuthToken } from "../utils/auth.js";
+import Confetti from "../components/Confetti";
+import LoadingSkeleton from "../components/LoadingSkeleton";
+import CircularTimer from "../components/CircularTimer";
 
-// === 1. TẠO ĐỐI TƯỢNG ÂM THANH ===
-// (Đảm bảo file đã nằm trong thư mục /public)
+// Sound effects
 const correctSound = new Audio('/correct.mp3');
 const wrongSound = new Audio('/wrong.mp3');
-// ===================================
+const winSound = new Audio('/winsound.mp3');
 
 export default function QuizPlayer() {
   const { quizId } = useParams();
@@ -23,6 +25,9 @@ export default function QuizPlayer() {
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [questionKey, setQuestionKey] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [timerActive, setTimerActive] = useState(true);
+  const [timePerQuestion] = useState(30); // 30 seconds per question
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -78,29 +83,48 @@ export default function QuizPlayer() {
     setSelectedAnswer(option);
   };
 
-  // === 2. CẬP NHẬT HÀM CHECK ANSWER ===
   const handleCheckAnswer = () => {
     if (!selectedAnswer) return; 
     setIsAnswered(true);
+    setTimerActive(false); // Stop timer
 
     if (selectedAnswer === currentQuestion.answer) {
       setScore(score + 1);
-      correctSound.play(); // <-- PHÁT ÂM THANH ĐÚNG
+      correctSound.play();
+      setShowConfetti(true); // Trigger confetti!
+      setTimeout(() => setShowConfetti(false), 3000);
     } else {
-      wrongSound.play(); // <-- PHÁT ÂM THANH SAI
+      wrongSound.play();
     }
   };
-  // ===================================
+
+  const handleTimeUp = () => {
+    if (!isAnswered) {
+      setIsAnswered(true);
+      wrongSound.play();
+    }
+  };
 
   const handleNextQuestion = () => {
-    setQuestionKey(prevKey => prevKey + 1); 
-
     if (currentQuestionIndex < quiz.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      // Reset states immediately for smooth transition
       setSelectedAnswer(null);
       setIsAnswered(false);
+      setTimerActive(true);
+      
+      // Use setTimeout to batch state updates and reduce lag
+      setTimeout(() => {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+        setQuestionKey(prevKey => prevKey + 1);
+      }, 0);
     } else {
       setShowResults(true);
+      // Play win sound if score is good
+      const percentage = ((score + (selectedAnswer === currentQuestion.answer ? 1 : 0)) / quiz.questions.length) * 100;
+      if (percentage >= 70) {
+        winSound.play();
+        setShowConfetti(true);
+      }
     }
   };
 
@@ -132,73 +156,25 @@ export default function QuizPlayer() {
     return { baseClasses, iconClass };
   };
 
-  // ... (Phần code JSX (return) giữ nguyên, không thay đổi)
-  // ...
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#fff7f0] flex items-center justify-center">
-        <div className="text-xl font-semibold text-gray-700 animate-pulse">Đang tải quiz...</div>
-      </div>
-    );
+    return <LoadingSkeleton type="quiz" />;
   }
 
   if (error || !quiz) {
     return (
-      <div className="min-h-screen bg-[#fff7f0] flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="text-xl font-semibold text-red-700 mb-4">
+      <div className="min-h-screen bg-[#fff7f0] dark:bg-gray-900 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg max-w-md"
+        >
+          <div className="text-6xl mb-4">😕</div>
+          <div className="text-xl font-semibold text-red-700 dark:text-red-400 mb-4">
             {error || "Không tìm thấy quiz."}
           </div>
           <button
             onClick={() => navigate("/myquizzes")}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-          >
-            Quay về "Quiz của tôi"
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Giao diện KẾT QUẢ
-  if (showResults) {
-    const percentage = Math.round((score / quiz.questions.length) * 100);
-    const resultMessage = percentage >= 70 ? "Chúc mừng, bạn đã làm rất tốt!" : "Hãy cố gắng hơn nữa nhé!";
-
-    return (
-      <div className="min-h-screen bg-[#fff7f0] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md w-full border border-red-100"
-        >
-          <h2 className="text-4xl font-extrabold text-gray-800 mb-4">🎉 Hoàn thành Quiz!</h2>
-          <p className="text-xl text-gray-700 mb-6">
-            Bạn đã đạt được: 
-            <strong className="text-red-600 text-2xl ml-2">{score} / {quiz.questions.length}</strong>
-          </p>
-          <p className="text-lg text-gray-600 mb-6">{resultMessage}</p>
-
-          <div className="relative pt-1 mb-6">
-            <div className="flex mb-2 items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-red-200 text-red-600">
-                  {percentage}%
-                </span>
-              </div>
-            </div>
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-red-200">
-              <div
-                style={{ width: `${percentage}%` }}
-                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500 transition-all duration-500"
-              ></div>
-            </div>
-          </div>
-          
-          <button
-            onClick={() => navigate("/myquizzes")}
-            className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition transform hover:scale-105 duration-300 shadow-md"
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-md hover:shadow-lg transform hover:scale-105"
           >
             Quay về "Quiz của tôi"
           </button>
@@ -207,98 +183,263 @@ export default function QuizPlayer() {
     );
   }
 
-  // Giao diện LÀM QUIZ
-  return (
-    <div className="min-h-screen bg-[#fff7f0]">
-      {/* Header đơn giản */}
-      <header className="p-4 bg-white shadow-sm border-b border-red-50">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-red-700">{quiz.title}</h1>
-          <Link to="/myquizzes" className="text-gray-600 hover:text-red-600 transition flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Thoát
-          </Link>
-        </div>
-      </header>
+  // Results Screen
+  if (showResults) {
+    const percentage = Math.round((score / quiz.questions.length) * 100);
+    const resultMessage = percentage >= 70 ? "Chúc mừng, bạn đã làm rất tốt!" : "Hãy cố gắng hơn nữa nhé!";
+    const emoji = percentage >= 90 ? "🏆" : percentage >= 70 ? "🎉" : percentage >= 50 ? "😊" : "😔";
 
-      {/* Nội dung Quiz */}
-      <main className="max-w-4xl mx-auto p-4 md:p-8 mt-6">
-        <motion.div
-          key={questionKey} // Dùng key để reset animation khi câu hỏi thay đổi
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -100 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-red-100"
-        >
-          {/* Thanh tiến độ */}
-          <div className="mb-6">
-            <p className="text-sm text-gray-600 mb-2 font-medium">
-              Câu hỏi <span className="font-bold text-red-600">{currentQuestionIndex + 1}</span> / {quiz.questions.length}
-            </p>
-            <div className="w-full bg-red-100 rounded-full h-3">
-              <motion.div
-                className="bg-red-500 h-3 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
-                transition={{ duration: 0.5 }}
-              ></motion.div>
+    return (
+      <>
+        <Confetti trigger={showConfetti} />
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.6, type: "spring" }}
+            className="bg-white dark:bg-gray-800 p-8 md:p-12 rounded-2xl shadow-2xl text-center max-w-lg w-full border-2 border-red-100 dark:border-red-900"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1, rotate: 360 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="text-8xl mb-6"
+            >
+              {emoji}
+            </motion.div>
+
+            <h2 className="text-4xl font-extrabold text-gray-800 dark:text-gray-100 mb-4">
+              Hoàn thành Quiz!
+            </h2>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="mb-6"
+            >
+              <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
+                Điểm của bạn:
+              </p>
+              <div className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600 dark:from-red-400 dark:to-orange-400">
+                {score} / {quiz.questions.length}
+              </div>
+            </motion.div>
+
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">{resultMessage}</p>
+
+            {/* Circular Progress */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.6, type: "spring" }}
+              className="relative w-48 h-48 mx-auto mb-8"
+            >
+              <svg className="transform -rotate-90 w-48 h-48">
+                <circle
+                  cx="96"
+                  cy="96"
+                  r="88"
+                  stroke="currentColor"
+                  strokeWidth="12"
+                  fill="none"
+                  className="text-gray-200 dark:text-gray-700"
+                />
+                <motion.circle
+                  cx="96"
+                  cy="96"
+                  r="88"
+                  stroke="url(#gradient)"
+                  strokeWidth="12"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 88}
+                  initial={{ strokeDashoffset: 2 * Math.PI * 88 }}
+                  animate={{ strokeDashoffset: 2 * Math.PI * 88 * (1 - percentage / 100) }}
+                  transition={{ duration: 1.5, delay: 0.8, ease: "easeOut" }}
+                />
+                <defs>
+                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#dc2626" />
+                    <stop offset="100%" stopColor="#f97316" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{percentage}%</span>
+              </div>
+            </motion.div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <motion.button
+                onClick={() => window.location.reload()}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-4 rounded-xl font-semibold hover:from-red-700 hover:to-orange-700 transition shadow-lg hover:shadow-xl"
+              >
+                Làm lại Quiz
+              </motion.button>
+              <motion.button
+                onClick={() => navigate("/myquizzes")}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full bg-white dark:bg-gray-700 text-red-600 dark:text-red-400 py-4 rounded-xl font-semibold border-2 border-red-600 dark:border-red-400 hover:bg-red-50 dark:hover:bg-gray-600 transition shadow-md"
+              >
+                Quay về "Quiz của tôi"
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      </>
+    );
+  }
+
+  // Quiz Interface
+  return (
+    <>
+      <Confetti trigger={showConfetti} />
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        {/* Header */}
+        <header className="p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border-b border-red-100 dark:border-gray-700 sticky top-0 z-40">
+          <div className="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-red-700 dark:text-red-400">{quiz.title}</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Câu {currentQuestionIndex + 1} / {quiz.questions.length}
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <CircularTimer
+                duration={timePerQuestion}
+                onTimeUp={handleTimeUp}
+                isActive={timerActive && !isAnswered}
+                size={60}
+                resetKey={currentQuestionIndex} // Reset timer mỗi câu hỏi
+              />
+              <Link 
+                to="/myquizzes" 
+                className="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span className="hidden sm:inline">Thoát</span>
+              </Link>
             </div>
           </div>
+        </header>
 
-          {/* Câu hỏi */}
-          <motion.h2
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-            className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8 leading-relaxed"
+      {/* Quiz Content */}
+      <main className="max-w-4xl mx-auto p-4 md:p-8 mt-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={questionKey}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 md:p-10 rounded-2xl shadow-2xl border-2 border-red-100 dark:border-red-900"
           >
-            {currentQuestion.question}
-          </motion.h2>
+            {/* Enhanced Progress Bar */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  Tiến độ
+                </p>
+                <p className="text-sm font-bold text-red-600 dark:text-red-400">
+                  {currentQuestionIndex + 1} / {quiz.questions.length}
+                </p>
+              </div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                </motion.div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs font-bold text-white drop-shadow-lg">
+                    {Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}%
+                  </span>
+                </div>
+              </div>
+            </div>
 
-          {/* Các lựa chọn */}
-          <div className="space-y-4">
+          {/* Question */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="mb-10"
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                <span className="text-white font-bold">?</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100 leading-relaxed">
+                {currentQuestion.question}
+              </h2>
+            </div>
+          </motion.div>
+
+          {/* Options */}
+          <div className="space-y-3">
             {currentQuestion.options.map((option, index) => {
               const { baseClasses, iconClass } = getOptionClass(option);
+              const isCorrect = isAnswered && option === currentQuestion.answer;
+              const isWrong = isAnswered && option === selectedAnswer && option !== currentQuestion.answer;
+              
               return (
                 <motion.button
                   key={index}
                   onClick={() => handleAnswerSelect(option)}
                   disabled={isAnswered}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 + index * 0.05, duration: 0.3 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={baseClasses}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.05, duration: 0.2 }}
+                  whileHover={!isAnswered ? { scale: 1.01 } : {}}
+                  whileTap={!isAnswered ? { scale: 0.99 } : {}}
+                  className={`${baseClasses} group relative overflow-hidden`}
                 >
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white mr-3 shrink-0 ${iconClass}`}>
-                    {String.fromCharCode(65 + index)} {/* A, B, C, D */}
-                  </span>
-                  <span className="grow">{option}</span>
-                  {isAnswered && option === currentQuestion.answer && (
+                  {/* Animated background on correct answer */}
+                  {isCorrect && (
                     <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
+                      className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20"
+                      initial={{ x: "-100%" }}
+                      animate={{ x: "100%" }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                  )}
+                  
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mr-4 shrink-0 ${iconClass} shadow-md transition-transform group-hover:scale-110`}>
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  <span className="grow text-left">{option}</span>
+                  
+                  {isCorrect && (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                      className="ml-auto text-green-700"
+                      className="ml-auto text-green-700 dark:text-green-400"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </motion.div>
                   )}
-                  {isAnswered && option === selectedAnswer && option !== currentQuestion.answer && (
+                  {isWrong && (
                     <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
+                      initial={{ scale: 0, rotate: 180 }}
+                      animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                      className="ml-auto text-red-700"
+                      className="ml-auto text-red-700 dark:text-red-400"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </motion.div>
                   )}
@@ -307,31 +448,58 @@ export default function QuizPlayer() {
             })}
           </div>
 
-          {/* Nút Kiểm tra / Tiếp theo */}
-          <div className="mt-10 text-right">
+          {/* Action Buttons */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.2 }}
+            className="mt-12 flex justify-between items-center"
+          >
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Điểm hiện tại: <span className="font-bold text-red-600 dark:text-red-400 text-lg">{score}</span>
+            </div>
+            
             {!isAnswered ? (
               <motion.button
                 onClick={handleCheckAnswer}
                 disabled={!selectedAnswer}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="px-8 py-3 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
+                whileHover={selectedAnswer ? { scale: 1.05 } : {}}
+                whileTap={selectedAnswer ? { scale: 0.95 } : {}}
+                className="px-10 py-4 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold text-lg hover:from-red-700 hover:to-orange-700 transition disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg hover:shadow-xl disabled:shadow-none"
               >
                 Kiểm tra
               </motion.button>
             ) : (
               <motion.button
                 onClick={handleNextQuestion}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="px-8 py-3 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition shadow-md"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-10 py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg hover:shadow-xl flex items-center gap-2"
               >
-                {currentQuestionIndex < quiz.questions.length - 1 ? "Tiếp theo" : "Xem kết quả"}
+                {currentQuestionIndex < quiz.questions.length - 1 ? (
+                  <>
+                    Tiếp theo
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </>
+                ) : (
+                  <>
+                    Xem kết quả
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </>
+                )}
               </motion.button>
             )}
-          </div>
+          </motion.div>
         </motion.div>
+        </AnimatePresence>
       </main>
     </div>
+    </>
   );
 }

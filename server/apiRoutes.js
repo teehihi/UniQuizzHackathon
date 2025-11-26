@@ -474,6 +474,7 @@ const {
 } = require('./geminiService');
 
 const { synthesizeWithGoogleTranslate } = require('./services/ttsService');
+const ContentExtractor = require('./utils/contentExtractor');
 
 // Import models
 const Deck = require('./models/Deck');
@@ -506,7 +507,27 @@ const verifyToken = (req, res, next) => {
    2. MULTER UPLOAD
 ======================================================= */
 const storage = multer.memoryStorage();
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+const upload = multer({ 
+  storage, 
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+      'text/plain'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Định dạng file không được hỗ trợ'));
+    }
+  }
+});
 
 /* =======================================================
    3. AUTH ROUTES
@@ -577,33 +598,111 @@ router.post('/auth/login', async (req, res) => {
 });
 
 /* =======================================================
-   4. QUIZ / DECK ROUTES
+   4. CONTENT EXTRACTION ROUTES
 ======================================================= */
 
-// UPLOAD DOCX → QUIZ
+// Extract content từ nhiều định dạng (PDF, DOCX, URL, YouTube, Image)
+router.post('/extract-content', verifyToken, upload.single('file'), async (req, res) => {
+  try {
+    const { url, text, type } = req.body;
+    
+    let extractedContent;
+    
+    // Case 1: File upload (PDF, DOCX, PPTX, Image)
+    if (req.file) {
+      const fileType = type || 'auto';
+      console.log(`[Content Extraction] Processing file: ${req.file.originalname}, type: ${fileType}`);
+      
+      extractedContent = await ContentExtractor.extractContent(req.file.buffer, fileType);
+    }
+    // Case 2: URL (Web scraping hoặc YouTube)
+    else if (url) {
+      console.log(`[Content Extraction] Processing URL: ${url}`);
+      
+      const urlType = url.includes('youtube.com') || url.includes('youtu.be') 
+        ? 'youtube' 
+        : 'url';
+      
+      extractedContent = await ContentExtractor.extractContent(url, urlType);
+    }
+    // Case 3: Plain text
+    else if (text) {
+      console.log(`[Content Extraction] Processing plain text (${text.length} chars)`);
+      extractedContent = await ContentExtractor.extractFromText(text);
+    }
+    else {
+      return res.status(400).json({ 
+        message: 'Vui lòng cung cấp file, URL, hoặc text' 
+      });
+    }
+    
+    // Validate extracted content
+    const validation = ContentExtractor.validateContent(extractedContent);
+    if (!validation.valid) {
+      return res.status(400).json({ 
+        message: validation.error 
+      });
+    }
+    
+    res.json({
+      success: true,
+      content: extractedContent.text,
+      metadata: extractedContent.metadata
+    });
+    
+  } catch (error) {
+    console.error('[Content Extraction] Error:', error);
+    res.status(500).json({ 
+      message: 'Lỗi khi trích xuất nội dung: ' + error.message 
+    });
+  }
+});
+
+/* =======================================================
+   5. QUIZ / DECK ROUTES
+======================================================= */
+
+// UPLOAD MULTI-FORMAT → QUIZ (Hỗ trợ PDF, DOCX, URL, YouTube)
 router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   try {
-    if (!req.file)
-      return res.status(400).json({ message: 'Chưa upload file.' });
-
-    const { title, courseCode, questionCount } = req.body;
+    const { title, courseCode, questionCount, url, text } = req.body;
     const numQuestions = parseInt(questionCount) || 10;
 
     if (!title)
       return res.status(400).json({ message: 'Thiếu title.' });
 
-    let text;
-    try {
-      const doc = await mammoth.extractRawText({ buffer: req.file.buffer });
-      text = doc.value;
-    } catch {
-      return res.status(400).json({ message: 'Không thể đọc file .docx.' });
+    let extractedText;
+    
+    // Extract content từ nhiều nguồn
+    if (req.file) {
+      // File upload (PDF, DOCX, etc.)
+      console.log(`[Quiz Upload] Processing file: ${req.file.originalname}`);
+      const result = await ContentExtractor.extractContent(req.file.buffer, 'auto');
+      extractedText = result.text;
+    } 
+    else if (url) {
+      // URL hoặc YouTube
+      console.log(`[Quiz Upload] Processing URL: ${url}`);
+      const urlType = url.includes('youtube.com') || url.includes('youtu.be') 
+        ? 'youtube' 
+        : 'url';
+      const result = await ContentExtractor.extractContent(url, urlType);
+      extractedText = result.text;
+    }
+    else if (text) {
+      // Plain text
+      extractedText = text;
+    }
+    else {
+      return res.status(400).json({ message: 'Vui lòng cung cấp file, URL, hoặc text.' });
     }
 
-    if (!text || text.trim().length < 50)
-      return res.status(400).json({ message: 'Nội dung file quá ngắn.' });
+    if (!extractedText || extractedText.trim().length < 50)
+      return res.status(400).json({ message: 'Nội dung quá ngắn (tối thiểu 50 ký tự).' });
 
-    const ai = await generateQuizFromText(text, numQuestions);
+    console.log(`[Quiz Upload] Extracted ${extractedText.length} characters, generating ${numQuestions} questions...`);
+
+    const ai = await generateQuizFromText(extractedText, numQuestions);
     if (!ai.summary || !ai.questions)
       throw new Error('AI trả về dữ liệu không hợp lệ');
 
@@ -619,6 +718,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
     res.status(201).json(saved);
 
   } catch (error) {
+    console.error('[Quiz Upload] Error:', error);
     res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 });
@@ -671,7 +771,7 @@ router.delete('/decks/:id', verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   5. TOPICS ROUTES
+   6. TOPICS ROUTES
 ======================================================= */
 
 router.get('/topics', verifyToken, async (req, res) => {
@@ -793,31 +893,44 @@ router.post('/topics/:topicId/words', verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   6. FLASHCARDS ROUTES
+   7. FLASHCARDS ROUTES
 ======================================================= */
 
-// AI generate flashcards
+// AI generate flashcards (Hỗ trợ multi-format)
 router.post('/flashcards/generate', verifyToken, upload.single('file'), async (req, res) => {
   console.log('Đã nhận request /api/flashcards/generate...');
   try {
-    const { title, courseCode, text, count } = req.body;
+    const { title, courseCode, text, count, url } = req.body;
     if (!title) return res.status(400).json({ message: 'Thiếu title' });
 
     let sourceText = '';
+    
+    // Extract từ nhiều nguồn
     if (text && String(text).trim().length > 0) {
       sourceText = String(text);
-    } else if (req.file) {
-      const { value } = await mammoth.extractRawText({ buffer: req.file.buffer });
-      sourceText = value || '';
-    } else {
-      return res.status(400).json({ message: 'Thiếu text hoặc file' });
+    } 
+    else if (req.file) {
+      console.log(`[Flashcard Generate] Processing file: ${req.file.originalname}`);
+      const result = await ContentExtractor.extractContent(req.file.buffer, 'auto');
+      sourceText = result.text;
+    }
+    else if (url) {
+      console.log(`[Flashcard Generate] Processing URL: ${url}`);
+      const urlType = url.includes('youtube.com') || url.includes('youtu.be') 
+        ? 'youtube' 
+        : 'url';
+      const result = await ContentExtractor.extractContent(url, urlType);
+      sourceText = result.text;
+    }
+    else {
+      return res.status(400).json({ message: 'Thiếu text, file, hoặc URL' });
     }
 
     if (sourceText.trim().length < 50) {
       return res.status(400).json({ message: 'Nội dung quá ngắn (>= 50 ký tự)' });
     }
 
-    console.log(`Đang gọi AI (Flashcard) tạo ${count || 'mặc định'} flashcards...`);
+    console.log(`[Flashcard Generate] Extracted ${sourceText.length} chars, generating ${count || 'default'} flashcards...`);
     const ai = await generateFlashcardsFromText(sourceText, { count });
 
     // Đảm bảo AI trả về đúng key 'flashcards'
@@ -941,30 +1054,45 @@ router.delete('/flashcards/:id', verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   7. MENTOR + LECTURE ROUTES
+   8. MENTOR + LECTURE ROUTES
 ======================================================= */
 
-// Upload tài liệu → sinh bài giảng
+// Upload tài liệu → sinh bài giảng (Hỗ trợ multi-format)
 router.post('/mentor/upload', verifyToken, upload.single('file'), async (req, res) => {
   try {
-    if (!req.file)
-      return res.status(400).json({ message: 'Chưa upload file.' });
-
-    let text;
-    try {
-      const doc = await mammoth.extractRawText({ buffer: req.file.buffer });
-      text = doc.value;
-    } catch {
-      return res.status(400).json({ message: 'Không thể đọc file .docx.' });
+    const { url, text } = req.body;
+    
+    let extractedText;
+    
+    if (req.file) {
+      console.log(`[Lecture Upload] Processing file: ${req.file.originalname}`);
+      const result = await ContentExtractor.extractContent(req.file.buffer, 'auto');
+      extractedText = result.text;
+    }
+    else if (url) {
+      console.log(`[Lecture Upload] Processing URL: ${url}`);
+      const urlType = url.includes('youtube.com') || url.includes('youtu.be') 
+        ? 'youtube' 
+        : 'url';
+      const result = await ContentExtractor.extractContent(url, urlType);
+      extractedText = result.text;
+    }
+    else if (text) {
+      extractedText = text;
+    }
+    else {
+      return res.status(400).json({ message: 'Vui lòng cung cấp file, URL, hoặc text.' });
     }
 
-    if (!text || text.trim().length < 50)
+    if (!extractedText || extractedText.trim().length < 50)
       return res.status(400).json({ message: 'Nội dung quá ngắn' });
 
-    const ai = await generateLectureFromFile(text);
+    console.log(`[Lecture Upload] Generating lecture from ${extractedText.length} characters...`);
+    const ai = await generateLectureFromFile(extractedText);
 
     res.status(201).json(ai);
   } catch (error) {
+    console.error('[Lecture Upload] Error:', error);
     res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 });
@@ -986,7 +1114,7 @@ router.post('/mentor/chat', verifyToken, async (req, res) => {
 });
 
 /* =======================================================
-   8. VOICE CONFIG + TTS ROUTES
+   9. VOICE CONFIG + TTS ROUTES
 ======================================================= */
 
 // Get voice config
@@ -1165,7 +1293,7 @@ router.get('/mentor/tts/status', verifyToken, (req, res) => {
 });
 
 /* =======================================================
-   9. DEBUG ROUTES
+   10. DEBUG ROUTES
 ======================================================= */
 
 router.get('/test', (req, res) => {

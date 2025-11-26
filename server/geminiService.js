@@ -385,6 +385,8 @@
 // server/geminiService.js
 require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { PromptBuilder, ContextManager } = require('./utils/promptBuilder');
+const { QuestionValidator, FlashcardValidator } = require('./utils/qualityValidator');
 
 // --- Cấu hình Ban Đầu ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -405,6 +407,10 @@ const FALLBACK_MODELS = [
 ].filter(Boolean);
 
 console.log(`[Khởi tạo AI] Đang cố gắng sử dụng model: ${PREFERRED_MODEL}`);
+console.log(`[Prompt Engineering] ✅ Đã kích hoạt`);
+
+// Context Manager instance
+const contextManager = new ContextManager(4000);
 
 // --- Helpers ---
 
@@ -483,44 +489,26 @@ async function listAvailableModels() {
 // --- Hàm Chính ---
 
 /**
- * Hàm 1: generate quiz
+ * Hàm 1: generate quiz với Prompt Engineering
  * @param {string} text - Văn bản nguồn.
  * @param {number} numQuestions - Số lượng câu hỏi cần tạo (mặc định 10).
+ * @param {object} options - Tùy chọn: template, difficulty, customInstructions
  */
-async function generateQuizFromText(text, numQuestions = 10) {
+async function generateQuizFromText(text, numQuestions = 10, options = {}) {
     numQuestions = Math.max(1, Math.min(20, parseInt(numQuestions, 10) || 10));
 
-    const prompt = `
-Dựa vào văn bản sau đây, hãy thực hiện 2 yêu cầu:
-1) Tóm tắt nội dung chính trong 3 gạch đầu dòng (summary).
-2) Tạo chính xác ${numQuestions} câu hỏi trắc nghiệm (questions) chỉ tập trung vào nội dung văn bản.
+    console.log(`[Quiz Generation] Tạo ${numQuestions} câu hỏi với Prompt Engineering...`);
 
-YÊU CẦU BẮT BUỘC:
-- Trả về duy nhất 1 đối tượng JSON (không dùng markdown).
-- Trong mỗi câu hỏi, trường "answer" PHẢI là một trong bốn nội dung của trường "options".
-- Trường "options" phải là một mảng (array) chứa 4 chuỗi (string) nội dung câu trả lời.
-- Cấu trúc:
-{
-  "summary": ["Nội dung tóm tắt 1", "Nội dung tóm tắt 2", "..."],
-  "questions": [
-    {
-      "question": "Nội dung câu hỏi 1?",
-      "options": [
-        "Nội dung câu trả lời 1",
-        "Nội dung câu trả lời 2",
-        "Nội dung câu trả lời 3",
-        "Nội dung câu trả lời 4"
-      ],
-      "answer": "Nội dung câu trả lời đúng"
-    }
-  ]
-}
+    // 1. Build prompt với Prompt Engineering
+    const prompt = PromptBuilder.buildQuizPrompt(text, numQuestions, {
+        template: options.template || 'universityExam',
+        difficulty: options.difficulty || 3,
+        includeFewShot: true,
+        customInstructions: options.customInstructions
+    });
 
-Văn bản:
----
-${text}
----
-`.trim();
+    // 2. Optimize context nếu quá dài
+    const optimizedPrompt = contextManager.optimize(prompt, '');
 
     let modelName = PREFERRED_MODEL;
 
@@ -529,8 +517,10 @@ ${text}
         const modelClient = picked.client;
         modelName = picked.name;
 
+        console.log(`[Quiz Generation] Sử dụng model: ${modelName}`);
+
         const generation = await modelClient.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            contents: [{ role: "user", parts: [{ text: optimizedPrompt }] }],
             generationConfig: jsonGenerationConfig
         });
 
@@ -540,13 +530,40 @@ ${text}
             throw new Error('Định dạng AI trả về không hợp lệ');
         }
 
+        // 3. Validate response quality
+        const validation = QuestionValidator.validateQuiz(jsonData);
+        
+        console.log(`[Quiz Validation] Score: ${validation.summary.averageScore}/100`);
+        console.log(`[Quiz Validation] Valid: ${validation.summary.validQuestions}/${validation.summary.totalQuestions}`);
+
+        if (!validation.valid) {
+            console.warn('[Quiz Validation] Issues found:', validation.overallIssues);
+            
+            // 4. Auto-fix common issues
+            let fixedCount = 0;
+            jsonData.questions = jsonData.questions.map((q, index) => {
+                const { fixed, changes, wasFixed } = QuestionValidator.autoFix(q);
+                if (wasFixed) {
+                    fixedCount++;
+                    console.log(`[Auto-Fix] Question ${index + 1}:`, changes);
+                }
+                return fixed;
+            });
+
+            if (fixedCount > 0) {
+                console.log(`[Auto-Fix] ✅ Đã sửa ${fixedCount} câu hỏi`);
+            }
+        } else {
+            console.log('[Quiz Validation] ✅ Tất cả câu hỏi hợp lệ');
+        }
+
         return jsonData;
     } catch (error) {
         const errMsg = error?.message || String(error);
-        console.error(`Lỗi khi gọi Gemini API (Quiz - model: ${modelName}):`, errMsg);
+        console.error(`[Quiz Generation] ❌ Lỗi (model: ${modelName}):`, errMsg);
 
         if (/not found|404|invalid api key/i.test(errMsg)) {
-            await listAvailableModels(); // Log available models for debugging
+            await listAvailableModels();
             throw new Error(`Model "${modelName}" không khả dụng.`);
         }
 
@@ -733,25 +750,21 @@ ${text}
 }
 
 /**
- * Hàm 5: generate mentor response (Hàm mới cho chat)
+ * Hàm 5: generate mentor response với Prompt Engineering
  * @param {string} question - Câu hỏi của học sinh.
  * @param {string} lectureContext - Ngữ cảnh bài giảng (tùy chọn).
+ * @param {object} options - Tùy chọn: customInstructions
  */
-async function generateMentorResponse(question, lectureContext = '') {
-    const prompt = `
-Bạn là một giảng viên thân thiện, nhiệt tình và có kiến thức sâu rộng. Học sinh của bạn vừa hỏi một câu hỏi trong lúc bạn đang giảng bài.
+async function generateMentorResponse(question, lectureContext = '', options = {}) {
+    console.log(`[Mentor Chat] Trả lời câu hỏi với Prompt Engineering...`);
 
-YÊU CẦU:
-- Trả lời câu hỏi một cách rõ ràng, dễ hiểu, như một giáo viên thật đang giải thích.
-- Sử dụng ngôn ngữ tự nhiên, thân thiện.
-- Nếu câu hỏi liên quan đến bài giảng, hãy tham khảo ngữ cảnh bài giảng.
-- Trả về CHỈ nội dung câu trả lời (không cần JSON, không cần markdown, chỉ văn bản thuần).
+    // 1. Build prompt với Prompt Engineering
+    const prompt = PromptBuilder.buildMentorPrompt(question, lectureContext, {
+        customInstructions: options.customInstructions
+    });
 
-${lectureContext ? `Ngữ cảnh bài giảng hiện tại:\n${lectureContext}\n\n` : ''}
-Câu hỏi của học sinh: ${question}
-
-Trả lời:
-`.trim();
+    // 2. Optimize context
+    const optimizedPrompt = contextManager.optimize(prompt, '');
 
     let modelName = PREFERRED_MODEL;
 
@@ -760,13 +773,18 @@ Trả lời:
         const modelClient = picked.client;
         modelName = picked.name;
         
-        const generation = await modelClient.generateContent(prompt);
-        const response = await generation.response;
+        console.log(`[Mentor Chat] Sử dụng model: ${modelName}`);
         
-        return response.text().trim();
+        const generation = await modelClient.generateContent(optimizedPrompt);
+        const response = await generation.response;
+        const answer = response.text().trim();
+        
+        console.log(`[Mentor Chat] ✅ Đã tạo câu trả lời (${answer.length} ký tự)`);
+        
+        return answer;
     } catch (error) {
         const errMsg = error?.message || String(error);
-        console.error('Lỗi khi gọi Gemini API (Mentor Response):', errMsg);
+        console.error('[Mentor Chat] ❌ Lỗi:', errMsg);
         if (/not found|404|invalid api key/i.test(errMsg)) {
             throw new Error(`Model "${modelName}" không khả dụng.`);
         }
@@ -775,34 +793,28 @@ Trả lời:
 }
 
 /**
- * Sinh flashcards từ văn bản.
+ * Sinh flashcards từ văn bản với Prompt Engineering
  */
 async function generateFlashcardsFromText(text, options = {}) {
   const count = Math.max(8, Math.min(50, parseInt(options.count || 20, 10) || 20));
 
+  console.log(`[Flashcard Generation] Tạo ${count} flashcards với Prompt Engineering...`);
+
   try {
-    const prompt = `
-Hãy tạo ${count} flashcard từ văn bản sau. Mỗi flashcard phải bám sát nội dung, ngắn gọn, hữu ích để học nhanh.
+    // 1. Build prompt với Prompt Engineering
+    const prompt = PromptBuilder.buildFlashcardPrompt(text, count, {
+      includeFewShot: true,
+      customInstructions: options.customInstructions
+    });
 
-YÊU CẦU BẮT BUỘC:
-- CHỈ trả về MỘT đối tượng JSON, KHÔNG dùng markdown hay \`\`\`.
-- Cấu trúc JSON:
-{
-  "flashcards": [
-    { "front": "Thuật ngữ hoặc câu hỏi", "back": "Định nghĩa hoặc đáp án", "hint": "Gợi ý ngắn (tùy chọn)" }
-  ]
-}
-
-VĂN BẢN:
----
-${text}
----
-`.trim();
+    // 2. Optimize context
+    const optimizedPrompt = contextManager.optimize(prompt, '');
 
     const { client: modelClient, name: modelName } = await getModelClient();
+    console.log(`[Flashcard Generation] Sử dụng model: ${modelName}`);
 
     const result = await modelClient.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      contents: [{ role: "user", parts: [{ text: optimizedPrompt }] }],
       generationConfig: jsonGenerationConfig
     });
 
@@ -823,14 +835,24 @@ ${text}
       }));
 
     if (flashcards.length === 0) {
-      console.warn("AI đã trả về JSON hợp lệ nhưng không có flashcard nào bên trong.");
-      // Trả về mảng rỗng thay vì ném lỗi
+      console.warn("[Flashcard Generation] ⚠️ Không có flashcard nào được tạo");
       return { flashcards: [] };
+    }
+
+    // 3. Validate flashcards
+    const validation = FlashcardValidator.validateSet(flashcards);
+    console.log(`[Flashcard Validation] Score: ${validation.summary.averageScore}/100`);
+    console.log(`[Flashcard Validation] Valid: ${validation.summary.valid}/${validation.summary.total}`);
+
+    if (!validation.valid) {
+      console.warn('[Flashcard Validation] Some flashcards have issues');
+    } else {
+      console.log('[Flashcard Validation] ✅ Tất cả flashcards hợp lệ');
     }
 
     return { flashcards };
   } catch (err) {
-    console.error('Lỗi khi gọi Gemini API (flashcards):', err.message);
+    console.error('[Flashcard Generation] ❌ Lỗi:', err.message);
     throw new Error('Không thể tạo flashcards từ AI: ' + err.message);
   }
 }
