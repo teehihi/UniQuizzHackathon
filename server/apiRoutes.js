@@ -1211,9 +1211,12 @@ router.get('/mentor/voice-config', verifyToken, async (req, res) => {
     if (!v) {
       v = new Voice({
         userId: req.userId,
+        engine: 'web-speech',
         gender: 'female',
         language: 'vi',
+        voiceName: '',
         rate: 1.0,
+        pitch: 1.0,
         volume: 1.0
       });
       await v.save();
@@ -1228,14 +1231,17 @@ router.get('/mentor/voice-config', verifyToken, async (req, res) => {
 // Update voice config
 router.put('/mentor/voice-config', verifyToken, async (req, res) => {
   try {
-    const { gender, language, rate, volume } = req.body;
+    const { engine, gender, language, voiceName, rate, pitch, volume } = req.body;
 
     let v = await Voice.findOne({ userId: req.userId });
     if (!v) v = new Voice({ userId: req.userId });
 
+    if (engine !== undefined) v.engine = engine;
     if (gender !== undefined) v.gender = gender;
     if (language !== undefined) v.language = language;
+    if (voiceName !== undefined) v.voiceName = voiceName;
     if (rate !== undefined) v.rate = rate;
+    if (pitch !== undefined) v.pitch = pitch;
     if (volume !== undefined) v.volume = volume;
 
     await v.save();
@@ -1389,6 +1395,146 @@ router.get('/test', (req, res) => {
 router.get('/debug/models', async (req, res) => {
   const models = await listAvailableModels();
   res.json(models);
+});
+
+/* =======================================================
+   11. SEARCH ROUTES - TÌM KIẾM QUIZ CÔNG KHAI
+======================================================= */
+
+// Tìm kiếm Quiz (Deck) công khai
+router.get('/search/quizzes', async (req, res) => {
+  try {
+    const { q, courseCode, limit = 20 } = req.query;
+    
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
+    }
+
+    const searchQuery = {
+      isPublic: true,
+      $or: [
+        { title: { $regex: q, $options: 'i' } },
+        { courseCode: { $regex: q, $options: 'i' } }
+      ]
+    };
+
+    // Nếu có filter theo courseCode
+    if (courseCode && courseCode.trim().length > 0) {
+      searchQuery.courseCode = { $regex: courseCode, $options: 'i' };
+    }
+
+    const quizzes = await Deck.find(searchQuery)
+      .populate('userId', 'email fullName')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+
+    res.json({
+      success: true,
+      count: quizzes.length,
+      data: quizzes
+    });
+
+  } catch (error) {
+    console.error('[Search Quizzes] Error:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Tìm kiếm Flashcard Sets công khai
+router.get('/search/flashcards', async (req, res) => {
+  try {
+    const { q, courseCode, limit = 20 } = req.query;
+    
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
+    }
+
+    const searchQuery = {
+      isPublic: true,
+      $or: [
+        { title: { $regex: q, $options: 'i' } },
+        { courseCode: { $regex: q, $options: 'i' } }
+      ]
+    };
+
+    // Nếu có filter theo courseCode
+    if (courseCode && courseCode.trim().length > 0) {
+      searchQuery.courseCode = { $regex: courseCode, $options: 'i' };
+    }
+
+    const flashcardSets = await FlashcardSet.find(searchQuery)
+      .populate('userId', 'email fullName')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+
+    res.json({
+      success: true,
+      count: flashcardSets.length,
+      data: flashcardSets
+    });
+
+  } catch (error) {
+    console.error('[Search Flashcards] Error:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Tìm kiếm tất cả (Quiz + Flashcard)
+router.get('/search/all', async (req, res) => {
+  try {
+    const { q, courseCode, limit = 20 } = req.query;
+    
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
+    }
+
+    const searchQuery = {
+      isPublic: true,
+      $or: [
+        { title: { $regex: q, $options: 'i' } },
+        { courseCode: { $regex: q, $options: 'i' } }
+      ]
+    };
+
+    if (courseCode && courseCode.trim().length > 0) {
+      searchQuery.courseCode = { $regex: courseCode, $options: 'i' };
+    }
+
+    const limitNum = parseInt(limit);
+    const halfLimit = Math.ceil(limitNum / 2);
+
+    // Tìm song song
+    const [quizzes, flashcardSets] = await Promise.all([
+      Deck.find(searchQuery)
+        .populate('userId', 'email fullName')
+        .sort({ createdAt: -1 })
+        .limit(halfLimit),
+      FlashcardSet.find(searchQuery)
+        .populate('userId', 'email fullName')
+        .sort({ createdAt: -1 })
+        .limit(halfLimit)
+    ]);
+
+    // Gắn type để frontend phân biệt
+    const quizzesWithType = quizzes.map(q => ({ ...q.toObject(), type: 'quiz' }));
+    const flashcardsWithType = flashcardSets.map(f => ({ ...f.toObject(), type: 'flashcard' }));
+
+    // Merge và sort theo thời gian
+    const allResults = [...quizzesWithType, ...flashcardsWithType]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({
+      success: true,
+      count: allResults.length,
+      quizCount: quizzes.length,
+      flashcardCount: flashcardSets.length,
+      data: allResults
+    });
+
+  } catch (error) {
+    console.error('[Search All] Error:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
 });
 
 // User Dashboard Routes

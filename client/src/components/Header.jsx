@@ -90,6 +90,15 @@ export default function Header() {
               Flash Card
             </Link>
             <Link to="/myquizzes" className="hover:text-red-600 dark:hover:text-red-400 transition">Quiz của tôi</Link>
+            <Link 
+              to="/search" 
+              className="flex items-center gap-2 hover:text-purple-600 dark:hover:text-purple-400 transition"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Tìm kiếm
+            </Link>
           </nav>
 
           <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
@@ -194,6 +203,16 @@ export default function Header() {
                   className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition py-2"
                 >
                   Quiz của tôi
+                </Link>
+                <Link
+                  to="/search"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-purple-600 dark:text-purple-400 font-semibold hover:text-purple-700 dark:hover:text-purple-500 transition py-2 flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Tìm kiếm
                 </Link>
 
                 <div className="border-t border-gray-200 dark:border-gray-700 my-4" />

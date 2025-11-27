@@ -7,6 +7,11 @@ const VoiceSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    engine: {
+        type: String,
+        enum: ['web-speech', 'google-translate', 'google-cloud'],
+        default: 'web-speech'
+    },
     gender: {
         type: String,
         enum: ['male', 'female'],
@@ -16,11 +21,19 @@ const VoiceSchema = new mongoose.Schema({
         type: String,
         default: 'vi'
     },
+    voiceName: {
+        type: String,
+        default: ''
+    },
     rate: {
         type: Number,
         default: 1.0,
         min: 0.5,
         max: 2.0
+    },
+    pitch: {
+        type: Number,
+        default: 1.0
     },
     volume: {
         type: Number,

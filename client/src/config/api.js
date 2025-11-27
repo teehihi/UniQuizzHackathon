@@ -35,6 +35,11 @@ export const API_ENDPOINTS = {
   // --- Auth endpoints ---
   REGISTER: `${API_BASE_URL}/api/auth/register`,
   LOGIN: `${API_BASE_URL}/api/auth/login`,
+
+  // --- Search endpoints ---
+  SEARCH_QUIZZES: `${API_BASE_URL}/api/search/quizzes`,
+  SEARCH_FLASHCARDS: `${API_BASE_URL}/api/search/flashcards`,
+  SEARCH_ALL: `${API_BASE_URL}/api/search/all`,
 };
 
 export default API_BASE_URL;

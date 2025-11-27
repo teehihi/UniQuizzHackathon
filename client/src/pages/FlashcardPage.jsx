@@ -149,9 +149,9 @@ function FlashcardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#fff7f0] flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
         <Header />
-        <div className="grow text-center p-8 text-xl">Đang tải dữ liệu...</div>
+        <div className="grow text-center p-8 text-xl text-gray-800 dark:text-gray-200">Đang tải dữ liệu...</div>
         <Footer />
       </div>
     );
@@ -159,9 +159,9 @@ function FlashcardPage() {
 
   if (!itemData || !itemData.items || itemData.items.length === 0) {
     return (
-      <div className="min-h-screen bg-[#fff7f0] flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
         <Header />
-        <div className="grow text-center p-8 text-xl text-red-600">
+        <div className="grow text-center p-8 text-xl text-red-600 dark:text-red-400">
           Không tìm thấy nội dung hoặc bộ này chưa có thẻ nào.
         </div>
         <Footer />
@@ -191,11 +191,41 @@ function FlashcardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 relative overflow-x-hidden flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-x-hidden flex flex-col">
       <SEOHead {...(type === 'topic' ? getTopicMeta({ title, words: items }) : getFlashcardMeta({ title, flashcards: items }))} />
       <style>{`
         .perspective-1000 {
           perspective: 1000px;
+        }
+        
+        /* Flashcard Front - Light Mode */
+        .flashcard-front {
+          background: linear-gradient(to bottom right, #ef4444, #ec4899);
+        }
+        
+        /* Flashcard Back - Light Mode */
+        .flashcard-back {
+          background: linear-gradient(to bottom right, #3b82f6, #9333ea);
+        }
+        
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+          .flashcard-front {
+            background: linear-gradient(to bottom right, #7f1d1d, #831843);
+          }
+          
+          .flashcard-back {
+            background: linear-gradient(to bottom right, #1e3a8a, #581c87);
+          }
+        }
+        
+        /* Dark Mode - Class based (for manual toggle) */
+        .dark .flashcard-front {
+          background: linear-gradient(to bottom right, #7f1d1d, #831843);
+        }
+        
+        .dark .flashcard-back {
+          background: linear-gradient(to bottom right, #1e3a8a, #581c87);
         }
       `}</style>
       <Header />
@@ -204,7 +234,7 @@ function FlashcardPage() {
           onClick={() =>
             navigate(type === "topic" ? "/vocabulary" : "/flashcard-hub")
           }
-          className="mb-8 text-red-600 border-2 border-red-300 bg-white hover:bg-red-50 
+          className="mb-8 text-red-600 dark:text-red-400 border-2 border-red-300 dark:border-red-700 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-gray-700 
                      px-6 py-3 rounded-full font-semibold transition duration-200 shadow-md hover:shadow-lg
                      flex items-center gap-2 mx-auto"
           whileHover={{ scale: 1.05, x: -5 }}
@@ -222,10 +252,10 @@ function FlashcardPage() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-3 bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-3 bg-gradient-to-r from-red-600 to-pink-600 dark:from-red-400 dark:to-pink-400 bg-clip-text text-transparent">
             {title}
           </h1>
-          <div className="flex items-center justify-center gap-2 text-gray-600">
+          <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
@@ -259,7 +289,7 @@ function FlashcardPage() {
             >
             {/* Mặt trước (Front) */}
             <motion.div
-              className="absolute inset-0 w-full h-full bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl shadow-2xl flex items-center justify-center p-8"
+              className="absolute inset-0 w-full h-full rounded-2xl shadow-2xl flex items-center justify-center p-8 flashcard-front"
               style={{ 
                 backfaceVisibility: "hidden",
                 WebkitBackfaceVisibility: "hidden"
@@ -290,7 +320,7 @@ function FlashcardPage() {
 
             {/* Mặt sau (Back) */}
             <motion.div
-              className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-2xl flex items-center justify-center p-8"
+              className="absolute inset-0 w-full h-full rounded-2xl shadow-2xl flex items-center justify-center p-8 flashcard-back"
               style={{ 
                 backfaceVisibility: "hidden",
                 WebkitBackfaceVisibility: "hidden",
@@ -340,18 +370,18 @@ function FlashcardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-6 flex flex-wrap justify-center gap-3 text-sm text-gray-600"
+          className="mb-6 flex flex-wrap justify-center gap-3 text-sm text-gray-600 dark:text-gray-400"
         >
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
-            <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">←</kbd>
+          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs font-mono text-gray-800 dark:text-gray-200">←</kbd>
             <span>Lùi</span>
           </div>
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
-            <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">→</kbd>
+          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs font-mono text-gray-800 dark:text-gray-200">→</kbd>
             <span>Tiếp</span>
           </div>
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
-            <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Space</kbd>
+          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs font-mono text-gray-800 dark:text-gray-200">Space</kbd>
             <span>Lật thẻ</span>
           </div>
         </motion.div>
@@ -380,8 +410,8 @@ function FlashcardPage() {
                   key={idx}
                   className={`h-2 rounded-full transition-all ${
                     idx === currentIndex 
-                      ? 'w-8 bg-red-600' 
-                      : 'w-2 bg-gray-300'
+                      ? 'w-8 bg-red-600 dark:bg-red-500' 
+                      : 'w-2 bg-gray-300 dark:bg-gray-600'
                   }`}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -389,7 +419,7 @@ function FlashcardPage() {
                 />
               ))}
             </div>
-            <span className="text-sm text-gray-600 font-medium">
+            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
               {currentIndex + 1} / {items.length}
             </span>
           </div>

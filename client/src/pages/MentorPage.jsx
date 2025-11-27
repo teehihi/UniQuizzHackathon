@@ -175,8 +175,8 @@ function ChatPanel({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Chat input - hiển thị khi có bài giảng và (đang tạm dừng hoặc chưa phát) */}
-      {lecture && (isPaused || !isPlaying) && (
+      {/* Chat input - hiển thị khi có bài giảng */}
+      {lecture && (
         <div className="flex flex-col gap-2 pt-3 border-t border-gray-200">
           <div className="flex gap-2">
             <input
@@ -189,29 +189,28 @@ function ChatPanel({
                 }
               }}
               placeholder={
-                isPaused
-                  ? "Nhập câu hỏi của bạn (đang tạm dừng)..."
+                isPlaying && !isPaused
+                  ? "Tạm dừng để chat với mentor..."
                   : "Nhập câu hỏi của bạn..."
               }
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent text-sm"
-              disabled={isProcessing}
+              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              disabled={isProcessing || (isPlaying && !isPaused)}
             />
             <button
               onClick={onSendMessage}
-              disabled={isProcessing || !chatInput.trim()}
+              disabled={isProcessing || !chatInput.trim() || (isPlaying && !isPaused)}
               className="px-6 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               {isProcessing ? "..." : "Gửi"}
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Thông báo khi đang phát */}
-      {lecture && isPlaying && !isPaused && (
-        <div className="text-sm text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
-          <span className="font-medium text-red-600">Tạm dừng</span> để chat với
-          mentor
+          
+          {/* Thông báo khi đang phát */}
+          {isPlaying && !isPaused && (
+            <div className="text-sm text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+              ⏸️ <span className="font-medium text-red-600">Tạm dừng</span> bài giảng để chat với mentor
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -292,8 +291,17 @@ export default function MentorPage() {
         // Load voice config
         const response = await api.get("/mentor/voice-config");
         const config = response.data;
+        
+        // Xác định engine mặc định
+        let defaultEngine = config.engine || (webSpeechAvailable ? "web-speech" : "google-translate");
+        
+        // Nếu engine được lưu là web-speech nhưng không available, fallback
+        if (defaultEngine === 'web-speech' && !webSpeechAvailable) {
+          defaultEngine = 'google-translate';
+        }
+        
         setTtsConfig({
-          engine: webSpeechAvailable ? "web-speech" : "google-translate",
+          engine: defaultEngine,
           gender: config.gender || "female",
           voiceName: config.voiceName || "",
           rate: config.rate || 1.0,
@@ -320,9 +328,12 @@ export default function MentorPage() {
   const saveVoiceConfig = async () => {
     try {
       await api.put("/mentor/voice-config", {
+        engine: ttsConfig.engine,
         gender: ttsConfig.gender,
         language: "vi",
+        voiceName: ttsConfig.voiceName,
         rate: ttsConfig.rate,
+        pitch: ttsConfig.pitch,
         volume: ttsConfig.volume,
       });
 
@@ -682,26 +693,33 @@ export default function MentorPage() {
   const resumeLecture = () => {
     // Web Speech API
     if (ttsConfig.engine === 'web-speech' && webSpeechAvailable) {
-      if (window.speechSynthesis.paused) {
+      if (window.speechSynthesis.paused && window.speechSynthesis.speaking) {
         window.speechSynthesis.resume();
         setIsPaused(false);
+        setIsPlaying(true);
         if (live2dRef.current) {
           live2dRef.current.startSpeaking();
         }
       } else {
         // Bắt đầu lại từ section hiện tại
-        speakCurrentSection();
+        setIsPlaying(true);
         setIsPaused(false);
+        speakCurrentSection();
       }
     }
     // Server TTS
     else if (audioRef.current && audioRef.current.paused) {
       audioRef.current.play();
       setIsPaused(false);
+      setIsPlaying(true);
+      if (live2dRef.current) {
+        live2dRef.current.startSpeaking();
+      }
     } else if (!audioRef.current) {
       // Nếu không đang phát, bắt đầu lại từ section hiện tại
-      speakCurrentSection();
+      setIsPlaying(true);
       setIsPaused(false);
+      speakCurrentSection();
     }
   };
 
@@ -748,12 +766,19 @@ export default function MentorPage() {
         { type: "mentor", text: mentorResponse },
       ]);
 
-      // Đọc câu trả lời bằng Gemini TTS
+      // Đọc câu trả lời bằng TTS
       // Dừng bài giảng nếu đang phát
+      if (ttsConfig.engine === 'web-speech' && webSpeechAvailable) {
+        window.speechSynthesis.cancel();
+      }
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      
+      // Cập nhật state để đồng bộ
+      setIsPlaying(false);
+      setIsPaused(false);
 
       // Đọc câu trả lời của mentor
       speakText(mentorResponse);
@@ -895,12 +920,16 @@ export default function MentorPage() {
                         </label>
                         <select
                           value={ttsConfig.engine}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const newEngine = e.target.value;
+                            // Reset pitch về giá trị mặc định khi chuyển engine
+                            const defaultPitch = newEngine === 'web-speech' ? 1.0 : 0.0;
                             setTtsConfig({
                               ...ttsConfig,
-                              engine: e.target.value,
-                            })
-                          }
+                              engine: newEngine,
+                              pitch: defaultPitch,
+                            });
+                          }}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                         >
                           {webSpeechAvailable && (
@@ -1139,6 +1168,11 @@ export default function MentorPage() {
                           key={idx}
                           onClick={() => {
                             // Jump to section khi click
+                            // Dừng Web Speech API
+                            if (ttsConfig.engine === 'web-speech' && webSpeechAvailable) {
+                              window.speechSynthesis.cancel();
+                            }
+                            // Dừng Server TTS
                             if (audioRef.current) {
                               audioRef.current.pause();
                               audioRef.current = null;

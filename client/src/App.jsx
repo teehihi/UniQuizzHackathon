@@ -27,6 +27,7 @@ import FlashcardHubPage from './pages/FlashcardHubPage';
 import CreateFlashcardPage from './pages/CreateFlashcardPage';
 import MyFlashcards from './pages/MyFlashcards';
 import ForgotPassword from './pages/ForgotPassword';
+import SearchPage from './pages/SearchPage';
 export default function App() {
   // Unregister Service Worker to fix white screen issue
   useEffect(() => {
@@ -91,6 +92,11 @@ export default function App() {
         />
         <Route path="/flashcard/:topicId" element={<FlashcardPage />} />
 
+        {/* Route tìm kiếm */}
+        <Route path="/search" element={<SearchPage />} />
+
+        {/* Route xem quiz công khai */}
+        <Route path="/decks/public/:id" element={<QuizPlayer />} />
         
         </Routes>
       </BrowserRouter>
