@@ -52,7 +52,10 @@ export default function QuizCard({ quiz, onDelete, onPublicToggle }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-red-50 dark:border-gray-700 overflow-visible flex flex-col hover:shadow-xl transition-shadow relative">
+    <Link 
+      to={`/quiz/${quiz.id}`}
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-red-50 dark:border-gray-700 overflow-visible flex flex-col hover:shadow-xl transition-all hover:scale-105 relative group"
+    >
       {/* Ảnh bìa (tùy chọn, bạn có thể thêm sau) */}
       {/* <img src="/quiz-placeholder.jpg" alt="Quiz cover" className="h-40 w-full object-cover" /> */}
       
@@ -102,16 +105,13 @@ export default function QuizCard({ quiz, onDelete, onPublicToggle }) {
 
         {/* Đẩy các nút xuống dưới cùng */}
         <div className="mt-auto flex gap-3">
-          <Link
-            to={`/quiz/${quiz.id}`} // Đường dẫn để làm quiz
-            className="flex-1 px-4 py-2 rounded-lg bg-red-600 dark:bg-red-500 text-white font-semibold text-center hover:bg-red-700 dark:hover:bg-red-600 transition"
-          >
+          <div className="flex-1 px-4 py-2 rounded-lg bg-red-600 dark:bg-red-500 text-white font-semibold text-center group-hover:bg-red-700 dark:group-hover:bg-red-600 transition">
             Làm ngay
-          </Link>
+          </div>
           <button
             onClick={handleDelete}
             title="Xóa"
-            className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-200 dark:hover:bg-red-900 hover:text-red-800 dark:hover:text-red-300 transition"
+            className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-200 dark:hover:bg-red-900 hover:text-red-800 dark:hover:text-red-300 transition z-10"
           >
             {/* Icon thùng rác */}
             <svg
@@ -131,6 +131,6 @@ export default function QuizCard({ quiz, onDelete, onPublicToggle }) {
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

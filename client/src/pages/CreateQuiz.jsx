@@ -30,12 +30,12 @@ export default function CreateQuiz() {
   const validateAndSetFile = (selectedFile) => {
     if (!selectedFile) return false;
 
-    // ⭐ Support both PDF and DOCX
-    const allowedExtensions = ['.pdf', '.docx'];
+    // ⭐ Support PDF, DOCX, and PPTX
+    const allowedExtensions = ['.pdf', '.docx', '.pptx'];
     const fileExtension = selectedFile.name.substring(selectedFile.name.lastIndexOf('.')).toLowerCase();
     
     if (!allowedExtensions.includes(fileExtension)) {
-      setError("Chỉ chấp nhận file PDF hoặc DOCX");
+      setError("Chỉ chấp nhận file PDF, DOCX, hoặc PPTX");
       setFile(null);
       return false;
     }
@@ -414,16 +414,24 @@ export default function CreateQuiz() {
                             animate={{ scale: 1 }}
                             className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto"
                           >
-                            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
+                            {file.name.endsWith('.pdf') ? (
+                              <span className="text-3xl">📄</span>
+                            ) : file.name.endsWith('.docx') ? (
+                              <span className="text-3xl">📝</span>
+                            ) : file.name.endsWith('.pptx') ? (
+                              <span className="text-3xl">📊</span>
+                            ) : (
+                              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
                           </motion.div>
                           <div>
                             <p className="text-lg font-semibold text-green-600 dark:text-green-400">
                               ✓ {file.name}
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                              {formatFileSize(file.size)}
+                              {formatFileSize(file.size)} • {file.name.split('.').pop().toUpperCase()}
                             </p>
                           </div>
                           <button
@@ -454,9 +462,29 @@ export default function CreateQuiz() {
                             <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
                               <span className="text-red-600 dark:text-red-400">Tải lên file</span> hoặc kéo thả
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                              Hỗ trợ: PDF, DOCX (tối đa 10MB)
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                              Hỗ trợ: <span className="font-semibold">PDF, DOCX, PPTX</span> (tối đa 10MB)
                             </p>
+                            <div className="flex items-center justify-center gap-4 mt-3">
+                              <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                                </svg>
+                                <span>PDF</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                                </svg>
+                                <span>DOCX</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                                </svg>
+                                <span>PPTX</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -536,7 +564,7 @@ export default function CreateQuiz() {
                       type="file"
                       className="sr-only"
                       onChange={handleFileChange}
-                      accept=".pdf,.docx"
+                      accept=".pdf,.docx,.pptx"
                     />
                   </motion.div>
 

@@ -21,6 +21,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "jszip": "^3.10.1",
     "mammoth": "^1.11.0",
     "mongodb": "^7.0.0",
     "mongoose": "^8.19.4",
@@ -29,8 +30,10 @@
     "officegen": "^0.6.5",
     "openai": "^6.9.0",
     "pdf-parse": "^2.4.5",
+    "pptx-parser": "^1.1.7-beta.9",
     "tailwindcss": "^4.1.17",
     "vite": "^7.2.2",
+    "xml2js": "^0.6.2",
     "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {

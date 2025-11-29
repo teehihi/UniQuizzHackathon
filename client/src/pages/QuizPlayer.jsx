@@ -37,18 +37,36 @@ export default function QuizPlayer() {
         setError("");
         
         const token = getAuthToken();
+        console.log('[QuizPlayer] Fetching quiz:', quizId);
+        console.log('[QuizPlayer] Has token:', !!token);
         
-        // Thử fetch public quiz trước (không cần token)
-        let res = await fetch(API_ENDPOINTS.DECK_PUBLIC(quizId));
+        let res;
+        let fetchMethod = '';
         
-        // Nếu không phải public quiz, thử với token (quiz của chính user)
-        if (!res.ok && token) {
+        // Nếu có token, thử fetch quiz của user trước (nhanh hơn)
+        if (token) {
+          console.log('[QuizPlayer] Trying authenticated fetch...');
+          fetchMethod = 'authenticated';
           res = await fetch(API_ENDPOINTS.DECK_BY_ID(quizId), {
             headers: {
               "Authorization": `Bearer ${token}`,
             },
           });
+          
+          // Nếu không tìm thấy (404), thử public
+          if (res.status === 404) {
+            console.log('[QuizPlayer] Not found in user quizzes, trying public...');
+            fetchMethod = 'public';
+            res = await fetch(API_ENDPOINTS.DECK_PUBLIC(quizId));
+          }
+        } else {
+          // Không có token, chỉ fetch public
+          console.log('[QuizPlayer] No token, trying public fetch...');
+          fetchMethod = 'public';
+          res = await fetch(API_ENDPOINTS.DECK_PUBLIC(quizId));
         }
+
+        console.log('[QuizPlayer] Response status:', res.status, 'Method:', fetchMethod);
 
         if (!res.ok) {
           if (res.status === 401) {
@@ -61,15 +79,20 @@ export default function QuizPlayer() {
             setIsLoading(false);
             return;
           }
-          const errData = await res.json();
-          throw new Error(errData.message || "Không thể tải quiz");
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || `Không thể tải quiz (${res.status})`);
         }
 
         const data = await res.json();
+        console.log('[QuizPlayer] Quiz loaded successfully:', data.title);
         setQuiz(data);
       } catch (err) {
-        console.error("Lỗi khi tải quiz:", err);
-        setError(err.message || "Có lỗi xảy ra khi tải quiz");
+        console.error("[QuizPlayer] Error loading quiz:", err);
+        if (err.name === 'TypeError' && err.message.includes('fetch')) {
+          setError("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+        } else {
+          setError(err.message || "Có lỗi xảy ra khi tải quiz");
+        }
       } finally {
         setIsLoading(false);
       }

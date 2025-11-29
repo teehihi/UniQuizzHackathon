@@ -441,8 +441,8 @@ async function getModelClient() {
 /**
  * Helper: Trích xuất JSON an toàn từ phản hồi của AI
  */
-function extractJsonFromResponse(response) {
-    let textResp = response.text();
+async function extractJsonFromResponse(response) {
+    let textResp = await response.text();
     textResp = textResp.replace(/```json|```/g, '').trim();
 
     try {
@@ -524,7 +524,7 @@ async function generateQuizFromText(text, numQuestions = 10, options = {}) {
             generationConfig: jsonGenerationConfig
         });
 
-        const jsonData = extractJsonFromResponse(generation.response);
+        const jsonData = await extractJsonFromResponse(generation.response);
 
         if (!jsonData || !Array.isArray(jsonData.summary) || !Array.isArray(jsonData.questions)) {
             throw new Error('Định dạng AI trả về không hợp lệ');
@@ -732,7 +732,7 @@ ${text}
             generationConfig: jsonGenerationConfig
         });
         
-        const jsonData = extractJsonFromResponse(generation.response);
+        const jsonData = await extractJsonFromResponse(generation.response);
 
         if (!jsonData.title || !Array.isArray(jsonData.sections)) {
             throw new Error('Định dạng AI (Lecture) trả về không hợp lệ');
@@ -819,7 +819,7 @@ async function generateFlashcardsFromText(text, options = {}) {
     });
 
     const response = await result.response;
-    const data = extractJsonFromResponse(response);
+    const data = await extractJsonFromResponse(response);
 
     if (!data || !Array.isArray(data.flashcards)) {
       throw new Error('Định dạng AI trả về không hợp lệ (thiếu flashcards)');

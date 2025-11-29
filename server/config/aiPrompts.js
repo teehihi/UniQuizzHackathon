@@ -149,9 +149,9 @@ const FEW_SHOT_EXAMPLES = {
       output: {
         question: "Sản phẩm chính của quá trình quang hợp là gì?",
         options: [
-          "Glucose và Oxygen",
           "CO2 và H2O",
           "Protein và Lipid",
+          "Glucose và Oxygen",
           "ATP và NADPH"
         ],
         answer: "Glucose và Oxygen",
@@ -161,12 +161,26 @@ const FEW_SHOT_EXAMPLES = {
     {
       input: "Nội dung: DNA có cấu trúc xoắn kép, gồm 2 chuỗi polynucleotide chạy song song ngược chiều. Mỗi nucleotide gồm 3 thành phần: đường deoxyribose, nhóm phosphate và base nitơ.",
       output: {
+        question: "Mỗi nucleotide trong DNA gồm bao nhiêu thành phần?",
+        options: [
+          "2 thành phần",
+          "3 thành phần",
+          "4 thành phần",
+          "5 thành phần"
+        ],
+        answer: "3 thành phần",
+        explanation: "Tài liệu nêu rõ mỗi nucleotide gồm 3 thành phần: đường deoxyribose, nhóm phosphate và base nitơ."
+      }
+    },
+    {
+      input: "Nội dung: DNA có cấu trúc xoắn kép, gồm 2 chuỗi polynucleotide chạy song song ngược chiều. Mỗi nucleotide gồm 3 thành phần: đường deoxyribose, nhóm phosphate và base nitơ.",
+      output: {
         question: "Cấu trúc DNA được mô tả như thế nào?",
         options: [
-          "Xoắn kép với 2 chuỗi song song ngược chiều",
           "Xoắn đơn với 1 chuỗi polynucleotide",
           "Cấu trúc phẳng với 3 chuỗi song song",
-          "Cấu trúc hình cầu với nhiều lớp"
+          "Cấu trúc hình cầu với nhiều lớp",
+          "Xoắn kép với 2 chuỗi song song ngược chiều"
         ],
         answer: "Xoắn kép với 2 chuỗi song song ngược chiều",
         explanation: "Tài liệu nêu rõ DNA có cấu trúc xoắn kép (double helix) với 2 chuỗi polynucleotide chạy song song ngược chiều nhau."

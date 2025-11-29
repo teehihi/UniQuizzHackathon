@@ -482,6 +482,7 @@ const User = require('./models/User');
 const Topic = require('./models/Topic');
 const FlashcardSet = require('./models/FlashcardSet');
 const Voice = require('./models/voice');
+const Lecture = require('./models/Lecture');
 
 const router = express.Router();
 
@@ -1143,17 +1144,23 @@ router.delete('/flashcards/:id', verifyToken, async (req, res) => {
    8. MENTOR + LECTURE ROUTES
 ======================================================= */
 
-// Upload tài liệu → sinh bài giảng (Hỗ trợ multi-format)
+// Upload tài liệu → sinh bài giảng (Hỗ trợ multi-format) + Lưu lịch sử
 router.post('/mentor/upload', verifyToken, upload.single('file'), async (req, res) => {
   try {
     const { url, text } = req.body;
     
     let extractedText;
+    let sourceInfo = {};
     
     if (req.file) {
       console.log(`[Lecture Upload] Processing file: ${req.file.originalname}`);
       const result = await ContentExtractor.extractContent(req.file.buffer, 'auto');
       extractedText = result.text;
+      sourceInfo = {
+        name: req.file.originalname,
+        fileType: req.file.mimetype,
+        size: req.file.size
+      };
     }
     else if (url) {
       console.log(`[Lecture Upload] Processing URL: ${url}`);
@@ -1162,9 +1169,19 @@ router.post('/mentor/upload', verifyToken, upload.single('file'), async (req, re
         : 'url';
       const result = await ContentExtractor.extractContent(url, urlType);
       extractedText = result.text;
+      sourceInfo = {
+        name: url,
+        fileType: urlType,
+        size: extractedText.length
+      };
     }
     else if (text) {
       extractedText = text;
+      sourceInfo = {
+        name: 'Text input',
+        fileType: 'text/plain',
+        size: text.length
+      };
     }
     else {
       return res.status(400).json({ message: 'Vui lòng cung cấp file, URL, hoặc text.' });
@@ -1176,9 +1193,98 @@ router.post('/mentor/upload', verifyToken, upload.single('file'), async (req, re
     console.log(`[Lecture Upload] Generating lecture from ${extractedText.length} characters...`);
     const ai = await generateLectureFromFile(extractedText);
 
-    res.status(201).json(ai);
+    // Lưu vào database
+    const lecture = new Lecture({
+      userId: req.userId,
+      title: ai.title,
+      sections: ai.sections,
+      sourceFile: sourceInfo,
+      metadata: {
+        totalSections: ai.sections.length,
+        estimatedDuration: Math.ceil(ai.sections.length * 2), // ~2 phút/section
+        language: 'vi'
+      }
+    });
+
+    await lecture.save();
+    console.log(`✅ Lecture saved to database: ${lecture._id}`);
+
+    // Trả về kèm ID để client có thể load lại
+    res.status(201).json({
+      ...ai,
+      _id: lecture._id,
+      createdAt: lecture.createdAt
+    });
   } catch (error) {
     console.error('[Lecture Upload] Error:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Lấy danh sách lịch sử bài giảng
+router.get('/mentor/lectures', verifyToken, async (req, res) => {
+  try {
+    const { limit = 20, skip = 0 } = req.query;
+    
+    const lectures = await Lecture.find({ userId: req.userId })
+      .sort({ lastAccessedAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip))
+      .select('title createdAt lastAccessedAt accessCount metadata sourceFile');
+
+    const total = await Lecture.countDocuments({ userId: req.userId });
+
+    res.json({
+      lectures,
+      total,
+      hasMore: total > parseInt(skip) + lectures.length
+    });
+  } catch (error) {
+    console.error('[Get Lectures] Error:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Lấy chi tiết 1 bài giảng
+router.get('/mentor/lectures/:id', verifyToken, async (req, res) => {
+  try {
+    const lecture = await Lecture.findOne({
+      _id: req.params.id,
+      userId: req.userId
+    });
+
+    if (!lecture) {
+      return res.status(404).json({ message: 'Không tìm thấy bài giảng' });
+    }
+
+    // Cập nhật lần truy cập
+    await lecture.markAccessed();
+
+    res.json(lecture);
+  } catch (error) {
+    console.error('[Get Lecture Detail] Error:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Xóa bài giảng
+router.delete('/mentor/lectures/:id', verifyToken, async (req, res) => {
+  try {
+    const lecture = await Lecture.findOne({
+      _id: req.params.id,
+      userId: req.userId
+    });
+
+    if (!lecture) {
+      return res.status(404).json({ message: 'Không tìm thấy bài giảng' });
+    }
+
+    await Lecture.findByIdAndDelete(req.params.id);
+    console.log(`✅ Deleted lecture: ${lecture._id}`);
+
+    res.json({ message: 'Đã xóa bài giảng thành công', deletedId: lecture._id });
+  } catch (error) {
+    console.error('[Delete Lecture] Error:', error);
     res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 });
@@ -1309,7 +1415,7 @@ router.post('/mentor/tts/google-synthesize', verifyToken, async (req, res) => {
     const maxLength = 5000;
     const processedText = text.length > maxLength ? text.substring(0, maxLength) : text;
 
-    // Cấu hình TTS
+    // Cấu hình TTS với SSML để giọng truyền cảm hơn
     const ttsOptions = {
       language: options?.language || 'vi-VN',
       gender: options?.gender || 'FEMALE',
@@ -1317,6 +1423,7 @@ router.post('/mentor/tts/google-synthesize', verifyToken, async (req, res) => {
       rate: options?.rate || 1.0,
       pitch: options?.pitch || 0.0,
       volume: options?.volume || 0.0,
+      useSSML: true, // Bật SSML để giọng đọc tự nhiên và truyền cảm hơn
     };
 
     // Synthesize với Google Cloud TTS

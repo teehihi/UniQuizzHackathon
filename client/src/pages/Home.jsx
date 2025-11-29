@@ -292,8 +292,14 @@ export default function Home() {
                   AI tạo câu hỏi tự động
                 </h4>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Tải file .docx → nhận quiz đầy đủ chỉ sau vài giây. Công nghệ AI thông minh hiểu ngữ cảnh và tạo câu hỏi chất lượng.
+                  Hỗ trợ PDF, DOCX, PPTX, URL, YouTube → nhận quiz đầy đủ chỉ sau vài giây. Công nghệ AI thông minh hiểu ngữ cảnh và tạo câu hỏi chất lượng.
                 </p>
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs rounded-full font-medium">📄 PDF</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs rounded-full font-medium">📝 DOCX</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs rounded-full font-medium">📊 PPTX</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs rounded-full font-medium">🔗 URL</span>
+                </div>
               </div>
             </motion.div>
 
