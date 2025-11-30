@@ -70,7 +70,7 @@ function SearchPage() {
 
   const handleResultClick = (item) => {
     if (item.type === 'quiz') {
-      navigate(`/decks/public/${item._id}`);
+      navigate(`/quiz/${item._id}`);
     } else {
       navigate(`/flashcard/${item._id}`);
     }

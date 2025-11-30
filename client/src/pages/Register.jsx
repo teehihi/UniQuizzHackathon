@@ -49,6 +49,33 @@ export default function Register() {
     }
 
     try {
+      // Đăng ký trực tiếp (bỏ qua OTP)
+      // TODO: Enable OTP verification when email service is ready
+      const res = await fetch(API_ENDPOINTS.REGISTER, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, fullName }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Đăng ký thất bại");
+      }
+
+      // Lưu token và user info
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      window.dispatchEvent(new Event("userUpdate"));
+
+      toast.success("Đăng ký thành công!");
+      
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+
+      /* 
+      // === CODE CŨ - GỬI OTP (DISABLED) ===
       // Bước 1: Gửi OTP qua email
       const otpRes = await fetch(`${API_ENDPOINTS.REGISTER.replace('/auth/register', '/email/send-otp')}`, {
         method: "POST",
@@ -74,6 +101,7 @@ export default function Register() {
           } 
         });
       }, 1000);
+      */
     } catch (err) {
       setError(err.message || "Có lỗi xảy ra khi đăng ký");
       toast.error(err.message || "Đăng ký thất bại!");

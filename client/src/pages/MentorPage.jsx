@@ -1,6 +1,7 @@
 import Live2DWidget from "../components/Live2DWidget";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LectureHistory from "../components/LectureHistory";
 import { useState, useRef, useEffect } from "react";
 import api from "../api";
 
@@ -207,8 +208,15 @@ function ChatPanel({
           
           {/* Thông báo khi đang phát */}
           {isPlaying && !isPaused && (
-            <div className="text-sm text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+            <div className="text-sm text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 animate-pulse">
               ⏸️ <span className="font-medium text-red-600">Tạm dừng</span> bài giảng để chat với mentor
+            </div>
+          )}
+          
+          {/* Thông báo khi chưa có bài giảng */}
+          {!lecture && (
+            <div className="text-sm text-center p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">
+              📤 <span className="font-medium">Upload tài liệu</span> để bắt đầu chat với mentor
             </div>
           )}
         </div>
@@ -337,12 +345,17 @@ export default function MentorPage() {
         volume: ttsConfig.volume,
       });
 
-      alert("Đã lưu cấu hình giọng đọc!");
+      // Thông báo thành công với thông tin cấu hình
+      const engineName = ttsConfig.engine === 'web-speech' ? 'Web Speech API' :
+                        ttsConfig.engine === 'google-cloud' ? 'Google Cloud TTS' :
+                        'Google Translate TTS';
+      
+      alert(`✅ Đã lưu cấu hình giọng đọc!\n\n🎤 Engine: ${engineName}\n👤 Giọng: ${ttsConfig.gender === 'female' ? 'Nữ' : 'Nam'}\n⚡ Tốc độ: ${ttsConfig.rate}x`);
       setShowVoiceSettings(false);
     } catch (error) {
       console.error("Lỗi khi lưu voice config:", error);
       alert(
-        "Lỗi khi lưu cấu hình: " +
+        "❌ Lỗi khi lưu cấu hình:\n" +
           (error.response?.data?.message || error.message)
       );
     }
@@ -428,9 +441,10 @@ export default function MentorPage() {
     try {
       let response;
       let contentType;
+      let usedEngine = '';
 
       // Thử Google Cloud TTS trước nếu có sẵn
-      if (googleCloudAvailable && ttsConfig.useGoogleCloud) {
+      if (googleCloudAvailable && ttsConfig.engine === 'google-cloud') {
         try {
           console.log("🎤 Using Google Cloud TTS...");
           response = await api.post(
@@ -451,9 +465,11 @@ export default function MentorPage() {
               headers: {
                 Accept: "audio/mpeg",
               },
+              timeout: 30000, // 30 seconds timeout
             }
           );
           contentType = "audio/mpeg";
+          usedEngine = 'Google Cloud TTS';
           console.log("✅ Google Cloud TTS success");
         } catch (error) {
           console.warn("⚠️ Google Cloud TTS failed, falling back to Google Translate TTS");
@@ -475,9 +491,11 @@ export default function MentorPage() {
               headers: {
                 Accept: "audio/webm, audio/*",
               },
+              timeout: 30000,
             }
           );
           contentType = response.headers["content-type"] || "audio/webm";
+          usedEngine = 'Google Translate TTS (Fallback)';
         }
       } else {
         // Sử dụng Google Translate TTS
@@ -498,9 +516,11 @@ export default function MentorPage() {
             headers: {
               Accept: "audio/webm, audio/*",
             },
+            timeout: 30000,
           }
         );
         contentType = response.headers["content-type"] || "audio/webm";
+        usedEngine = 'Google Translate TTS';
       }
 
       // Kiểm tra response
@@ -509,8 +529,7 @@ export default function MentorPage() {
       }
 
       // Log thông tin
-      console.log("Audio Content-Type:", contentType);
-      console.log("Audio size:", response.data.byteLength, "bytes");
+      console.log(`✅ ${usedEngine} - Content-Type: ${contentType}, Size: ${response.data.byteLength} bytes`);
 
       // Convert arraybuffer thành blob
       const blob = new Blob([response.data], { type: contentType });
@@ -521,7 +540,7 @@ export default function MentorPage() {
 
       // Thêm error handler trước khi play
       audio.onerror = (error) => {
-        console.error("Lỗi phát audio:", error);
+        console.error("❌ Lỗi phát audio:", error);
         console.error("Audio error details:", {
           error: audio.error,
           src: audio.src,
@@ -533,7 +552,7 @@ export default function MentorPage() {
           live2dRef.current.stopSpeaking();
         }
         audioRef.current = null;
-        alert("Lỗi phát audio. Vui lòng thử lại hoặc kiểm tra cấu hình TTS.");
+        alert(`❌ Lỗi phát audio (${usedEngine}).\n\nVui lòng thử:\n1. Chuyển sang Web Speech API\n2. Kiểm tra kết nối mạng\n3. Thử lại sau`);
       };
 
       audio.onended = () => {
@@ -545,34 +564,35 @@ export default function MentorPage() {
         audioRef.current = null;
       };
 
-      // Kiểm tra audio có thể load không
-      audio.oncanplaythrough = () => {
-        console.log("Audio đã sẵn sàng phát");
-      };
-
-      audio.onloadstart = () => {
-        console.log("Bắt đầu load audio");
-      };
-
       audioRef.current = audio;
 
       // Thử play với error handling
       try {
         await audio.play();
+        console.log(`🎵 Playing audio with ${usedEngine}`);
       } catch (playError) {
-        console.error("Lỗi khi play audio:", playError);
+        console.error("❌ Lỗi khi play audio:", playError);
         URL.revokeObjectURL(audioUrl);
         if (live2dRef.current) {
           live2dRef.current.stopSpeaking();
         }
         audioRef.current = null;
-        throw new Error("Không thể phát audio: " + playError.message);
+        throw new Error(`Không thể phát audio: ${playError.message}`);
       }
     } catch (error) {
-      console.error("Lỗi khi phát giọng đọc:", error);
+      console.error("❌ Lỗi khi phát giọng đọc:", error);
       const errorMessage =
         error.response?.data?.message || error.message || "Lỗi không xác định";
-      alert("Lỗi khi phát giọng đọc: " + errorMessage);
+      
+      // Thông báo lỗi chi tiết hơn
+      if (error.code === 'ECONNABORTED') {
+        alert("⏱️ Timeout: Server mất quá nhiều thời gian phản hồi.\n\nVui lòng thử:\n1. Chuyển sang Web Speech API\n2. Kiểm tra kết nối mạng");
+      } else if (error.response?.status === 503) {
+        alert("⚠️ Service không khả dụng.\n\nVui lòng chuyển sang Web Speech API hoặc thử lại sau.");
+      } else {
+        alert(`❌ Lỗi khi phát giọng đọc:\n${errorMessage}\n\n💡 Gợi ý: Thử chuyển sang Web Speech API trong cài đặt giọng đọc.`);
+      }
+      
       if (live2dRef.current) {
         live2dRef.current.stopSpeaking();
       }
@@ -624,8 +644,12 @@ export default function MentorPage() {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (!file.name.endsWith(".docx")) {
-      alert("Vui lòng chọn file .docx");
+    // Kiểm tra định dạng file được hỗ trợ
+    const allowedExtensions = ['.docx', '.pdf', '.txt', '.pptx'];
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    
+    if (!allowedExtensions.includes(fileExtension)) {
+      alert(`Vui lòng chọn file có định dạng: ${allowedExtensions.join(', ')}`);
       return;
     }
 
@@ -644,13 +668,49 @@ export default function MentorPage() {
       lectureContextRef.current = JSON.stringify(response.data);
       setCurrentSectionIndex(0);
       setMessages([]);
-      alert("Tải bài giảng thành công! Nhấn nút phát để bắt đầu.");
+      
+      // Thông báo thành công với số phần đã tạo
+      const sectionCount = response.data.sections?.length || 0;
+      alert(`✅ Tải bài giảng thành công!\n📚 Đã tạo ${sectionCount} phần nội dung.\n🎤 Nhấn nút phát để bắt đầu.`);
     } catch (error) {
       console.error("Lỗi upload:", error);
-      alert(
-        "Lỗi khi tải bài giảng: " +
-          (error.response?.data?.message || error.message)
-      );
+      const errorMsg = error.response?.data?.message || error.message;
+      alert(`❌ Lỗi khi tải bài giảng:\n${errorMsg}\n\nVui lòng thử lại hoặc chọn file khác.`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Hàm load bài giảng từ lịch sử
+  const handleLoadLecture = async (lectureId) => {
+    setIsLoading(true);
+    try {
+      const response = await api.get(`/mentor/lectures/${lectureId}`);
+      const lectureData = response.data;
+      
+      setLecture(lectureData);
+      lectureContextRef.current = JSON.stringify(lectureData);
+      setCurrentSectionIndex(0);
+      setMessages([]);
+      
+      // Dừng audio nếu đang phát
+      if (ttsConfig.engine === 'web-speech' && webSpeechAvailable) {
+        window.speechSynthesis.cancel();
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (live2dRef.current) {
+        live2dRef.current.stopSpeaking();
+      }
+      setIsPlaying(false);
+      setIsPaused(false);
+      
+      console.log(`✅ Loaded lecture: ${lectureData.title}`);
+    } catch (error) {
+      console.error("Lỗi khi load bài giảng:", error);
+      alert(`❌ Lỗi khi tải bài giảng:\n${error.response?.data?.message || error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -784,8 +844,10 @@ export default function MentorPage() {
       speakText(mentorResponse);
     } catch (error) {
       console.error("Lỗi chat:", error);
-      const errorMessage =
-        "Xin lỗi, tôi gặp lỗi khi trả lời. Vui lòng thử lại.";
+      const errorMessage = error.response?.data?.message 
+        ? `Xin lỗi, ${error.response.data.message}` 
+        : "Xin lỗi, tôi gặp lỗi khi trả lời. Vui lòng thử lại sau.";
+      
       setMessages((prev) => [
         ...prev,
         {
@@ -836,6 +898,12 @@ export default function MentorPage() {
                 </div>
               </div>
 
+              {/* Lecture History */}
+              <LectureHistory 
+                onSelectLecture={handleLoadLecture}
+                currentLectureId={lecture?._id}
+              />
+
               {/* File Upload Card */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -854,14 +922,14 @@ export default function MentorPage() {
                       Upload tài liệu
                     </h3>
                     <p className="text-xs text-gray-500">
-                      Chỉ hỗ trợ file .docx
+                      Hỗ trợ: .docx, .pdf, .txt, .pptx
                     </p>
                   </div>
                 </div>
                 <div className="relative">
                   <input
                     type="file"
-                    accept=".docx"
+                    accept=".docx,.pdf,.txt,.pptx"
                     onChange={handleFileUpload}
                     disabled={isLoading}
                     className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 transition cursor-pointer hover:border-red-300"

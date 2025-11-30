@@ -25,7 +25,46 @@ try {
 }
 
 /**
- * Synthesize speech với Google Cloud TTS
+ * Chuyển text thành SSML để giọng đọc truyền cảm hơn
+ */
+function textToSSML(text) {
+  // Thêm các break và emphasis để giọng tự nhiên hơn
+  let ssml = '<speak>';
+  
+  // Chia text thành câu
+  const sentences = text.split(/([.!?。！？])/);
+  
+  for (let i = 0; i < sentences.length; i += 2) {
+    const sentence = sentences[i]?.trim();
+    const punctuation = sentences[i + 1] || '';
+    
+    if (!sentence) continue;
+    
+    // Thêm emphasis cho từ quan trọng (chữ in hoa, từ đặc biệt)
+    let processedSentence = sentence;
+    
+    // Nhấn mạnh từ viết hoa
+    processedSentence = processedSentence.replace(/\b([A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴĐ]{2,})\b/g, 
+      '<emphasis level="strong">$1</emphasis>');
+    
+    // Thêm pause sau dấu câu
+    if (punctuation === '.' || punctuation === '。') {
+      ssml += `${processedSentence}${punctuation}<break time="500ms"/>`;
+    } else if (punctuation === '!' || punctuation === '！') {
+      ssml += `<prosody pitch="+2st">${processedSentence}</prosody>${punctuation}<break time="600ms"/>`;
+    } else if (punctuation === '?' || punctuation === '？') {
+      ssml += `<prosody pitch="+3st">${processedSentence}</prosody>${punctuation}<break time="600ms"/>`;
+    } else {
+      ssml += `${processedSentence}${punctuation}<break time="300ms"/>`;
+    }
+  }
+  
+  ssml += '</speak>';
+  return ssml;
+}
+
+/**
+ * Synthesize speech với Google Cloud TTS (Cải thiện với SSML)
  * @param {string} text - Text cần đọc
  * @param {object} options - Cấu hình giọng đọc
  * @returns {Buffer} - Audio buffer
@@ -42,13 +81,17 @@ async function synthesizeSpeech(text, options = {}) {
     rate = 1.0, // 0.25 - 4.0
     pitch = 0.0, // -20.0 - 20.0
     volume = 0.0, // -96.0 - 16.0 (dB)
+    useSSML = true, // Sử dụng SSML để giọng truyền cảm hơn
   } = options;
 
   // Chọn giọng tự động nếu không chỉ định
   const selectedVoice = voiceName || getRecommendedVoice(language, gender);
 
+  // Sử dụng SSML để giọng đọc tự nhiên và truyền cảm hơn
+  const input = useSSML ? { ssml: textToSSML(text) } : { text };
+
   const request = {
-    input: { text },
+    input,
     voice: {
       languageCode: language,
       name: selectedVoice,
@@ -61,11 +104,13 @@ async function synthesizeSpeech(text, options = {}) {
       volumeGainDb: volume,
       // Thêm effects để giọng tự nhiên hơn
       effectsProfileId: ['headphone-class-device'],
+      // Thêm sample rate cao hơn cho chất lượng tốt hơn
+      sampleRateHertz: 24000,
     },
   };
 
   try {
-    console.log(`🎤 Synthesizing speech with voice: ${selectedVoice}`);
+    console.log(`🎤 Synthesizing speech with voice: ${selectedVoice} (SSML: ${useSSML})`);
     const [response] = await client.synthesizeSpeech(request);
     console.log(`✅ Speech synthesized: ${response.audioContent.length} bytes`);
     return response.audioContent;
@@ -94,13 +139,14 @@ async function listVoices(languageCode = 'vi-VN') {
 }
 
 /**
- * Gợi ý giọng đọc tốt nhất
+ * Gợi ý giọng đọc tốt nhất (Ưu tiên giọng truyền cảm)
  */
 function getRecommendedVoice(language, gender) {
   const recommendations = {
     'vi-VN': {
-      FEMALE: 'vi-VN-Wavenet-A', // Giọng nữ WaveNet (tự nhiên nhất)
-      MALE: 'vi-VN-Wavenet-B',   // Giọng nam WaveNet
+      // Ưu tiên Neural2 > Wavenet > Standard
+      FEMALE: 'vi-VN-Neural2-A', // Giọng nữ Neural2 (truyền cảm nhất)
+      MALE: 'vi-VN-Neural2-D',   // Giọng nam Neural2
       NEUTRAL: 'vi-VN-Wavenet-C',
     },
     'en-US': {
@@ -110,7 +156,7 @@ function getRecommendedVoice(language, gender) {
     },
   };
 
-  return recommendations[language]?.[gender] || `${language}-Standard-A`;
+  return recommendations[language]?.[gender] || `${language}-Wavenet-A`;
 }
 
 /**
@@ -125,4 +171,5 @@ module.exports = {
   listVoices,
   getRecommendedVoice,
   isAvailable,
+  textToSSML,
 };

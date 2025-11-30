@@ -169,7 +169,12 @@ class PromptBuilder {
       .addConstraints([
         `Tạo chính xác ${numQuestions} câu hỏi`,
         `Mỗi câu hỏi có 4 đáp án (1 đúng, 3 sai)`,
-        `Trường "answer" PHẢI là một trong 4 options (chính xác từng chữ)`,
+        `QUAN TRỌNG: Trường "answer" PHẢI là NỘI DUNG CHÍNH XÁC của 1 trong 4 options`,
+        `KHÔNG dùng chữ cái A/B/C/D, KHÔNG dùng số 0/1/2/3`,
+        `Ví dụ: Nếu options là ["Glucose", "Protein", "Lipid", "DNA"], answer phải là "Glucose" (không phải "A" hay "0")`,
+        `BẮT BUỘC: Đáp án đúng phải PHÂN BỐ ĐỀU giữa các vị trí (option 1, 2, 3, 4)`,
+        `KHÔNG được để đáp án đúng toàn ở vị trí đầu tiên hoặc cùng 1 vị trí`,
+        `Xáo trộn vị trí đáp án đúng để tạo sự đa dạng`,
         `Trả về JSON với cấu trúc: { "summary": [...], "questions": [...] }`
       ])
       .addUserInput(`Tạo ${numQuestions} câu hỏi trắc nghiệm từ tài liệu trên.`);

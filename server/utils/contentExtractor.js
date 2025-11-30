@@ -224,16 +224,63 @@ class ContentExtractor {
   }
 
   /**
-   * Extract từ PPTX - Placeholder
+   * Extract từ PPTX
    */
   static async extractFromPptx(buffer) {
-    // TODO: Implement PPTX parser
-    // Có thể dùng:
-    // - officegen
-    // - pptx-parser
-    // - node-pptx
-    
-    throw new Error('PPTX parser chưa được implement. Vui lòng chuyển sang PDF hoặc DOCX.');
+    try {
+      const JSZip = require('jszip');
+      const xml2js = require('xml2js');
+      
+      const zip = await JSZip.loadAsync(buffer);
+      let text = '';
+      
+      // Extract từ các slide
+      const slideFiles = Object.keys(zip.files).filter(name => 
+        name.startsWith('ppt/slides/slide') && name.endsWith('.xml')
+      );
+      
+      for (const slideFile of slideFiles) {
+        const slideXml = await zip.files[slideFile].async('string');
+        const parser = new xml2js.Parser();
+        const result = await parser.parseStringPromise(slideXml);
+        
+        // Extract text từ slide
+        const extractText = (obj) => {
+          if (!obj) return '';
+          if (typeof obj === 'string') return obj + ' ';
+          if (Array.isArray(obj)) {
+            return obj.map(extractText).join('');
+          }
+          if (typeof obj === 'object') {
+            return Object.values(obj).map(extractText).join('');
+          }
+          return '';
+        };
+        
+        text += extractText(result) + '\n\n';
+      }
+      
+      // Clean up text
+      text = text
+        .replace(/\s+/g, ' ')
+        .replace(/\n+/g, '\n')
+        .trim();
+      
+      if (text.length < 50) {
+        throw new Error('Không thể trích xuất đủ nội dung từ PPTX');
+      }
+      
+      return {
+        text,
+        metadata: {
+          format: 'pptx',
+          slides: slideFiles.length,
+          length: text.length
+        }
+      };
+    } catch (error) {
+      throw new Error('Không thể đọc file PPTX: ' + error.message);
+    }
   }
 
   /**
@@ -314,9 +361,14 @@ class ContentExtractor {
         return 'pdf';
       }
 
-      // DOCX signature: PK (ZIP)
+      // DOCX/PPTX signature: PK (ZIP) - need to check content
       if (input[0] === 0x50 && input[1] === 0x4B) {
-        return 'docx'; // or pptx, need more checks
+        // Check for PPTX vs DOCX by looking at file structure
+        const str = input.toString('utf8', 0, 100);
+        if (str.includes('ppt/')) {
+          return 'pptx';
+        }
+        return 'docx';
       }
 
       // Image signatures

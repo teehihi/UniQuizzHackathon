@@ -8,6 +8,8 @@ import { getAuthToken } from "../utils/auth.js";
 
 export default function MyQuizzes() {
   const [quizzes, setQuizzes] = useState([]);
+  const [filteredQuizzes, setFilteredQuizzes] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -58,6 +60,7 @@ export default function MyQuizzes() {
       }));
       
       setQuizzes(formattedQuizzes);
+      setFilteredQuizzes(formattedQuizzes);
     } catch (err) {
       console.error("Lỗi khi tải quiz:", err);
       setError(err.message || "Có lỗi xảy ra khi tải danh sách quiz");
@@ -65,6 +68,21 @@ export default function MyQuizzes() {
       setIsLoading(false);
     }
   };
+
+  // Handle search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredQuizzes(quizzes);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = quizzes.filter(quiz => 
+      quiz.title.toLowerCase().includes(query) ||
+      (quiz.courseCode && quiz.courseCode.toLowerCase().includes(query))
+    );
+    setFilteredQuizzes(filtered);
+  }, [searchQuery, quizzes]);
 
   const handleDeleteQuiz = async (quizId) => {
     try {
@@ -101,14 +119,47 @@ export default function MyQuizzes() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fff7f0] flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
       <Header />
 
       {/* Phần nội dung chính */}
       <main className="grow max-w-6xl mx-auto w-full px-4 py-12">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
-          Quiz của tôi
-        </h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+            Quiz của tôi
+          </h1>
+          
+          {/* Search bar */}
+          {!isLoading && quizzes.length > 0 && (
+            <div className="relative max-w-md w-full">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm kiếm quiz..."
+                className="w-full px-4 py-2 pl-10 border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+              />
+              <svg 
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Loading state */}
         {isLoading && (
@@ -132,7 +183,7 @@ export default function MyQuizzes() {
 
         {/* Empty state */}
         {!isLoading && !error && quizzes.length === 0 && (
-          <div className="text-center text-gray-600 py-12">
+          <div className="text-center text-gray-600 dark:text-gray-400 py-12">
             <p className="mb-4">Bạn chưa có bộ quiz nào.</p>
             <Link
               to="/create"
@@ -143,23 +194,47 @@ export default function MyQuizzes() {
           </div>
         )}
 
-        {/* Quiz list */}
-        {!isLoading && !error && quizzes.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quizzes.map((quiz) => (
-              <QuizCard 
-                key={quiz.id} 
-                quiz={quiz} 
-                onDelete={handleDeleteQuiz}
-                onPublicToggle={(quizId, isPublic) => {
-                  // Update local state
-                  setQuizzes(prev => prev.map(q => 
-                    q.id === quizId ? { ...q, isPublic } : q
-                  ));
-                }}
-              />
-            ))}
+        {/* No search results */}
+        {!isLoading && !error && quizzes.length > 0 && filteredQuizzes.length === 0 && (
+          <div className="text-center text-gray-600 dark:text-gray-400 py-12">
+            <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-lg font-medium mb-2">Không tìm thấy quiz nào</p>
+            <p className="text-sm">Thử tìm kiếm với từ khóa khác</p>
+            <button
+              onClick={() => setSearchQuery("")}
+              className="mt-4 px-4 py-2 text-red-600 dark:text-red-400 hover:underline"
+            >
+              Xóa bộ lọc
+            </button>
           </div>
+        )}
+
+        {/* Quiz list */}
+        {!isLoading && !error && filteredQuizzes.length > 0 && (
+          <>
+            {searchQuery && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Tìm thấy {filteredQuizzes.length} quiz
+              </p>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredQuizzes.map((quiz) => (
+                <QuizCard 
+                  key={quiz.id} 
+                  quiz={quiz} 
+                  onDelete={handleDeleteQuiz}
+                  onPublicToggle={(quizId, isPublic) => {
+                    // Update local state
+                    setQuizzes(prev => prev.map(q => 
+                      q.id === quizId ? { ...q, isPublic } : q
+                    ));
+                  }}
+                />
+              ))}
+            </div>
+          </>
         )}
       </main>
 
