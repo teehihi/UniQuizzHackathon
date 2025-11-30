@@ -401,8 +401,7 @@ GET /api/search/all?q=python&type=quiz
 <div align="center">
 
 ### 🏠 Trang chủ - Giao diện Tết ấm áp
-<video src="docs/screenshots/home.webm" controls="controls" muted="muted" width="800" style="display:block; margin: 0 auto;">
-</video>
+<img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOTZkeTk3bXF4dDhjeXJxaG9jbHRhZTV0YndmcGVod3J5bjZodnBnNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wkYAQxsGPBvh14sT78/giphy.gif" alt="Home Page" width="800"/>
 
 *Trang chủ với theme Tết Việt Nam, hiệu ứng hoa mai rơi và CTA rõ ràng*
 
@@ -416,16 +415,14 @@ GET /api/search/all?q=python&type=quiz
 ---
 
 ### 📝 Thực hiện Quiz
-<video src="docs/screenshots/quiz.webm" controls="controls" muted="muted" width="800" style="display:block; margin: 0 auto;">
-</video>
+<img src="docs/screenshots/quiz.webm" alt="Quizzes Handle" width="800"/>
 
 *Giao diện Quiz sống động tạo cảm giác "muốn học"*
 
 ---
 
 ### 👩‍🏫 Mentor AI - Miku Live2D
-<video src="docs/screenshots/mentor.webm" controls="controls" muted="muted" width="800" style="display:block; margin: 0 auto;">
-</video>
+<img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ2N5aWdvbm9oaGhiaWNsbGRsdzhhMW5yNWNpMXd0MndpcmpzbHp1biZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/4AbBlXLDxr5WeHZQq0/giphy.gif" alt="Mentor AI" width="800"/>
 
 *Trợ lý AI Miku với Live2D character, chat thông minh và TTS*
 
@@ -433,8 +430,7 @@ GET /api/search/all?q=python&type=quiz
 
 ### 🗂️ Flashcard - Học tập hiệu quả
 <img src="docs/screenshots/flashcard.png" alt="Flashcard" width="800"/>
-<video src="docs/screenshots/flash.webm" controls="controls" muted="muted" width="800" style="display:block; margin: 0 auto;">
-</video>
+<img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExYm85ajB6YjVxcTN0aTQ5bjFwc2xhMjB6MndqNnR3dTIyNDhsaXlrNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/DVKnWXtryBCTLgQuZ9/giphy.gif" alt="Flashcard Learn" width="800"/>
 
 *Tạo và học flashcard với giao diện thân thiện, hỗ trợ nhiều chủ đề*
 
