@@ -25,7 +25,7 @@ export default function ProgressChart({ data = [] }) {
         </h2>
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gradient-to-t from-red-600 to-orange-400 rounded"></div>
+            <div className="w-3 h-3 bg-linear-to-t from-red-600 to-orange-400 rounded"></div>
             <span>Điểm</span>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function ProgressChart({ data = [] }) {
 
                 {/* Bar */}
                 <motion.div
-                  className="w-full bg-gradient-to-t from-red-600 to-orange-400 rounded-t-lg cursor-pointer transition-all duration-300 hover:from-red-500 hover:to-orange-300"
+                  className="w-full bg-linear-to-t from-red-600 to-orange-400 rounded-t-lg cursor-pointer transition-all duration-300 hover:from-red-500 hover:to-orange-300"
                   initial={{ height: 0 }}
                   animate={{ height: `${height}%` }}
                   transition={{ duration: 0.8, delay: index * 0.1, ease: "easeOut" }}

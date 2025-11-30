@@ -177,7 +177,7 @@ Toggle Dark Mode ở góc trên bên phải để bảo vệ mắt khi học đ�
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/sai-ctruong/UniQuizz.git
+git clone https://github.com/teehihi/UniQuizzHackathon.git
 
 ```
 
@@ -401,7 +401,8 @@ GET /api/search/all?q=python&type=quiz
 <div align="center">
 
 ### 🏠 Trang chủ - Giao diện Tết ấm áp
-<img src="docs/screenshots/home.png" alt="Home Page" width="800"/>
+<video src="docs/screenshots/home.webm" controls="controls" muted="muted" width="800" style="display:block; margin: 0 auto;">
+</video>
 
 *Trang chủ với theme Tết Việt Nam, hiệu ứng hoa mai rơi và CTA rõ ràng*
 
@@ -414,8 +415,17 @@ GET /api/search/all?q=python&type=quiz
 
 ---
 
+### 📝 Thực hiện Quiz
+<video src="docs/screenshots/quiz.webm" controls="controls" muted="muted" width="800" style="display:block; margin: 0 auto;">
+</video>
+
+*Giao diện Quiz sống động tạo cảm giác "muốn học"*
+
+---
+
 ### 👩‍🏫 Mentor AI - Miku Live2D
-<img src="docs/screenshots/mentor.png" alt="Mentor AI" width="800"/>
+<video src="docs/screenshots/mentor.webm" controls="controls" muted="muted" width="800" style="display:block; margin: 0 auto;">
+</video>
 
 *Trợ lý AI Miku với Live2D character, chat thông minh và TTS*
 
@@ -423,6 +433,8 @@ GET /api/search/all?q=python&type=quiz
 
 ### 🗂️ Flashcard - Học tập hiệu quả
 <img src="docs/screenshots/flashcard.png" alt="Flashcard" width="800"/>
+<video src="docs/screenshots/flash.webm" controls="controls" muted="muted" width="800" style="display:block; margin: 0 auto;">
+</video>
 
 *Tạo và học flashcard với giao diện thân thiện, hỗ trợ nhiều chủ đề*
 
@@ -527,7 +539,7 @@ Tất cả thành viên đều tham gia vào các phần:
 
 - **Email**: contact@uniquizz.com
 - **Website**: https://uniquizzdom.vercel.app
-- **GitHub**: https://github.com/yourusername/uniquizz
+- **GitHub**: [https://github.com/teehihi/UniQuizzHackathon](https://github.com/teehihi/UniQuizzHackathon)
 
 ---
 

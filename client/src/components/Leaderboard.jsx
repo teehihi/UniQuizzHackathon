@@ -19,7 +19,7 @@ export default function Leaderboard({ currentUser = null }) {
   const getTrendIcon = (trend) => {
     if (trend === 'up') return <span className="text-green-500">↑</span>;
     if (trend === 'down') return <span className="text-red-500">↓</span>;
-    return <span className="text-gray-400">−</span>;
+    return <span className="text-gray-400">-</span>;
   };
 
   const getRankColor = (rank) => {

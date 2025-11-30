@@ -127,12 +127,12 @@ export default function ShareButton({ quiz, type = "quiz" }) {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-[100]"
+            className="fixed inset-0 z-100"
             onClick={() => setShowMenu(false)}
           ></div>
 
           {/* Menu */}
-          <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[101] overflow-hidden max-h-[80vh] overflow-y-auto">
+          <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-101 overflow-hidden max-h-[80vh] overflow-y-auto">
             <div className="p-3 border-b border-gray-200 dark:border-gray-700">
               <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
                 Chia sẻ {type === "quiz" ? "Quiz" : "Flashcard"}
@@ -146,7 +146,7 @@ export default function ShareButton({ quiz, type = "quiz" }) {
                   onClick={shareViaWebShare}
                   className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-left"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-linear-0-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                     <svg
                       className="w-5 h-5 text-white"
                       fill="currentColor"
