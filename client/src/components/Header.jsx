@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import ProfileModal from "./ProfileModal";
 
 export default function Header() {
   const [user, setUser] = useState(null);
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -105,14 +107,25 @@ export default function Header() {
 
           {user ? (
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-red-600 dark:bg-red-500 text-white flex items-center justify-center">
-                  {(user.fullName || user.email).charAt(0).toUpperCase()}
-                </div>
+              <button 
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center gap-3 hover:opacity-80 transition"
+              >
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt="Avatar" 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-red-600 dark:bg-red-500 text-white flex items-center justify-center">
+                    {(user.fullName || user.email).charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <span className="text-gray-700 dark:text-gray-300 font-medium hidden md:block">
                   {user.fullName || user.email}
                 </span>
-              </div>
+              </button>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
@@ -219,14 +232,28 @@ export default function Header() {
 
                 {user ? (
                   <>
-                    <div className="flex items-center gap-3 py-2">
-                      <div className="w-10 h-10 rounded-full bg-red-600 dark:bg-red-500 text-white flex items-center justify-center">
-                        {(user.fullName || user.email).charAt(0).toUpperCase()}
-                      </div>
+                    <button
+                      onClick={() => {
+                        setShowProfileModal(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 py-2 w-full"
+                    >
+                      {user.avatar ? (
+                        <img 
+                          src={user.avatar} 
+                          alt="Avatar" 
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-red-600 dark:bg-red-500 text-white flex items-center justify-center">
+                          {(user.fullName || user.email).charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <span className="text-gray-700 dark:text-gray-300 font-medium">
                         {user.fullName || user.email}
                       </span>
-                    </div>
+                    </button>
                     <button
                       onClick={() => {
                         handleLogout();
@@ -265,6 +292,12 @@ export default function Header() {
       {/* Chiều cao của Header là py-5 (padding top và bottom), nên ta dùng h-20 để dự phòng */}
       <div className="h-20 sm:h-24"></div> 
       {/* Chiều cao này có thể cần điều chỉnh thêm dựa trên chính xác kích thước logo và padding của bạn */}
+
+      {/* Profile Modal */}
+      <ProfileModal 
+        isOpen={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
+      />
     </>
   );
 }

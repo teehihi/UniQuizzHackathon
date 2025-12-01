@@ -28,6 +28,10 @@ import CreateFlashcardPage from './pages/CreateFlashcardPage';
 import MyFlashcards from './pages/MyFlashcards';
 import ForgotPassword from './pages/ForgotPassword';
 import SearchPage from './pages/SearchPage';
+import CreateRoom from './pages/CreateRoom';
+import JoinRoom from './pages/JoinRoom';
+import MultiplayerRoom from './pages/MultiplayerRoom';
+
 export default function App() {
   // Unregister Service Worker to fix white screen issue
   useEffect(() => {
@@ -97,6 +101,11 @@ export default function App() {
 
         {/* Route xem quiz công khai */}
         <Route path="/decks/public/:id" element={<QuizPlayer />} />
+
+        {/* Multiplayer Routes */}
+        <Route path="/create-room" element={<CreateRoom />} />
+        <Route path="/join-room" element={<JoinRoom />} />
+        <Route path="/room/:roomCode" element={<MultiplayerRoom />} />
         
         </Routes>
       </BrowserRouter>

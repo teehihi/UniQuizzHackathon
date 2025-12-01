@@ -136,7 +136,7 @@ export default function MyFlashcards() {
             </div>
             <Link
               to="/create-flashcard"
-              className="inline-block px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-md hover:shadow-lg transform hover:scale-105"
+              className="inline-block px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg transform hover:scale-105"
             >
               Tạo flashcard set mới
             </Link>
@@ -159,7 +159,7 @@ export default function MyFlashcards() {
             </p>
             <Link
               to="/create-flashcard"
-              className="inline-block px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-700 hover:to-orange-700 transition shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="inline-block px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-700 hover:to-orange-700 transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Tạo flashcard set mới ngay
             </Link>

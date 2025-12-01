@@ -21,6 +21,21 @@ const UserSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  bio: {
+    type: String,
+    trim: true,
+    default: '',
+    maxlength: 500
+  },
+  phone: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  avatar: {
+    type: String, // Base64 hoặc URL
+    default: ''
+  },
   isEmailVerified: {
     type: Boolean,
     default: false

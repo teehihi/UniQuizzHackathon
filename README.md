@@ -124,16 +124,37 @@ Toggle Dark Mode ở góc trên bên phải để bảo vệ mắt khi học đ�
 ### 🔐 Authentication & Security
 
 - 🔑 JWT Authentication
-- 👤 User profiles
+- 👤 User profiles với avatar
 - 🔒 Private/Public content control
 - 📧 Email verification (optional)
+- 🔐 Password management
 
 ### 🌐 Social Features
 
 - 🔗 Chia sẻ quiz qua Facebook, Zalo, Telegram, Twitter
 - 🌍 Public quiz gallery
 - 👥 Community learning
-- 📊 Leaderboard (coming soon)
+- 🎮 **Multiplayer Realtime** - Thi đấu trực tuyến với bạn bè
+- 📊 Leaderboard realtime
+
+### 🎮 Multiplayer Features (NEW!)
+
+- 🏠 **Tạo phòng thi đấu** - Host quiz cho nhiều người chơi
+- 🚪 **Tham gia phòng** - Join bằng mã phòng 6 ký tự
+- 👥 **Guest mode** - Tham gia không cần đăng nhập
+- ⚡ **Realtime** - Socket.IO cho trải nghiệm mượt mà
+- 🎯 **2 chế độ**:
+  - Tự động: Câu hỏi tự động chuyển
+  - Thủ công: Host điều khiển
+- 🏆 **Bảng xếp hạng** - Cập nhật realtime
+- ⏱️ **Tính điểm** - Dựa trên độ chính xác và tốc độ
+
+### 👤 Profile Management (NEW!)
+
+- 📸 **Upload avatar** - Ảnh đại diện cá nhân
+- ✏️ **Chỉnh sửa thông tin** - Họ tên, SĐT, giới thiệu
+- 🔑 **Đổi mật khẩu** - Bảo mật tài khoản
+- 🎨 **UI thân thiện** - Modal đẹp, responsive
 
 ---
 
@@ -187,12 +208,16 @@ git clone https://github.com/teehihi/UniQuizzHackathon.git
 ```bash
 cd server
 npm install
+# Cài đặt thêm cho tính năng mới
+npm install socket.io
 ```
 
 #### Frontend
 ```bash
 cd client
 npm install
+# Cài đặt thêm cho tính năng mới
+npm install socket.io-client
 ```
 
 ### 3. Cấu hình Environment Variables
@@ -302,6 +327,31 @@ npm run preview
 2. Chọn chủ đề hoặc tạo mới
 3. AI tạo 10 từ vựng quan trọng
 4. Học và luyện tập
+
+### 6. Thi đấu Multiplayer (MỚI!)
+
+#### Tạo phòng
+1. Vào **"Quiz của tôi"** → Click **"Tạo phòng"**
+2. Chọn quiz và cấu hình:
+   - Chế độ: Tự động hoặc Thủ công
+   - Thời gian mỗi câu
+   - Cài đặt khác
+3. Chia sẻ mã phòng với bạn bè
+4. Bắt đầu khi đủ người
+
+#### Tham gia phòng
+1. Click **"Tham gia"** trên header
+2. Nhập mã phòng 6 ký tự
+3. Nhập tên (nếu chưa đăng nhập)
+4. Chờ host bắt đầu và thi đấu!
+
+### 7. Chỉnh sửa Profile (MỚI!)
+
+1. Click vào **tên hoặc ảnh đại diện** trên header
+2. Modal hiện ra với 2 tab:
+   - **Thông tin**: Upload avatar, chỉnh sửa tên, SĐT, giới thiệu
+   - **Đổi mật khẩu**: Thay đổi mật khẩu bảo mật
+3. Chỉnh sửa và click **"Lưu thay đổi"**
 
 ---
 
@@ -447,11 +497,19 @@ GET /api/search/all?q=python&type=quiz
 - ✅ Dark mode
 - ✅ Improved quiz quality with prompt engineering
 
-### Version 2.1 (Planned)
-- 🔄 Real-time collaboration
+### Version 2.5 (Current - NEW!)
+- ✅ Multiplayer realtime với Socket.IO
+- ✅ Profile management với avatar upload
+- ✅ Guest mode cho multiplayer
+- ✅ 2 chế độ thi đấu (Auto/Manual)
+- ✅ Realtime leaderboard
+
+### Version 2.6 (Planned)
+- 🔄 Voice chat trong phòng
+- 🔄 Power-ups và achievements
+- 🔄 Tournament mode
 - 🔄 Advanced analytics dashboard
 - 🔄 Mobile app (React Native)
-- 🔄 Gamification (badges, achievements)
 - 🔄 AI-powered study recommendations
 
 ### Version 3.0 (Future)

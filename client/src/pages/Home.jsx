@@ -7,6 +7,17 @@ import { isAuthenticated } from "../utils/auth.js";
 import { motion } from "framer-motion";
 import FeedbackCard from "../components/FeedbackCard.jsx";
 import FAQSection from "../components/FAQSection";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faLightbulb, 
+  faLayerGroup, 
+  faChartLine,
+  faComments,
+  faBook,
+  faChevronDown,
+  faChevronLeft,
+  faChevronRight
+} from '@fortawesome/free-solid-svg-icons';
 // Animation fade-in
 const baseFadeInVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -175,7 +186,7 @@ export default function Home() {
           >
             <Link
               to="/create"
-              className="group relative px-8 py-4 rounded-xl bg-linear-to-r from-red-600 to-orange-600 text-white font-semibold overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              className="group relative px-8 py-4 rounded-xl bg-linear-to-r from-red-600 to-orange-600 text-white font-semibold overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -183,12 +194,12 @@ export default function Home() {
                 </svg>
                 Tạo Quiz Mới
               </span>
-              <div className="absolute inset-0 bg-linear-to-r from-orange-600 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-linear-to-r from-orange-600 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"></div>
             </Link>
 
             <Link
               to="/flashcard-hub"
-              className="group relative px-8 py-4 rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-white font-semibold overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              className="group relative px-8 py-4 rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-white font-semibold overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,12 +207,12 @@ export default function Home() {
                 </svg>
                 Flash Card
               </span>
-              <div className="absolute inset-0 bg-linear-to-r from-emerald-600 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-linear-to-r from-emerald-600 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"></div>
             </Link>
 
             <Link
               to="/myquizzes"
-              className="group px-8 py-4 rounded-xl bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border-2 border-red-400 dark:border-red-600 font-semibold hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+              className="group px-8 py-4 rounded-xl bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border-2 border-red-400 dark:border-red-600 font-semibold hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out hover:scale-105 shadow-lg hover:shadow-xl"
             >
               <span className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,16 +284,16 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <motion.div
-              className="group relative bg-linear-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 p-8 rounded-2xl border border-red-100 dark:border-red-900/50 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
+              className="group relative bg-linear-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 p-8 rounded-2xl border border-red-100 dark:border-red-900/50 overflow-hidden transition-all duration-500 ease-in-out hover:shadow-2xl hover:-translate-y-2"
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-red-200 dark:bg-red-800 rounded-full -mr-16 -mt-16 opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-200 dark:bg-red-800 rounded-full -mr-16 -mt-16 opacity-20 group-hover:scale-150 transition-transform duration-500 ease-in-out"></div>
               
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-linear-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                <div className="w-16 h-16 bg-linear-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 ease-in-out">
                   <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
@@ -305,16 +316,16 @@ export default function Home() {
 
             {/* Feature 2 */}
             <motion.div
-              className="group relative bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 p-8 rounded-2xl border border-green-100 dark:border-green-900/50 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
+              className="group relative bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 p-8 rounded-2xl border border-green-100 dark:border-green-900/50 overflow-hidden transition-all duration-500 ease-in-out hover:shadow-2xl hover:-translate-y-2"
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-green-200 dark:bg-green-800 rounded-full -mr-16 -mt-16 opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-200 dark:bg-green-800 rounded-full -mr-16 -mt-16 opacity-20 group-hover:scale-150 transition-transform duration-500 ease-in-out"></div>
               
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-linear-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                <div className="w-16 h-16 bg-linear-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 ease-in-out">
                   <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                   </svg>
@@ -331,16 +342,16 @@ export default function Home() {
 
             {/* Feature 3 */}
             <motion.div
-              className="group relative bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-8 rounded-2xl border border-blue-100 dark:border-blue-900/50 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
+              className="group relative bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 p-8 rounded-2xl border border-blue-100 dark:border-blue-900/50 overflow-hidden transition-all duration-500 ease-in-out hover:shadow-2xl hover:-translate-y-2"
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200 dark:bg-blue-800 rounded-full -mr-16 -mt-16 opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200 dark:bg-blue-800 rounded-full -mr-16 -mt-16 opacity-20 group-hover:scale-150 transition-transform duration-500 ease-in-out"></div>
               
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-in-out">
                   <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
@@ -360,14 +371,14 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
             {/* Feature 4 */}
             <motion.div
-              className="group relative bg-linear-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-6 rounded-2xl border border-purple-100 dark:border-purple-900/50 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              className="group relative bg-linear-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-6 rounded-2xl border border-purple-100 dark:border-purple-900/50 overflow-hidden transition-all duration-500 ease-in-out hover:shadow-xl hover:-translate-y-1"
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.4 }}
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-linear-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-linear-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 ease-in-out">
                   <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
@@ -385,14 +396,14 @@ export default function Home() {
 
             {/* Feature 5 */}
             <motion.div
-              className="group relative bg-linear-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-yellow-100 dark:border-yellow-900/50 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              className="group relative bg-linear-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 p-6 rounded-2xl border border-yellow-100 dark:border-yellow-900/50 overflow-hidden transition-all duration-500 ease-in-out hover:shadow-xl hover:-translate-y-1"
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.5 }}
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-linear-to-br from-yellow-500 to-amber-500 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 bg-linear-to-br from-yellow-500 to-amber-500 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500 ease-in-out">
                   <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
@@ -442,7 +453,7 @@ export default function Home() {
             <Link
               to="/mentor"
               className="mt-8 inline-block px-10 py-4 rounded-xl bg-red-600 dark:bg-red-500 text-white font-semibold 
-          hover:bg-red-700 dark:hover:bg-red-600 transition-all shadow-lg dark:shadow-red-500/30 text-lg hover:shadow-red-300/50 dark:hover:shadow-red-400/50 hover:scale-[1.03]"
+          hover:bg-red-700 dark:hover:bg-red-600 transition-all duration-300 ease-in-out shadow-lg dark:shadow-red-500/30 text-lg hover:shadow-red-300/50 dark:hover:shadow-red-400/50 hover:scale-[1.03]"
             >
               Trải nghiệm ngay
             </Link>
@@ -559,7 +570,7 @@ export default function Home() {
           </p>
           <button
             onClick={handleStartNow}
-            className="mt-8 inline-block px-10 py-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-orange-500 transition shadow-lg text-lg"
+            className="mt-8 inline-block px-10 py-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-orange-500 hover:scale-105 transition-all duration-300 ease-in-out shadow-lg text-lg"
           >
             {isLoggedIn ? "Tạo Quiz Mới Ngay" : "Bắt đầu ngay"}
           </button>
@@ -606,7 +617,7 @@ export default function Home() {
             {/* Navigation Buttons */}
             <button
               onClick={prevSlide}
-              className="absolute left-0 top-1/2 -mt-6 z-20 p-4 rounded-full bg-white dark:bg-gray-800 shadow-2xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-110 md:-ml-12 border border-red-100 dark:border-red-900"
+              className="absolute left-0 top-1/2 -mt-6 z-20 p-4 rounded-full bg-white dark:bg-gray-800 shadow-2xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out hover:scale-110 md:-ml-12 border border-red-100 dark:border-red-900"
               aria-label="Previous testimonial"
             >
               <svg
@@ -648,7 +659,7 @@ export default function Home() {
 
             <button
               onClick={nextSlide}
-              className="absolute right-0 top-1/2 -mt-6 z-20 p-4 rounded-full bg-white dark:bg-gray-800 shadow-2xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-110 md:-mr-12 border border-red-100 dark:border-red-900"
+              className="absolute right-0 top-1/2 -mt-6 z-20 p-4 rounded-full bg-white dark:bg-gray-800 shadow-2xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out hover:scale-110 md:-mr-12 border border-red-100 dark:border-red-900"
               aria-label="Next testimonial"
             >
               <svg

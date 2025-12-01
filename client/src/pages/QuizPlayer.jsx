@@ -201,7 +201,7 @@ export default function QuizPlayer() {
           </div>
           <button
             onClick={() => navigate("/myquizzes")}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-md hover:shadow-lg transform hover:scale-105"
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg transform hover:scale-105"
           >
             Quay về "Quiz của tôi"
           </button>

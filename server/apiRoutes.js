@@ -1180,6 +1180,14 @@ router.get('/search/all', async (req, res) => {
 const userRoutes = require('./routes/userRoutes');
 router.use('/user', userRoutes);
 
+// Profile Routes
+const profileRoutes = require('./routes/profileRoutes');
+router.use('/profile', profileRoutes);
+
+// Room Routes
+const roomRoutes = require('./routes/roomRoutes');
+router.use('/rooms', roomRoutes);
+
 // Email Verification Routes - DISABLED (OTP feature not ready)
 // TODO: Enable when email service is configured
 // const emailRoutes = require('./routes/emailRoutes');

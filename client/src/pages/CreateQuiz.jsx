@@ -584,7 +584,7 @@ export default function CreateQuiz() {
                         (activeTab === 'youtube' && !youtubeUrl) ||
                         (activeTab === 'text' && text.length < 50)
                       }
-                      className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:from-red-700 hover:to-orange-700 transition disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+                      className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:from-red-700 hover:to-orange-700 transition-all duration-300 ease-in-out disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
                     >
                       {isLoading ? "Đang xử lý..." : "🚀 Tạo Quiz với AI"}
                     </button>

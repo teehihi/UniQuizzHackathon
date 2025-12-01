@@ -2,15 +2,51 @@ require("dotenv").config(); // Phải ở dòng đầu tiên
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-// Xóa các import không còn dùng ở đây (multer, mammoth, geminiService, Deck)
+const http = require("http");
+const { Server } = require("socket.io");
 
 const apiRoutes = require("./apiRoutes"); // Import file routes mới
+const socketHandler = require("./socketHandler"); // Import socket handler
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 
-// 1. Cài đặt Middleware
-app.use(cors());
+// 1. Cài đặt CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://uniquizzdom.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true
+  })
+);
+
+// Socket.IO CORS
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Setup Socket.IO handlers
+socketHandler(io);
+
+// Make io accessible to routes
+app.set('io', io);
+
+// Middleware
 app.use(express.json());
 
 // 2. Kết nối MongoDB
@@ -33,23 +69,7 @@ app.use("/api", apiRoutes);
 // Tất cả logic định nghĩa Schema đã được chuyển sang models/FlashcardSet.js
 
 // 7. Khởi chạy Server
-app.listen(PORT, () => {
-  console.log(`Server đang chạy ở cổng http://localhost:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`🚀 Server đang chạy ở cổng http://localhost:${PORT}`);
+  console.log(`🔌 Socket.IO ready for realtime connections`);
 });
-
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://uniquizzdom.vercel.app/",
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-  })
-);
