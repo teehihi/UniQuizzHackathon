@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { analytics } from "./Analytics";
 import { APP_CONFIG, APP_INFO } from "../config/constants";
 
 export default function ShareButton({ quiz, type = "quiz" }) {
   const [showMenu, setShowMenu] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const buttonRef = useRef(null);
+
+  // Calculate menu position when opened
+  useEffect(() => {
+    if (showMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right + window.scrollX,
+      });
+    }
+  }, [showMenu]);
 
   // Validate quiz ID
   const quizId = quiz._id || quiz.id;
@@ -98,11 +112,17 @@ export default function ShareButton({ quiz, type = "quiz" }) {
   };
 
   return (
-    <div className="relative inline-block z-50">
+    <>
       {/* Share Button */}
       <button
-        onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow-md hover:shadow-lg"
+        ref={buttonRef}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowMenu(!showMenu);
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
         aria-label="Chia sẻ"
       >
         <svg
@@ -122,17 +142,27 @@ export default function ShareButton({ quiz, type = "quiz" }) {
         <span className="hidden sm:inline">Chia sẻ</span>
       </button>
 
-      {/* Share Menu */}
-      {showMenu && (
+      {/* Share Menu - Rendered via Portal */}
+      {showMenu && createPortal(
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-100"
-            onClick={() => setShowMenu(false)}
+            className="fixed inset-0 z-[9998]"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(false);
+            }}
           ></div>
 
           {/* Menu */}
-          <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-101 overflow-hidden max-h-[80vh] overflow-y-auto">
+          <div 
+            className="fixed w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[9999] overflow-hidden max-h-[80vh] overflow-y-auto"
+            style={{
+              top: `${menuPosition.top}px`,
+              right: `${menuPosition.right}px`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-3 border-b border-gray-200 dark:border-gray-700">
               <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
                 Chia sẻ {type === "quiz" ? "Quiz" : "Flashcard"}
@@ -143,7 +173,10 @@ export default function ShareButton({ quiz, type = "quiz" }) {
               {/* Web Share API (Mobile) */}
               {navigator.share && (
                 <button
-                  onClick={shareViaWebShare}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    shareViaWebShare();
+                  }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-left"
                 >
                   <div className="w-10 h-10 rounded-full bg-linear-0-to-br from-purple-500 to-pink-500 flex items-center justify-center">
@@ -168,7 +201,10 @@ export default function ShareButton({ quiz, type = "quiz" }) {
 
               {/* Facebook */}
               <button
-                onClick={shareToFacebook}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareToFacebook();
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center">
@@ -192,7 +228,10 @@ export default function ShareButton({ quiz, type = "quiz" }) {
 
               {/* Twitter */}
               <button
-                onClick={shareToTwitter}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareToTwitter();
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-[#1DA1F2] flex items-center justify-center">
@@ -216,7 +255,10 @@ export default function ShareButton({ quiz, type = "quiz" }) {
 
               {/* Zalo */}
               <button
-                onClick={shareToZalo}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareToZalo();
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-[#0068FF] flex items-center justify-center">
@@ -240,7 +282,10 @@ export default function ShareButton({ quiz, type = "quiz" }) {
 
               {/* Telegram */}
               <button
-                onClick={shareToTelegram}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareToTelegram();
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-[#0088cc] flex items-center justify-center">
@@ -264,7 +309,10 @@ export default function ShareButton({ quiz, type = "quiz" }) {
 
               {/* Copy Link */}
               <button
-                onClick={copyToClipboard}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard();
+                }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-gray-600 dark:bg-gray-500 flex items-center justify-center">
@@ -319,8 +367,9 @@ export default function ShareButton({ quiz, type = "quiz" }) {
               </p>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
-    </div>
+    </>
   );
 }

@@ -30,6 +30,51 @@ const contextManager = new ContextManager(4000);
 // --- Helpers ---
 
 /**
+ * Helper: Rate limiting và retry logic
+ */
+const RATE_LIMIT = {
+    minDelay: 1000, // 1 giây giữa các request
+    maxRetries: 3,
+    retryDelay: 5000 // 5 giây khi gặp lỗi 429
+};
+
+let lastRequestTime = 0;
+
+async function waitForRateLimit() {
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < RATE_LIMIT.minDelay) {
+        const waitTime = RATE_LIMIT.minDelay - timeSinceLastRequest;
+        console.log(`[Rate Limit] Chờ ${waitTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    lastRequestTime = Date.now();
+}
+
+async function retryWithBackoff(fn, retries = RATE_LIMIT.maxRetries) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            await waitForRateLimit();
+            return await fn();
+        } catch (error) {
+            const errMsg = error?.message || String(error);
+            
+            // Nếu là lỗi 429, retry với delay lâu hơn
+            if (/429|Too Many Requests|quota/i.test(errMsg)) {
+                if (i < retries - 1) {
+                    const delay = RATE_LIMIT.retryDelay * (i + 1);
+                    console.log(`[Rate Limit] ⚠️ Lỗi 429, retry sau ${delay}ms... (${i + 1}/${retries})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+            }
+            
+            throw error;
+        }
+    }
+}
+
+/**
  * Helper: Cấu hình bắt buộc để model trả về JSON
  */
 const jsonGenerationConfig = {
@@ -134,9 +179,11 @@ async function generateQuizFromText(text, numQuestions = 10, options = {}) {
 
         console.log(`[Quiz Generation] Sử dụng model: ${modelName}`);
 
-        const generation = await modelClient.generateContent({
-            contents: [{ role: "user", parts: [{ text: optimizedPrompt }] }],
-            generationConfig: jsonGenerationConfig
+        const generation = await retryWithBackoff(async () => {
+            return await modelClient.generateContent({
+                contents: [{ role: "user", parts: [{ text: optimizedPrompt }] }],
+                generationConfig: jsonGenerationConfig
+            });
         });
 
         const jsonData = await extractJsonFromResponse(generation.response);
@@ -208,7 +255,9 @@ YÊU CẦU:
   try {
     // ... (Copy-paste code try...catch y hệt hàm trên) ...
     if (!modelClient) throw new Error('Không tạo được model client');
-    const generation = await modelClient.generateContent(prompt);
+    const generation = await retryWithBackoff(async () => {
+        return await modelClient.generateContent(prompt);
+    });
     const response = await generation.response;
     let textResp = await response.text();
     textResp = textResp.replace(/```json|```/g, '').trim();
@@ -267,7 +316,9 @@ YÊU CẦU:
   try {
     if (!modelClient) throw new Error("Không tạo được model client");
 
-    const generation = await modelClient.generateContent(prompt);
+    const generation = await retryWithBackoff(async () => {
+        return await modelClient.generateContent(prompt);
+    });
     const response = generation.response;
     let textResp = await response.text();
 
@@ -342,9 +393,11 @@ ${text}
         const modelClient = picked.client;
         modelName = picked.name;
         
-        const generation = await modelClient.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: jsonGenerationConfig
+        const generation = await retryWithBackoff(async () => {
+            return await modelClient.generateContent({
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: jsonGenerationConfig
+            });
         });
         
         const jsonData = await extractJsonFromResponse(generation.response);
@@ -390,7 +443,9 @@ async function generateMentorResponse(question, lectureContext = '', options = {
         
         console.log(`[Mentor Chat] Sử dụng model: ${modelName}`);
         
-        const generation = await modelClient.generateContent(optimizedPrompt);
+        const generation = await retryWithBackoff(async () => {
+            return await modelClient.generateContent(optimizedPrompt);
+        });
         const response = await generation.response;
         const answer = response.text().trim();
         
@@ -428,9 +483,11 @@ async function generateFlashcardsFromText(text, options = {}) {
     const { client: modelClient, name: modelName } = await getModelClient();
     console.log(`[Flashcard Generation] Sử dụng model: ${modelName}`);
 
-    const result = await modelClient.generateContent({
-      contents: [{ role: "user", parts: [{ text: optimizedPrompt }] }],
-      generationConfig: jsonGenerationConfig
+    const result = await retryWithBackoff(async () => {
+        return await modelClient.generateContent({
+            contents: [{ role: "user", parts: [{ text: optimizedPrompt }] }],
+            generationConfig: jsonGenerationConfig
+        });
     });
 
     const response = await result.response;
