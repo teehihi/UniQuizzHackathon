@@ -3,13 +3,16 @@ class SoundManager {
   constructor() {
     this.sounds = {};
     this.bgMusic = null;
+    this.bgMusicAudio = null;
     this.isMuted = localStorage.getItem('soundMuted') === 'true';
   }
 
   // Initialize sounds
   init() {
-    // Background music (using Web Audio API to generate simple tones)
-    this.createBackgroundMusic();
+    // Background music from file
+    this.bgMusicAudio = new Audio('/BG_MultiPlay.mp3');
+    this.bgMusicAudio.loop = true;
+    this.bgMusicAudio.volume = 0.3;
     
     // Sound effects using Audio API with data URIs (simple beeps)
     this.sounds = {
@@ -51,48 +54,7 @@ class SoundManager {
     };
   }
 
-  // Create background music (simple melody loop)
-  createBackgroundMusic() {
-    const notes = [523.25, 587.33, 659.25, 698.46, 783.99]; // C, D, E, F, G
-    let currentNote = 0;
 
-    this.bgMusic = {
-      interval: null,
-      start: () => {
-        if (this.isMuted || this.bgMusic.interval) return;
-        
-        this.bgMusic.interval = setInterval(() => {
-          try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.frequency.value = notes[currentNote];
-            oscillator.type = 'sine';
-
-            gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.3);
-
-            currentNote = (currentNote + 1) % notes.length;
-          } catch (error) {
-            // Silently fail
-          }
-        }, 500);
-      },
-      stop: () => {
-        if (this.bgMusic.interval) {
-          clearInterval(this.bgMusic.interval);
-          this.bgMusic.interval = null;
-        }
-      }
-    };
-  }
 
   // Play sound effect
   play(soundName) {
@@ -102,17 +64,29 @@ class SoundManager {
   }
 
   // Start background music
-  startMusic() {
-    if (this.bgMusic) {
-      this.bgMusic.start();
+  startBackgroundMusic() {
+    if (this.bgMusicAudio && !this.isMuted) {
+      this.bgMusicAudio.play().catch(err => {
+        console.log('Background music autoplay prevented:', err);
+      });
     }
   }
 
   // Stop background music
-  stopMusic() {
-    if (this.bgMusic) {
-      this.bgMusic.stop();
+  stopBackgroundMusic() {
+    if (this.bgMusicAudio) {
+      this.bgMusicAudio.pause();
+      this.bgMusicAudio.currentTime = 0;
     }
+  }
+
+  // Legacy aliases
+  startMusic() {
+    this.startBackgroundMusic();
+  }
+
+  stopMusic() {
+    this.stopBackgroundMusic();
   }
 
   // Toggle mute
@@ -121,7 +95,9 @@ class SoundManager {
     localStorage.setItem('soundMuted', this.isMuted);
     
     if (this.isMuted) {
-      this.stopMusic();
+      this.stopBackgroundMusic();
+    } else {
+      this.startBackgroundMusic();
     }
     
     return this.isMuted;
@@ -136,3 +112,8 @@ class SoundManager {
 // Export singleton instance
 export const soundManager = new SoundManager();
 soundManager.init();
+
+// Make it globally accessible for cleanup
+if (typeof window !== 'undefined') {
+  window.soundManager = soundManager;
+}

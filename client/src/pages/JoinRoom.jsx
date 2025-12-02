@@ -1,14 +1,23 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function JoinRoom() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [roomCode, setRoomCode] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Auto-fill room code from URL query parameter
+  useEffect(() => {
+    const codeFromUrl = searchParams.get('code');
+    if (codeFromUrl) {
+      setRoomCode(codeFromUrl.toUpperCase());
+    }
+  }, [searchParams]);
 
   const handleJoin = async () => {
     if (!roomCode.trim()) {

@@ -73,7 +73,7 @@ export default function AchievementBadge({
       {/* Badge Icon */}
       <div className="flex items-center gap-3 relative z-10">
         <motion.div
-          className="text-4xl"
+          className={`text-4xl ${unlocked ? colors.text : 'text-gray-400 dark:text-gray-600'}`}
           animate={unlocked ? {
             rotate: [0, -10, 10, -10, 0],
             scale: [1, 1.1, 1]

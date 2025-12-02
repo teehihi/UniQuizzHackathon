@@ -103,6 +103,15 @@ export default function QuizPlayer() {
     }
   }, [quizId, navigate]);
 
+  // Cleanup: Stop background music when component unmounts
+  useEffect(() => {
+    return () => {
+      if (window.soundManager) {
+        window.soundManager.stopBackgroundMusic();
+      }
+    };
+  }, []);
+
   const currentQuestion = quiz?.questions[currentQuestionIndex];
 
   const handleAnswerSelect = (option) => {
@@ -308,7 +317,13 @@ export default function QuizPlayer() {
                 Làm lại Quiz
               </motion.button>
               <motion.button
-                onClick={() => navigate("/myquizzes")}
+                onClick={() => {
+                  // Stop any background music if playing
+                  if (window.soundManager) {
+                    window.soundManager.stopBackgroundMusic();
+                  }
+                  navigate("/myquizzes");
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-full bg-white dark:bg-gray-700 text-red-600 dark:text-red-400 py-4 rounded-xl font-semibold border-2 border-red-600 dark:border-red-400 hover:bg-red-50 dark:hover:bg-gray-600 transition shadow-md"
@@ -330,30 +345,55 @@ export default function QuizPlayer() {
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         {/* Header */}
         <header className="p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border-b border-red-100 dark:border-gray-700 sticky top-0 z-40">
-          <div className="max-w-4xl mx-auto flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-red-700 dark:text-red-400">{quiz.title}</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Câu {currentQuestionIndex + 1} / {quiz.questions.length}
-              </p>
+          <div className="max-w-4xl mx-auto">
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <h1 className="text-2xl font-bold text-red-700 dark:text-red-400">{quiz.title}</h1>
+              </div>
+              <div className="flex items-center gap-4">
+                <CircularTimer
+                  duration={timePerQuestion}
+                  onTimeUp={handleTimeUp}
+                  isActive={timerActive && !isAnswered}
+                  size={60}
+                  resetKey={currentQuestionIndex} // Reset timer mỗi câu hỏi
+                />
+                <button
+                  onClick={() => {
+                    // Stop any background music if playing
+                    if (window.soundManager) {
+                      window.soundManager.stopBackgroundMusic();
+                    }
+                    navigate('/myquizzes');
+                  }}
+                  className="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="hidden sm:inline">Thoát</span>
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <CircularTimer
-                duration={timePerQuestion}
-                onTimeUp={handleTimeUp}
-                isActive={timerActive && !isAnswered}
-                size={60}
-                resetKey={currentQuestionIndex} // Reset timer mỗi câu hỏi
-              />
-              <Link 
-                to="/myquizzes" 
-                className="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <span className="hidden sm:inline">Thoát</span>
-              </Link>
+            
+            {/* Progress Bar */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                Câu {currentQuestionIndex + 1}/{quiz.questions.length}
+              </span>
+              <div className="relative flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                </motion.div>
+              </div>
+              <span className="text-xs font-bold text-red-600 dark:text-red-400 whitespace-nowrap">
+                {Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}%
+              </span>
             </div>
           </div>
         </header>
@@ -369,33 +409,6 @@ export default function QuizPlayer() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 md:p-10 rounded-2xl shadow-2xl border-2 border-red-100 dark:border-red-900"
           >
-            {/* Enhanced Progress Bar */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-3">
-                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                  Tiến độ
-                </p>
-                <p className="text-sm font-bold text-red-600 dark:text-red-400">
-                  {currentQuestionIndex + 1} / {quiz.questions.length}
-                </p>
-              </div>
-              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
-                <motion.div
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                </motion.div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-bold text-white drop-shadow-lg">
-                    {Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}%
-                  </span>
-                </div>
-              </div>
-            </div>
-
           {/* Question */}
           <motion.div
             initial={{ opacity: 0 }}

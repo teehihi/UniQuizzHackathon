@@ -6,12 +6,11 @@ export default function CircularTimer({
   onTimeUp, 
   isActive = true,
   size = 80,
-  resetKey = 0 // Add reset key to force reset
+  resetKey = 0
 }) {
   const [timeLeft, setTimeLeft] = useState(duration);
   const [isWarning, setIsWarning] = useState(false);
 
-  // Reset timer when resetKey changes
   useEffect(() => {
     setTimeLeft(duration);
     setIsWarning(false);
@@ -28,7 +27,6 @@ export default function CircularTimer({
           return 0;
         }
         
-        // Warning when < 10 seconds
         if (prev <= 10) {
           setIsWarning(true);
         } else {
@@ -43,83 +41,161 @@ export default function CircularTimer({
   }, [isActive, onTimeUp, resetKey]);
 
   const percentage = (timeLeft / duration) * 100;
-  const circumference = 2 * Math.PI * (size / 2 - 8);
+  const circumference = 2 * Math.PI * (size / 2 - 10);
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-  const getColor = () => {
-    if (timeLeft <= 5) return '#ef4444'; // red
-    if (timeLeft <= 10) return '#f97316'; // orange
-    return '#22c55e'; // green
+  const getGradient = () => {
+    if (timeLeft <= 5) return { from: '#dc2626', to: '#ef4444', glow: '#fca5a5' }; // red
+    if (timeLeft <= 10) return { from: '#ea580c', to: '#f97316', glow: '#fdba74' }; // orange
+    return { from: '#dc2626', to: '#f97316', glow: '#fcd34d' }; // red-orange gradient (Tết colors)
   };
+
+  const colors = getGradient();
 
   return (
     <div className="relative inline-flex items-center justify-center">
-      <svg width={size} height={size} className="transform -rotate-90">
-        {/* Background circle */}
+      {/* Outer glow ring */}
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `radial-gradient(circle, ${colors.glow}20 0%, transparent 70%)`,
+          filter: 'blur(8px)'
+        }}
+        animate={{
+          scale: [1, 1.1, 1],
+          opacity: [0.5, 0.8, 0.5]
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+
+      {/* Decorative outer ring */}
+      <svg width={size} height={size} className="absolute transform -rotate-90">
+        <defs>
+          <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.from} />
+            <stop offset="100%" stopColor={colors.to} />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        
+        {/* Background circle with pattern */}
         <circle
           cx={size / 2}
           cy={size / 2}
-          r={size / 2 - 8}
+          r={size / 2 - 10}
           stroke="currentColor"
-          strokeWidth="8"
+          strokeWidth="3"
           fill="none"
           className="text-gray-200 dark:text-gray-700"
+          opacity="0.3"
         />
         
-        {/* Progress circle */}
+        {/* Progress circle with gradient */}
         <motion.circle
           cx={size / 2}
           cy={size / 2}
-          r={size / 2 - 8}
-          stroke={getColor()}
-          strokeWidth="8"
+          r={size / 2 - 10}
+          stroke="url(#timerGradient)"
+          strokeWidth="6"
           fill="none"
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
+          filter="url(#glow)"
           initial={{ strokeDashoffset: 0 }}
           animate={{ strokeDashoffset }}
           transition={{ duration: 0.5, ease: "linear" }}
         />
       </svg>
 
-      {/* Time text */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center"
-        animate={isWarning ? {
-          scale: [1, 1.1, 1],
-        } : {}}
-        transition={{
-          duration: 0.5,
-          repeat: isWarning ? Infinity : 0
-        }}
-      >
-        <span 
-          className={`text-2xl font-bold ${
-            timeLeft <= 5 
-              ? 'text-red-600 dark:text-red-400' 
-              : timeLeft <= 10 
-              ? 'text-orange-600 dark:text-orange-400' 
-              : 'text-green-600 dark:text-green-400'
-          }`}
-        >
-          {timeLeft}
-        </span>
-      </motion.div>
+      {/* Center decoration - Lantern style */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="relative">
+          {/* Background circle */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `linear-gradient(135deg, ${colors.from}15, ${colors.to}15)`,
+              boxShadow: `0 0 20px ${colors.glow}40`
+            }}
+            animate={{
+              boxShadow: [
+                `0 0 20px ${colors.glow}40`,
+                `0 0 30px ${colors.glow}60`,
+                `0 0 20px ${colors.glow}40`
+              ]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity
+            }}
+          />
+          
+          {/* Time text */}
+          <motion.div
+            className="relative z-10 flex flex-col items-center justify-center"
+            style={{ width: size * 0.6, height: size * 0.6 }}
+            animate={isWarning ? {
+              scale: [1, 1.15, 1],
+            } : {}}
+            transition={{
+              duration: 0.5,
+              repeat: isWarning ? Infinity : 0
+            }}
+          >
+            <span 
+              className="text-3xl font-bold"
+              style={{
+                background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+              }}
+            >
+              {timeLeft}
+            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">giây</span>
+          </motion.div>
+        </div>
+      </div>
 
-      {/* Warning pulse effect */}
+      {/* Warning sparkles */}
       {isWarning && (
-        <motion.div
-          className="absolute inset-0 rounded-full border-4 border-red-500"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.5, 0, 0.5]
-          }}
-          transition={{
-            duration: 1,
-            repeat: Infinity
-          }}
-        />
+        <>
+          {[...Array(4)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 rounded-full"
+              style={{
+                background: colors.to,
+                top: '50%',
+                left: '50%',
+                boxShadow: `0 0 10px ${colors.glow}`
+              }}
+              animate={{
+                x: [0, Math.cos(i * Math.PI / 2) * size * 0.6],
+                y: [0, Math.sin(i * Math.PI / 2) * size * 0.6],
+                scale: [1, 0],
+                opacity: [1, 0]
+              }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                delay: i * 0.2
+              }}
+            />
+          ))}
+        </>
       )}
     </div>
   );

@@ -28,6 +28,7 @@ import CreateFlashcardPage from './pages/CreateFlashcardPage';
 import MyFlashcards from './pages/MyFlashcards';
 import ForgotPassword from './pages/ForgotPassword';
 import SearchPage from './pages/SearchPage';
+import RoomRedirect from './pages/RoomRedirect';
 import CreateRoom from './pages/CreateRoom';
 import JoinRoom from './pages/JoinRoom';
 import MultiplayerRoom from './pages/MultiplayerRoom';
@@ -106,6 +107,7 @@ export default function App() {
         <Route path="/create-room" element={<CreateRoom />} />
         <Route path="/join-room" element={<JoinRoom />} />
         <Route path="/room/:roomCode" element={<MultiplayerRoom />} />
+        <Route path="/r/:roomCode" element={<RoomRedirect />} />
         
         </Routes>
       </BrowserRouter>

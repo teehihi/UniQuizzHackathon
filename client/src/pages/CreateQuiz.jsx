@@ -5,6 +5,8 @@ import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
 import { API_ENDPOINTS } from "../config/api.js";
 import { getAuthToken } from "../utils/auth.js";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRocket, faSpinner, faLightbulb } from '@fortawesome/free-solid-svg-icons';
 
 export default function CreateQuiz() {
   const [title, setTitle] = useState("");
@@ -385,7 +387,8 @@ export default function CreateQuiz() {
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                       >
-                        📝 Text
+                        <FontAwesomeIcon icon={faLightbulb} className="mr-2" />
+                        Text
                       </button>
                     </div>
 
@@ -503,7 +506,8 @@ export default function CreateQuiz() {
                           />
                           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                             <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-2">
-                              💡 Ví dụ URL hỗ trợ:
+                              <FontAwesomeIcon icon={faLightbulb} className="mr-2" />
+                              Ví dụ URL hỗ trợ:
                             </p>
                             <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
                               <li>• Wikipedia: https://en.wikipedia.org/wiki/...</li>
@@ -586,7 +590,17 @@ export default function CreateQuiz() {
                       }
                       className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:from-red-700 hover:to-orange-700 transition-all duration-300 ease-in-out disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
                     >
-                      {isLoading ? "Đang xử lý..." : "🚀 Tạo Quiz với AI"}
+                      {isLoading ? (
+                        <>
+                          <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        <>
+                          <FontAwesomeIcon icon={faRocket} className="mr-2" />
+                          Tạo Quiz với AI
+                        </>
+                      )}
                     </button>
                   </motion.div>
 

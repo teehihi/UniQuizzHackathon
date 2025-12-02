@@ -68,14 +68,22 @@ export default function StudyStreakCalendar({ studyData = [] }) {
           {weeks.map((week, weekIndex) => (
             <div key={weekIndex} className="flex flex-col gap-1">
               {week.map((day, dayIndex) => (
-                <motion.div
+                <div
                   key={dayIndex}
-                  className={`w-3 h-3 rounded-sm ${getColorClass(day.level)} cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-red-400 dark:hover:ring-red-500`}
-                  whileHover={{ scale: 1.5 }}
-                  onMouseEnter={() => setHoveredDay(day)}
-                  onMouseLeave={() => setHoveredDay(null)}
-                  title={`${day.date.toLocaleDateString('vi-VN')}: ${day.count} hoạt động`}
-                />
+                  className="relative w-3 h-3"
+                >
+                  <motion.div
+                    className={`absolute inset-0 rounded-sm ${getColorClass(day.level)} cursor-pointer`}
+                    whileHover={{ 
+                      scale: 1.8,
+                      zIndex: 50
+                    }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    onMouseEnter={() => setHoveredDay(day)}
+                    onMouseLeave={() => setHoveredDay(null)}
+                    title={`${day.date.toLocaleDateString('vi-VN')}: ${day.count} hoạt động`}
+                  />
+                </div>
               ))}
             </div>
           ))}
