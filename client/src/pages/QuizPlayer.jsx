@@ -350,7 +350,7 @@ export default function QuizPlayer() {
               <div>
                 <h1 className="text-2xl font-bold text-red-700 dark:text-red-400">{quiz.title}</h1>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
                 <CircularTimer
                   duration={timePerQuestion}
                   onTimeUp={handleTimeUp}
@@ -366,12 +366,12 @@ export default function QuizPlayer() {
                     }
                     navigate('/myquizzes');
                   }}
-                  className="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700"
+                  className="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-gray-700 flex-shrink-0"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span className="hidden sm:inline">Thoát</span>
+                  <span className="hidden sm:inline font-medium">Thoát</span>
                 </button>
               </div>
             </div>

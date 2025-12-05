@@ -3,7 +3,7 @@
  * Trích xuất nội dung từ nhiều định dạng: PDF, URL, YouTube, Images, PPTX
  */
 
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const mammoth = require('mammoth');
@@ -32,15 +32,17 @@ class ContentExtractor {
    */
   static async extractFromPdf(buffer) {
     try {
-      const data = await pdfParse(buffer);
+      // pdf-parse v2 API
+      const parser = new PDFParse({ data: buffer });
+      const result = await parser.getText();
       
       return {
-        text: data.text,
+        text: result.text,
         metadata: {
           format: 'pdf',
-          pages: data.numpages,
-          length: data.text.length,
-          info: data.info
+          pages: result.numpages || result.numPages || 0,
+          length: result.text.length,
+          info: result.info || {}
         }
       };
     } catch (error) {

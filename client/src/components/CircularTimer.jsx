@@ -53,7 +53,7 @@ export default function CircularTimer({
   const colors = getGradient();
 
   return (
-    <div className="relative inline-flex items-center justify-center">
+    <div className="relative inline-flex items-center justify-center flex-shrink-0">
       {/* Outer glow ring */}
       <motion.div
         className="absolute inset-0 rounded-full"
@@ -146,7 +146,7 @@ export default function CircularTimer({
             className="relative z-10 flex flex-col items-center justify-center"
             style={{ width: size * 0.6, height: size * 0.6 }}
             animate={isWarning ? {
-              scale: [1, 1.15, 1],
+              scale: [1, 1.08, 1],
             } : {}}
             transition={{
               duration: 0.5,
@@ -154,17 +154,21 @@ export default function CircularTimer({
             }}
           >
             <span 
-              className="text-3xl font-bold"
+              className="font-bold leading-none"
               style={{
+                fontSize: timeLeft < 10 ? '1.75rem' : '1.5rem',
+                color: colors.from,
                 background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+                backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
+                textFillColor: 'transparent',
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
               }}
             >
               {timeLeft}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">giây</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">giây</span>
           </motion.div>
         </div>
       </div>

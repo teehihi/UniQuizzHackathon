@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faChevronDown,
@@ -15,6 +16,11 @@ export default function Header() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showQuizDropdown, setShowQuizDropdown] = useState(false);
   const [showFlashcardDropdown, setShowFlashcardDropdown] = useState(false);
+  
+  // Mobile accordion states
+  const [mobileQuizOpen, setMobileQuizOpen] = useState(false);
+  const [mobileFlashcardOpen, setMobileFlashcardOpen] = useState(false);
+  const [mobileMultiplayerOpen, setMobileMultiplayerOpen] = useState(false);
 
   const navigate = useNavigate();
   const quizDropdownRef = useRef(null);
@@ -77,7 +83,7 @@ export default function Header() {
           fixed top-0 left-0 right-0 z-50
           bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-md
           transition-transform duration-300
-          ${showHeader ? "translate-y-0" : "-translate-y-full"}
+          ${showHeader && !mobileMenuOpen ? "translate-y-0" : "-translate-y-full"}
         `}
       >
         {/* Logo */}
@@ -104,7 +110,7 @@ export default function Header() {
               </Link>
             )}
 
-            {/* Quiz Dropdown - Hover */}
+            {/* Quiz Dropdown - Hover + Click */}
             <div 
               className="relative" 
               ref={quizDropdownRef}
@@ -112,6 +118,7 @@ export default function Header() {
               onMouseLeave={() => setShowQuizDropdown(false)}
             >
               <button
+                onClick={() => setShowQuizDropdown(!showQuizDropdown)}
                 className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 dark:hover:from-red-900/20 dark:hover:to-orange-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 flex items-center gap-1.5"
               >
                 Quiz
@@ -167,7 +174,7 @@ export default function Header() {
               )}
             </div>
 
-            {/* Flashcard Dropdown - Hover */}
+            {/* Flashcard Dropdown - Hover + Click */}
             <div 
               className="relative" 
               ref={flashcardDropdownRef}
@@ -175,6 +182,7 @@ export default function Header() {
               onMouseLeave={() => setShowFlashcardDropdown(false)}
             >
               <button
+                onClick={() => setShowFlashcardDropdown(!showFlashcardDropdown)}
                 className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 dark:hover:from-green-900/20 dark:hover:to-emerald-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 flex items-center gap-1.5"
               >
                 Flashcard
@@ -305,58 +313,156 @@ export default function Header() {
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
           <div className="fixed right-0 top-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto">
-            <div className="p-6">
+            <div className="p-6 pt-16">
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400"
+                className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 z-50"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
 
-              <nav className="mt-8 flex flex-col gap-2">
-                <Link to="/" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+              <nav className="flex flex-col gap-2">
+                <Link to="/" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-800 dark:text-gray-200 font-medium">
                   Trang chủ
                 </Link>
                 {user && (
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-800 dark:text-gray-200 font-medium">
                     Dashboard
                   </Link>
                 )}
                 
-                <div className="mt-2 mb-1 px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quiz</div>
-                <Link to="/create" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition">
-                  Tạo Quiz
-                </Link>
-                <Link to="/myquizzes" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition">
-                  Quiz của tôi
-                </Link>
+                {/* Quiz Accordion */}
+                <div className="mt-2">
+                  <motion.button
+                    onClick={() => setMobileQuizOpen(!mobileQuizOpen)}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition text-gray-800 dark:text-gray-200 font-bold text-sm uppercase tracking-wider flex items-center justify-between"
+                  >
+                    <span>Quiz</span>
+                    <motion.div
+                      animate={{ rotate: mobileQuizOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                    </motion.div>
+                  </motion.button>
+                  <AnimatePresence>
+                    {mobileQuizOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-3 overflow-hidden"
+                      >
+                        <motion.div
+                          initial={{ y: -10 }}
+                          animate={{ y: 0 }}
+                          className="mt-1 flex flex-col gap-1"
+                        >
+                          <Link to="/create" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition text-gray-700 dark:text-gray-300">
+                            Tạo Quiz
+                          </Link>
+                          <Link to="/myquizzes" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-700 dark:text-gray-300">
+                            Quiz của tôi
+                          </Link>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
-                <div className="mt-3 mb-1 px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Flashcard</div>
-                <Link to="/flashcard-hub" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition">
-                  Flashcard Hub
-                </Link>
-                <Link to="/create-flashcard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition">
-                  Tạo Flashcard
-                </Link>
-                <Link to="/my-flashcards" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition">
-                  Flashcard của tôi
-                </Link>
+                {/* Flashcard Accordion */}
+                <div>
+                  <motion.button
+                    onClick={() => setMobileFlashcardOpen(!mobileFlashcardOpen)}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition text-gray-800 dark:text-gray-200 font-bold text-sm uppercase tracking-wider flex items-center justify-between"
+                  >
+                    <span>Flashcard</span>
+                    <motion.div
+                      animate={{ rotate: mobileFlashcardOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                    </motion.div>
+                  </motion.button>
+                  <AnimatePresence>
+                    {mobileFlashcardOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-3 overflow-hidden"
+                      >
+                        <motion.div
+                          initial={{ y: -10 }}
+                          animate={{ y: 0 }}
+                          className="mt-1 flex flex-col gap-1"
+                        >
+                          <Link to="/flashcard-hub" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition text-gray-700 dark:text-gray-300">
+                            Flashcard Hub
+                          </Link>
+                          <Link to="/create-flashcard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition text-gray-700 dark:text-gray-300">
+                            Tạo Flashcard
+                          </Link>
+                          <Link to="/my-flashcards" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition text-gray-700 dark:text-gray-300">
+                            Flashcard của tôi
+                          </Link>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
-                <div className="mt-3 mb-1 px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Multiplayer</div>
-                <Link to="/create-room" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition">
-                  Tạo phòng
-                </Link>
-                <Link to="/join-room" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition">
-                  Tham gia phòng
-                </Link>
+                {/* Multiplayer Accordion */}
+                <div>
+                  <motion.button
+                    onClick={() => setMobileMultiplayerOpen(!mobileMultiplayerOpen)}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition text-gray-800 dark:text-gray-200 font-bold text-sm uppercase tracking-wider flex items-center justify-between"
+                  >
+                    <span>Multiplayer</span>
+                    <motion.div
+                      animate={{ rotate: mobileMultiplayerOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                    </motion.div>
+                  </motion.button>
+                  <AnimatePresence>
+                    {mobileMultiplayerOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-3 overflow-hidden"
+                      >
+                        <motion.div
+                          initial={{ y: -10 }}
+                          animate={{ y: 0 }}
+                          className="mt-1 flex flex-col gap-1"
+                        >
+                          <Link to="/create-room" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition text-gray-700 dark:text-gray-300">
+                            Tạo phòng
+                          </Link>
+                          <Link to="/join-room" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition text-gray-700 dark:text-gray-300">
+                            Tham gia phòng
+                          </Link>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
-                <Link to="/mentor" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition mt-3">
-                  <FontAwesomeIcon icon={faRobot} className="text-purple-600" />
+                <Link to="/mentor" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition mt-2 text-gray-800 dark:text-gray-200 font-medium">
                   Mentor AI
                 </Link>
-                <Link to="/search" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-2">
+                <Link to="/search" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-2 text-gray-800 dark:text-gray-200 font-medium">
                   <FontAwesomeIcon icon={faSearch} />
                   Tìm kiếm
                 </Link>

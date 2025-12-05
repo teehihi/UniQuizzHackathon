@@ -6,7 +6,7 @@ import Footer from "../components/Footer.jsx";
 import { API_ENDPOINTS } from "../config/api.js";
 import { getAuthToken } from "../utils/auth.js";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRocket, faSpinner, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import { faRocket, faSpinner, faLightbulb, faFile, faLink, faVideo } from '@fortawesome/free-solid-svg-icons';
 
 export default function CreateQuiz() {
   const [title, setTitle] = useState("");
@@ -354,7 +354,8 @@ export default function CreateQuiz() {
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                       >
-                        📄 File
+                        <FontAwesomeIcon icon={faFile} className="mr-2" />
+                        File
                       </button>
                       <button
                         type="button"
@@ -365,7 +366,8 @@ export default function CreateQuiz() {
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                       >
-                        🔗 URL
+                        <FontAwesomeIcon icon={faLink} className="mr-2" />
+                        URL
                       </button>
                       <button
                         type="button"
@@ -376,7 +378,8 @@ export default function CreateQuiz() {
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                       >
-                        📺 Video
+                        <FontAwesomeIcon icon={faVideo} className="mr-2" />
+                        Video
                       </button>
                       <button
                         type="button"
