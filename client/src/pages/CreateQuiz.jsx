@@ -6,12 +6,13 @@ import Footer from "../components/Footer.jsx";
 import { API_ENDPOINTS } from "../config/api.js";
 import { getAuthToken } from "../utils/auth.js";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRocket, faSpinner, faLightbulb, faFile, faLink, faVideo } from '@fortawesome/free-solid-svg-icons';
+import { faRocket, faSpinner, faLightbulb, faFile, faLink, faVideo, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 
 export default function CreateQuiz() {
   const [title, setTitle] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
+  const [inputValue, setInputValue] = useState("10"); // Separate state for input display
   
   // ⭐ Multi-format support
   const [activeTab, setActiveTab] = useState('file'); // 'file', 'url', 'youtube', 'text'
@@ -321,15 +322,48 @@ export default function CreateQuiz() {
                         min="1"
                         max="50"
                         value={questionCount}
-                        onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setQuestionCount(val);
+                          setInputValue(val.toString());
+                        }}
                         className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-600"
                       />
-                      <div className="w-16 text-center">
-                        <span className="text-2xl font-bold text-red-600 dark:text-red-400">{questionCount}</span>
-                      </div>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={inputValue}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          // Chỉ cho phép nhập số
+                          if (val === '' || /^\d+$/.test(val)) {
+                            setInputValue(val);
+                            // Cập nhật questionCount nếu là số hợp lệ
+                            if (val !== '') {
+                              const num = parseInt(val);
+                              if (num >= 1 && num <= 50) {
+                                setQuestionCount(num);
+                              }
+                            }
+                          }
+                        }}
+                        onBlur={() => {
+                          // Validate khi rời khỏi ô
+                          if (inputValue === '' || parseInt(inputValue) < 1) {
+                            setQuestionCount(1);
+                            setInputValue('1');
+                          } else if (parseInt(inputValue) > 50) {
+                            setQuestionCount(50);
+                            setInputValue('50');
+                          } else {
+                            setInputValue(questionCount.toString());
+                          }
+                        }}
+                        className="w-16 text-center text-2xl font-bold text-red-600 dark:text-red-400 bg-transparent border-2 border-red-200 dark:border-red-800 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      />
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      Kéo để chọn số câu hỏi (1-50)
+                      Kéo thanh trượt hoặc nhập số (1-50)
                     </p>
                   </motion.div>
 
@@ -557,8 +591,9 @@ export default function CreateQuiz() {
                               {text.length} / 100,000 ký tự
                             </span>
                             {text.length < 50 && text.length > 0 && (
-                              <span className="text-red-600 dark:text-red-400">
-                                ⚠️ Cần ít nhất 50 ký tự
+                              <span className="text-red-600 dark:text-red-400 flex items-center gap-1">
+                                <FontAwesomeIcon icon={faExclamationTriangle} />
+                                Cần ít nhất 50 ký tự
                               </span>
                             )}
                           </div>
