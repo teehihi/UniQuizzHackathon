@@ -229,6 +229,15 @@ export default function Header() {
               Mentor AI
             </Link>
 
+            {user && (
+              <Link 
+                to="/rag-documents" 
+                className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+              >
+                📚 Thư viện RAG
+              </Link>
+            )}
+
             <Link 
               to="/search" 
               className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 flex items-center gap-2"
@@ -461,6 +470,9 @@ export default function Header() {
 
                 <Link to="/mentor" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition mt-2 text-gray-800 dark:text-gray-200 font-medium">
                   Mentor AI
+                </Link>
+                <Link to="/rag-documents" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition text-gray-800 dark:text-gray-200 font-medium">
+                  📚 Thư viện RAG
                 </Link>
                 <Link to="/search" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-2 text-gray-800 dark:text-gray-200 font-medium">
                   <FontAwesomeIcon icon={faSearch} />

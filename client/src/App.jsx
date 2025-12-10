@@ -28,6 +28,7 @@ import CreateFlashcardPage from './pages/CreateFlashcardPage';
 import MyFlashcards from './pages/MyFlashcards';
 import ForgotPassword from './pages/ForgotPassword';
 import SearchPage from './pages/SearchPage';
+import RAGDocumentsPage from './pages/RAGDocumentsPage';
 import RoomRedirect from './pages/RoomRedirect';
 import CreateRoom from './pages/CreateRoom';
 import JoinRoom from './pages/JoinRoom';
@@ -88,6 +89,9 @@ export default function App() {
         <Route path="/flashcard-hub" element={<FlashcardHubPage />} />
         <Route path="/create-flashcard" element={<CreateFlashcardPage />} />
         <Route path="/my-flashcards" element={<MyFlashcards />} />
+
+        {/* RAG Documents */}
+        <Route path="/rag-documents" element={<RAGDocumentsPage />} />
         <Route path="/vocabulary" element={<VocabularyPage />} />
         <Route 
           path="/topic-details/:topicId" 

@@ -2,17 +2,23 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { PromptBuilder, ContextManager } = require('./utils/promptBuilder');
 const { QuestionValidator, FlashcardValidator } = require('./utils/qualityValidator');
+const RAGService = require('./services/ragService');
 
 // --- Cấu hình Ban Đầu ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Sử dụng model có tốc độ tốt và khả năng theo format JSON
 const PREFERRED_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
 
-if (!GEMINI_API_KEY) {
-    throw new Error('Không tìm thấy GEMINI_API_KEY trong file .env');
+// Nếu không có key, KHÔNG ném lỗi tại startup — chỉ tắt tính năng AI
+const AI_ENABLED = Boolean(GEMINI_API_KEY);
+if (!AI_ENABLED) {
+  console.warn('⚠️ GEMINI_API_KEY không được cấu hình — các endpoint AI sẽ trả về lỗi. Server vẫn sẽ chạy.');
 }
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+let genAI = null;
+if (AI_ENABLED) {
+  genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+}
 
 // Danh sách model ưu tiên (có fallback)
 const FALLBACK_MODELS = [
@@ -85,6 +91,9 @@ const jsonGenerationConfig = {
  * Tạo client model với logic fallback.
  */
 async function getModelClient() {
+  if (!AI_ENABLED) {
+    throw new Error('Gemini API không được cấu hình. Vui lòng đặt GEMINI_API_KEY trong .env để bật tính năng AI.');
+  }
     for (const name of FALLBACK_MODELS) {
         try {
             const client = genAI.getGenerativeModel({ model: name });
@@ -128,18 +137,23 @@ async function extractJsonFromResponse(response) {
  */
 async function listAvailableModels() {
     try {
-        // Dùng REST API để lấy danh sách models
-        const fetch = global.fetch || (await import('node-fetch')).default;
-        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`;
-        const r = await fetch(url);
+    // Nếu AI chưa bật, trả về mảng rỗng (không lỗi) — dùng để debug nhẹ
+    if (!AI_ENABLED) {
+      return [];
+    }
 
-        if (!r.ok) {
-            const errorText = await r.text();
-            throw new Error(`API call failed with status ${r.status}: ${errorText}`);
-        }
+    // Dùng REST API để lấy danh sách models
+    const fetch = global.fetch || (await import('node-fetch')).default;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`;
+    const r = await fetch(url);
 
-        const data = await r.json();
-        return data.models || [];
+    if (!r.ok) {
+      const errorText = await r.text();
+      throw new Error(`API call failed with status ${r.status}: ${errorText}`);
+    }
+
+    const data = await r.json();
+    return data.models || [];
     } catch (err) {
         console.warn('Không thể lấy model list:', err.message);
         return [];
@@ -149,18 +163,52 @@ async function listAvailableModels() {
 // --- Hàm Chính ---
 
 /**
- * Hàm 1: generate quiz với Prompt Engineering
+ * Hàm 1: generate quiz với RAG + Prompt Engineering
  * @param {string} text - Văn bản nguồn.
  * @param {number} numQuestions - Số lượng câu hỏi cần tạo (mặc định 10).
- * @param {object} options - Tùy chọn: template, difficulty, customInstructions
+ * @param {object} options - Tùy chọn: template, difficulty, customInstructions, userId, useRAG
  */
 async function generateQuizFromText(text, numQuestions = 10, options = {}) {
     numQuestions = Math.max(1, Math.min(20, parseInt(numQuestions, 10) || 10));
 
-    console.log(`[Quiz Generation] Tạo ${numQuestions} câu hỏi với Prompt Engineering...`);
+    console.log(`[Quiz Generation] Tạo ${numQuestions} câu hỏi với ${options.useRAG ? 'RAG +' : ''} Prompt Engineering...`);
 
-    // 1. Build prompt với Prompt Engineering
-    const prompt = PromptBuilder.buildQuizPrompt(text, numQuestions, {
+    let enhancedText = text;
+    let ragSources = [];
+
+    // 1. RAG Enhancement - Tìm kiếm context liên quan
+    if (options.useRAG && options.userId) {
+        try {
+            console.log('[RAG] 🔍 Tìm kiếm context liên quan...');
+            
+            // Tạo search query từ text input
+            const searchQuery = text.substring(0, 200); // Lấy 200 ký tự đầu làm query
+            
+            const ragResult = await RAGService.getRelevantContext(options.userId, searchQuery, {
+                maxChunks: 3,
+                maxContextLength: 2000,
+                includePublic: true
+            });
+            
+            if (ragResult.context) {
+                enhancedText = `NGỮ CẢNH LIÊN QUAN:\n${ragResult.context}\n\nNỘI DUNG CHÍNH:\n${text}`;
+                ragSources = ragResult.sources;
+                
+                console.log(`[RAG] ✅ Đã bổ sung context từ ${ragResult.totalChunks} chunks, ${ragSources.length} tài liệu`);
+                
+                // Cập nhật usage stats
+                const documentIds = ragSources.map(s => s.documentId);
+                await RAGService.recordDocumentUsage(documentIds, 'quizGenerated');
+            } else {
+                console.log('[RAG] ⚠️ Không tìm thấy context liên quan, sử dụng text gốc');
+            }
+        } catch (error) {
+            console.error('[RAG] ❌ Lỗi RAG, fallback về text gốc:', error.message);
+        }
+    }
+
+    // 2. Build prompt với enhanced text
+    const prompt = PromptBuilder.buildQuizPrompt(enhancedText, numQuestions, {
         template: options.template || 'universityExam',
         difficulty: options.difficulty || 3,
         includeFewShot: true,
@@ -219,6 +267,17 @@ async function generateQuizFromText(text, numQuestions = 10, options = {}) {
             console.log('[Quiz Validation] ✅ Tất cả câu hỏi hợp lệ');
         }
 
+        // 5. Thêm RAG metadata vào response
+        if (options.useRAG && ragSources.length > 0) {
+            jsonData.ragMetadata = {
+                sourcesUsed: ragSources.length,
+                sources: ragSources.map(s => ({
+                    title: s.title,
+                    fileType: s.fileType
+                }))
+            };
+        }
+
         return jsonData;
     } catch (error) {
         const errMsg = error?.message || String(error);
@@ -234,6 +293,9 @@ async function generateQuizFromText(text, numQuestions = 10, options = {}) {
 }
 
 async function generateWordsFromTopic(topic) {
+  if (!AI_ENABLED) {
+    throw new Error('Gemini API key không được cấu hình — không thể tạo từ vựng.');
+  }
   const prompt = `
 Tạo 10 từ vựng tiếng Anh quan trọng về chủ đề "${topic}".
 YÊU CẦU:
@@ -288,6 +350,9 @@ YÊU CẦU:
 
 // Tạo 1 từ mới
 async function generateSingleWordFromTopic(topic) {
+  if (!AI_ENABLED) {
+    throw new Error('Gemini API key không được cấu hình — không thể tạo từ vựng.');
+  }
   const prompt = `
 Tạo 1 từ vựng tiếng Anh DUY NHẤT về chủ đề "${topic}".
 YÊU CẦU:
@@ -418,16 +483,49 @@ ${text}
 }
 
 /**
- * Hàm 5: generate mentor response với Prompt Engineering
+ * Hàm 5: generate mentor response với RAG + Prompt Engineering
  * @param {string} question - Câu hỏi của học sinh.
  * @param {string} lectureContext - Ngữ cảnh bài giảng (tùy chọn).
- * @param {object} options - Tùy chọn: customInstructions
+ * @param {object} options - Tùy chọn: customInstructions, userId, useRAG
  */
 async function generateMentorResponse(question, lectureContext = '', options = {}) {
-    console.log(`[Mentor Chat] Trả lời câu hỏi với Prompt Engineering...`);
+    console.log(`[Mentor Chat] Trả lời câu hỏi với ${options.useRAG ? 'RAG +' : ''} Prompt Engineering...`);
 
-    // 1. Build prompt với Prompt Engineering
-    const prompt = PromptBuilder.buildMentorPrompt(question, lectureContext, {
+    let enhancedContext = lectureContext;
+    let ragSources = [];
+
+    // 1. RAG Enhancement - Tìm kiếm context liên quan
+    if (options.useRAG && options.userId) {
+        try {
+            console.log('[RAG] 🔍 Tìm kiếm tài liệu liên quan cho câu hỏi...');
+            
+            const ragResult = await RAGService.getRelevantContext(options.userId, question, {
+                maxChunks: 4,
+                maxContextLength: 2500,
+                includePublic: true
+            });
+            
+            if (ragResult.context) {
+                enhancedContext = lectureContext 
+                    ? `${lectureContext}\n\nTÀI LIỆU THAM KHẢO:\n${ragResult.context}`
+                    : ragResult.context;
+                ragSources = ragResult.sources;
+                
+                console.log(`[RAG] ✅ Đã bổ sung context từ ${ragResult.totalChunks} chunks, ${ragSources.length} tài liệu`);
+                
+                // Cập nhật usage stats
+                const documentIds = ragSources.map(s => s.documentId);
+                await RAGService.recordDocumentUsage(documentIds, 'mentorQuestions');
+            } else {
+                console.log('[RAG] ⚠️ Không tìm thấy tài liệu liên quan');
+            }
+        } catch (error) {
+            console.error('[RAG] ❌ Lỗi RAG, sử dụng context gốc:', error.message);
+        }
+    }
+
+    // 2. Build prompt với enhanced context
+    const prompt = PromptBuilder.buildMentorPrompt(question, enhancedContext, {
         customInstructions: options.customInstructions
     });
 
@@ -446,12 +544,24 @@ async function generateMentorResponse(question, lectureContext = '', options = {
         const generation = await retryWithBackoff(async () => {
             return await modelClient.generateContent(optimizedPrompt);
         });
-        const response = await generation.response;
-        const answer = response.text().trim();
+        const aiResponse = await generation.response;
+        const answer = aiResponse.text().trim();
         
         console.log(`[Mentor Chat] ✅ Đã tạo câu trả lời (${answer.length} ký tự)`);
         
-        return answer;
+        // 3. Thêm RAG metadata nếu có
+        const response = { answer };
+        if (options.useRAG && ragSources.length > 0) {
+            response.ragMetadata = {
+                sourcesUsed: ragSources.length,
+                sources: ragSources.map(s => ({
+                    title: s.title,
+                    fileType: s.fileType
+                }))
+            };
+        }
+        
+        return response;
     } catch (error) {
         const errMsg = error?.message || String(error);
         console.error('[Mentor Chat] ❌ Lỗi:', errMsg);

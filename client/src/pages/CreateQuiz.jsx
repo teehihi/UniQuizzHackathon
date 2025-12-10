@@ -14,6 +14,10 @@ export default function CreateQuiz() {
   const [questionCount, setQuestionCount] = useState(10);
   const [inputValue, setInputValue] = useState("10"); // Separate state for input display
   
+  // RAG options
+  const [useRAG, setUseRAG] = useState(true);
+  const [storeDocument, setStoreDocument] = useState(true);
+  
   // ⭐ Multi-format support
   const [activeTab, setActiveTab] = useState('file'); // 'file', 'url', 'youtube', 'text'
   const [file, setFile] = useState(null);
@@ -163,6 +167,8 @@ export default function CreateQuiz() {
         formData.append("title", title);
         formData.append("courseCode", courseCode || "");
         formData.append("questionCount", questionCount.toString());
+        formData.append("useRAG", useRAG.toString());
+        formData.append("storeDocument", storeDocument.toString());
         formData.append("file", file);
 
         res = await fetch(API_ENDPOINTS.UPLOAD, {
@@ -184,6 +190,8 @@ export default function CreateQuiz() {
             title,
             courseCode: courseCode || "",
             questionCount,
+            useRAG,
+            storeDocument,
             url: activeTab === 'url' ? url : activeTab === 'youtube' ? youtubeUrl : undefined,
             text: activeTab === 'text' ? text : undefined
           }),
@@ -365,6 +373,68 @@ export default function CreateQuiz() {
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       Kéo thanh trượt hoặc nhập số (1-50)
                     </p>
+                  </motion.div>
+
+                  {/* RAG Options */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.35 }}
+                    className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800"
+                  >
+                    <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
+                      <FontAwesomeIcon icon={faLightbulb} />
+                      🤖 Tùy chọn AI nâng cao (RAG)
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      {/* Use RAG */}
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={useRAG}
+                          onChange={(e) => setUseRAG(e.target.checked)}
+                          className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded 
+                                   focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 
+                                   focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <div>
+                          <div className="font-medium text-blue-800 dark:text-blue-300">
+                            Sử dụng RAG (Retrieval-Augmented Generation)
+                          </div>
+                          <div className="text-sm text-blue-600 dark:text-blue-400">
+                            AI sẽ tìm kiếm và sử dụng thông tin từ tài liệu đã lưu để tạo quiz chính xác hơn
+                          </div>
+                        </div>
+                      </label>
+
+                      {/* Store Document */}
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={storeDocument}
+                          onChange={(e) => setStoreDocument(e.target.checked)}
+                          className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded 
+                                   focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 
+                                   focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <div>
+                          <div className="font-medium text-blue-800 dark:text-blue-300">
+                            Lưu tài liệu vào thư viện RAG
+                          </div>
+                          <div className="text-sm text-blue-600 dark:text-blue-400">
+                            Tài liệu sẽ được lưu để AI có thể sử dụng cho các lần tạo quiz/flashcard sau
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="mt-3 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <div className="text-xs text-blue-700 dark:text-blue-300">
+                        💡 <strong>Gợi ý:</strong> Bật cả 2 tùy chọn để có trải nghiệm AI tốt nhất. 
+                        RAG giúp tạo câu hỏi chính xác hơn dựa trên ngữ cảnh từ tài liệu đã học.
+                      </div>
+                    </div>
                   </motion.div>
 
                   {/* ⭐ Multi-format Input with Tabs */}

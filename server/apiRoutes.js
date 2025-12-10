@@ -17,6 +17,7 @@ const {
 
 const { synthesizeWithGoogleTranslate } = require('./services/ttsService');
 const ContentExtractor = require('./utils/contentExtractor');
+const RAGService = require('./services/ragService');
 
 // Import models
 const Deck = require('./models/Deck');
@@ -208,13 +209,14 @@ router.post('/extract-content', verifyToken, upload.single('file'), async (req, 
 // UPLOAD MULTI-FORMAT → QUIZ (Hỗ trợ PDF, DOCX, URL, YouTube)
 router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   try {
-    const { title, courseCode, questionCount, url, text } = req.body;
+    const { title, courseCode, questionCount, url, text, useRAG, storeDocument } = req.body;
     const numQuestions = parseInt(questionCount) || 10;
 
     if (!title)
       return res.status(400).json({ message: 'Thiếu title.' });
 
     let extractedText;
+    let fileMetadata = {};
     
     // Extract content từ nhiều nguồn
     if (req.file) {
@@ -222,6 +224,11 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
       console.log(`[Quiz Upload] Processing file: ${req.file.originalname}`);
       const result = await ContentExtractor.extractContent(req.file.buffer, 'auto');
       extractedText = result.text;
+      fileMetadata = {
+        fileName: req.file.originalname,
+        fileType: req.file.originalname.split('.').pop().toLowerCase(),
+        size: req.file.size
+      };
     } 
     else if (url) {
       // URL hoặc YouTube
@@ -231,10 +238,19 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
         : 'url';
       const result = await ContentExtractor.extractContent(url, urlType);
       extractedText = result.text;
+      fileMetadata = {
+        fileName: title,
+        fileType: urlType,
+        sourceUrl: url
+      };
     }
     else if (text) {
       // Plain text
       extractedText = text;
+      fileMetadata = {
+        fileName: title,
+        fileType: 'txt'
+      };
     }
     else {
       return res.status(400).json({ message: 'Vui lòng cung cấp file, URL, hoặc text.' });
@@ -245,7 +261,35 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
 
     console.log(`[Quiz Upload] Extracted ${extractedText.length} characters, generating ${numQuestions} questions...`);
 
-    const ai = await generateQuizFromText(extractedText, numQuestions);
+    // RAG: Lưu document vào database nếu được yêu cầu
+    let storedDocument = null;
+    if (storeDocument === 'true' || storeDocument === true) {
+      try {
+        storedDocument = await RAGService.storeDocument(
+          req.userId, 
+          title, 
+          extractedText, 
+          {
+            ...fileMetadata,
+            tags: [courseCode].filter(Boolean)
+          }
+        );
+        console.log(`[RAG] ✅ Đã lưu document: ${storedDocument._id}`);
+      } catch (error) {
+        console.error('[RAG] ❌ Lỗi lưu document:', error.message);
+        // Không fail toàn bộ request nếu lưu document lỗi
+      }
+    }
+
+    // Generate quiz với RAG nếu được bật
+    const ai = await generateQuizFromText(extractedText, numQuestions, {
+      template: 'universityExam',
+      difficulty: 3,
+      userId: req.userId,
+      useRAG: useRAG === 'true' || useRAG === true,
+      customInstructions: `Tạo quiz cho môn học: ${courseCode || 'Tổng hợp'}`
+    });
+    
     if (!ai.summary || !ai.questions)
       throw new Error('AI trả về dữ liệu không hợp lệ');
 
@@ -258,7 +302,19 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
     });
 
     const saved = await deck.save();
-    res.status(201).json(saved);
+    
+    // Thêm RAG metadata vào response
+    const response = {
+      ...saved.toObject(),
+      ragMetadata: ai.ragMetadata || null,
+      storedDocument: storedDocument ? {
+        id: storedDocument._id,
+        title: storedDocument.title,
+        chunks: storedDocument.metadata.totalChunks
+      } : null
+    };
+    
+    res.status(201).json(response);
 
   } catch (error) {
     console.error('[Quiz Upload] Error:', error);
@@ -1192,5 +1248,166 @@ router.use('/rooms', roomRoutes);
 // TODO: Enable when email service is configured
 // const emailRoutes = require('./routes/emailRoutes');
 // router.use('/email', emailRoutes);
+
+/* =======================================================
+   RAG (Retrieval-Augmented Generation) ENDPOINTS
+======================================================= */
+
+// Lấy danh sách documents của user
+router.get('/rag/documents', verifyToken, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, fileType, search, sortBy = 'createdAt' } = req.query;
+    
+    const result = await RAGService.getUserDocuments(req.userId, {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      fileType,
+      search,
+      sortBy
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error('[RAG API] Error getting documents:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Tìm kiếm documents
+router.get('/rag/search', verifyToken, async (req, res) => {
+  try {
+    const { q: query, limit = 10, fileTypes, tags, includePublic = false } = req.query;
+    
+    if (!query) {
+      return res.status(400).json({ message: 'Thiếu query tìm kiếm' });
+    }
+    
+    const documents = await RAGService.searchDocuments(req.userId, query, {
+      limit: parseInt(limit),
+      fileTypes: fileTypes ? fileTypes.split(',') : [],
+      tags: tags ? tags.split(',') : [],
+      includePublic: includePublic === 'true'
+    });
+    
+    res.json({ documents });
+  } catch (error) {
+    console.error('[RAG API] Error searching documents:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Lấy context liên quan cho một query
+router.post('/rag/context', verifyToken, async (req, res) => {
+  try {
+    const { query, maxChunks = 5, maxContextLength = 3000, includePublic = false } = req.body;
+    
+    if (!query) {
+      return res.status(400).json({ message: 'Thiếu query' });
+    }
+    
+    const result = await RAGService.getRelevantContext(req.userId, query, {
+      maxChunks: parseInt(maxChunks),
+      maxContextLength: parseInt(maxContextLength),
+      includePublic
+    });
+    
+    res.json(result);
+  } catch (error) {
+    console.error('[RAG API] Error getting context:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Xóa document
+router.delete('/rag/documents/:id', verifyToken, async (req, res) => {
+  try {
+    const Document = require('./models/Document');
+    
+    const document = await Document.findOne({
+      _id: req.params.id,
+      userId: req.userId
+    });
+    
+    if (!document) {
+      return res.status(404).json({ message: 'Không tìm thấy document' });
+    }
+    
+    await Document.deleteOne({ _id: req.params.id });
+    
+    res.json({ message: 'Đã xóa document thành công' });
+  } catch (error) {
+    console.error('[RAG API] Error deleting document:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Cập nhật document (title, tags, isPublic)
+router.put('/rag/documents/:id', verifyToken, async (req, res) => {
+  try {
+    const Document = require('./models/Document');
+    const { title, tags, isPublic } = req.body;
+    
+    const document = await Document.findOne({
+      _id: req.params.id,
+      userId: req.userId
+    });
+    
+    if (!document) {
+      return res.status(404).json({ message: 'Không tìm thấy document' });
+    }
+    
+    if (title) document.title = title;
+    if (tags !== undefined) document.tags = Array.isArray(tags) ? tags : [];
+    if (isPublic !== undefined) document.isPublic = Boolean(isPublic);
+    
+    await document.save();
+    
+    res.json(document);
+  } catch (error) {
+    console.error('[RAG API] Error updating document:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// Nâng cấp mentor response với RAG
+router.post('/mentor/chat-rag', verifyToken, async (req, res) => {
+  try {
+    const { question, lectureId, useRAG = true } = req.body;
+    
+    if (!question) {
+      return res.status(400).json({ message: 'Thiếu câu hỏi' });
+    }
+    
+    // Lấy lecture context nếu có
+    let lectureContext = '';
+    if (lectureId) {
+      const lecture = await Lecture.findOne({
+        _id: lectureId,
+        userId: req.userId
+      });
+      
+      if (lecture) {
+        lectureContext = lecture.sections
+          .map(section => `${section.title}: ${section.content}`)
+          .join('\n\n');
+        
+        // Mark lecture as accessed
+        await lecture.markAccessed();
+      }
+    }
+    
+    // Generate response với RAG
+    const response = await generateMentorResponse(question, lectureContext, {
+      userId: req.userId,
+      useRAG,
+      customInstructions: 'Trả lời như một giảng viên thân thiện, dễ hiểu.'
+    });
+    
+    res.json(response);
+  } catch (error) {
+    console.error('[RAG API] Error in mentor chat:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
 
 module.exports = router;
