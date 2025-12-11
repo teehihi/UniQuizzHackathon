@@ -59,7 +59,7 @@ const RAGDemo = () => {
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
             <FontAwesomeIcon icon={faRobot} className="text-blue-500" />
-            🧪 RAG Demo - Test Context Retrieval
+            RAG Demo - Test Context Retrieval
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
             Nhập câu hỏi để test khả năng tìm kiếm context từ thư viện tài liệu RAG
@@ -206,7 +206,8 @@ const RAGDemo = () => {
         {/* Instructions */}
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
-            💡 Hướng dẫn sử dụng RAG:
+            <FontAwesomeIcon icon={faLightbulb} className="text-yellow-500" />
+            Hướng dẫn sử dụng RAG:
           </h4>
           <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
             <li>1. Vào "Tạo Quiz" và upload tài liệu với tùy chọn "Lưu vào RAG"</li>

@@ -108,7 +108,7 @@ const RAGDocuments = ({ userId }) => {
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-2">
-          📚 Thư viện tài liệu RAG
+          Thư viện tài liệu RAG
         </h1>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
           Quản lý tài liệu để tăng cường AI với RAG (Retrieval-Augmented Generation)

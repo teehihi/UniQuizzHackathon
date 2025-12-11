@@ -87,7 +87,7 @@ export default function Header() {
         `}
       >
         {/* Logo */}
-        <Link to="/" className="flex-shrink-0">
+        <Link to="/" className="shrink-0">
           <img src="/logo.png" alt="UniQuizz Logo" className="h-12 w-auto" />
         </Link>
 
@@ -96,7 +96,7 @@ export default function Header() {
           <nav className="flex gap-2 text-gray-700 dark:text-gray-300 font-medium">
             <Link 
               to="/" 
-              className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 dark:hover:from-red-900/20 dark:hover:to-orange-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200"
+              className="px-4 py-2 rounded-lg hover:bg-linear-to-r hover:from-red-50 hover:to-orange-50 dark:hover:from-red-900/20 dark:hover:to-orange-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200"
             >
               Trang chủ
             </Link>
@@ -104,7 +104,7 @@ export default function Header() {
             {user && (
               <Link 
                 to="/dashboard" 
-                className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-900/20 dark:hover:to-cyan-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                className="px-4 py-2 rounded-lg hover:bg-linear-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-900/20 dark:hover:to-cyan-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
               >
                 Dashboard
               </Link>
@@ -119,7 +119,7 @@ export default function Header() {
             >
               <button
                 onClick={() => setShowQuizDropdown(!showQuizDropdown)}
-                className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 dark:hover:from-red-900/20 dark:hover:to-orange-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg hover:bg-linear-to-r hover:from-red-50 hover:to-orange-50 dark:hover:from-red-900/20 dark:hover:to-orange-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 flex items-center gap-1.5"
               >
                 Quiz
                 <FontAwesomeIcon 
@@ -183,7 +183,7 @@ export default function Header() {
             >
               <button
                 onClick={() => setShowFlashcardDropdown(!showFlashcardDropdown)}
-                className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 dark:hover:from-green-900/20 dark:hover:to-emerald-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg hover:bg-linear-to-r hover:from-green-50 hover:to-emerald-50 dark:hover:from-green-900/20 dark:hover:to-emerald-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 flex items-center gap-1.5"
               >
                 Flashcard
                 <FontAwesomeIcon 
@@ -224,7 +224,7 @@ export default function Header() {
 
             <Link 
               to="/mentor" 
-              className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200"
+              className="px-4 py-2 rounded-lg hover:bg-linear-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200"
             >
               Mentor AI
             </Link>
@@ -232,15 +232,15 @@ export default function Header() {
             {user && (
               <Link 
                 to="/rag-documents" 
-                className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                className="px-4 py-2 rounded-lg hover:bg-linear-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
               >
-                📚 Thư viện RAG
+                Thư viện
               </Link>
             )}
 
             <Link 
               to="/search" 
-              className="px-4 py-2 rounded-lg hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 flex items-center gap-2"
+              className="px-4 py-2 rounded-lg hover:bg-linear-to-r hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faSearch} className="text-sm" />
               Tìm kiếm
@@ -267,7 +267,7 @@ export default function Header() {
                   />
                 ) : null}
                 <div 
-                  className={`w-9 h-9 rounded-full bg-gradient-to-br from-red-600 to-orange-600 text-white flex items-center justify-center font-bold ${user.avatar && user.avatar.trim() !== '' ? 'hidden' : 'flex'}`}
+                  className={`w-9 h-9 rounded-full bg-linear-to-br from-red-600 to-orange-600 text-white flex items-center justify-center font-bold ${user.avatar && user.avatar.trim() !== '' ? 'hidden' : 'flex'}`}
                 >
                   {(user.fullName || user.email).charAt(0).toUpperCase()}
                 </div>
@@ -292,7 +292,7 @@ export default function Header() {
               </Link>
               <Link
                 to="/register"
-                className="px-5 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-700 hover:to-orange-700 shadow-sm transition"
+                className="px-5 py-2 bg-linear-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-700 hover:to-orange-700 shadow-sm transition"
               >
                 Đăng ký
               </Link>
@@ -501,7 +501,7 @@ export default function Header() {
                           }}
                         />
                       ) : null}
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-orange-600 text-white flex items-center justify-center font-bold ${user.avatar && user.avatar.trim() !== '' ? 'hidden' : 'flex'}`}>
+                      <div className={`w-10 h-10 rounded-full bg-linear-to-br from-red-600 to-orange-600 text-white flex items-center justify-center font-bold ${user.avatar && user.avatar.trim() !== '' ? 'hidden' : 'flex'}`}>
                         {(user.fullName || user.email).charAt(0).toUpperCase()}
                       </div>
                       <span className="text-gray-700 dark:text-gray-300 font-medium truncate">
@@ -523,7 +523,7 @@ export default function Header() {
                     <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                       Đăng nhập
                     </Link>
-                    <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-700 hover:to-orange-700 text-center transition">
+                    <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="px-4 py-2 bg-linear-to-r from-red-600 to-orange-600 text-white rounded-lg hover:from-red-700 hover:to-orange-700 text-center transition">
                       Đăng ký
                     </Link>
                   </>

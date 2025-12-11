@@ -4,7 +4,10 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import RAGDocuments from '../components/RAGDocuments';
 import RAGDemo from '../components/RAGDemo';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faBook, faFlask
+} from '@fortawesome/free-solid-svg-icons';
 const RAGDocumentsPage = () => {
   const [activeTab, setActiveTab] = useState('documents');
 
@@ -24,7 +27,8 @@ const RAGDocumentsPage = () => {
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                 }`}
               >
-                📚 Thư viện tài liệu
+                <FontAwesomeIcon icon={faBook} className="text-white" />
+                <i className="fas fa-book mr-2"></i>Thư viện tài liệu
               </button>
               <button
                 onClick={() => setActiveTab('demo')}
@@ -34,7 +38,8 @@ const RAGDocumentsPage = () => {
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                 }`}
               >
-                🧪 Test RAG
+                <FontAwesomeIcon icon={faFlask} className="text-white" />
+                Test RAG
               </button>
             </div>
           </div>
