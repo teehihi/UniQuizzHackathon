@@ -1,0 +1,11 @@
+# UniQuizz - Robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://uniquizz.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
