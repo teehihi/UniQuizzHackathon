@@ -33,7 +33,6 @@ import RoomRedirect from './pages/RoomRedirect';
 import CreateRoom from './pages/CreateRoom';
 import JoinRoom from './pages/JoinRoom';
 import MultiplayerRoom from './pages/MultiplayerRoom';
-
 export default function App() {
   // Unregister Service Worker to fix white screen issue
   useEffect(() => {
