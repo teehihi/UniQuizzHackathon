@@ -16,6 +16,8 @@ import CountdownOverlay from '../components/CountdownOverlay';
 import MemeIntermission from '../components/MemeIntermission';
 import PlayerResultSummary from '../components/PlayerResultSummary';
 import HostLeaderboard from '../components/HostLeaderboard';
+import CharacterCustomizerModal from '../components/CharacterCustomizerModal';
+import CharacterAvatar from '../components/CharacterAvatar';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -32,7 +34,8 @@ import {
   faUsers,
   faCheckCircle,
   faTimesCircle,
-  faLightbulb
+  faLightbulb,
+  faUserEdit
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function MultiplayerRoom() {
@@ -63,6 +66,13 @@ export default function MultiplayerRoom() {
   const [showCountdown, setShowCountdown] = useState(false);
   const [showMeme, setShowMeme] = useState(false);
   const [pendingGameData, setPendingGameData] = useState(null);
+  
+  // Character Customization State
+  const [showCustomizer, setShowCustomizer] = useState(false);
+  const [myCharacterConfig, setMyCharacterConfig] = useState(() => {
+    const saved = localStorage.getItem('myCharacterConfig');
+    return saved ? JSON.parse(saved) : { skin: 0, face: 0, hair: 0, shirts: 0, pants: 0, shoes: 0 };
+  });
   
   const socketRef = useRef(null);
   const timerRef = useRef(null);
@@ -144,7 +154,11 @@ export default function MultiplayerRoom() {
         
         hasJoined = true;
         
-        socket.emit('join-room', { roomCode, displayName }, (response) => {
+        socket.emit('join-room', { 
+          roomCode, 
+          displayName,
+          characterConfig: myCharacterConfig // Send saved character
+        }, (response) => {
           
           if (response?.error) {
             toast.error(response.error);
@@ -555,7 +569,24 @@ export default function MultiplayerRoom() {
       }
     });
   };
-
+  const handleSaveCharacter = (newConfig) => {
+    setMyCharacterConfig(newConfig);
+    localStorage.setItem('myCharacterConfig', JSON.stringify(newConfig));
+    
+    // Broadcast update to room if connected
+    if (socketRef.current && roomCode) {
+      socketRef.current.emit('update-character', {
+        roomCode,
+        characterConfig: newConfig
+      }, (response) => {
+          if (response?.error) {
+              console.error('Error updating character:', response.error);
+          } else {
+             console.log('Character updated successfully');
+          }
+      });
+    }
+  };
 
   const handleCountdownComplete = () => {
     setShowCountdown(false);
@@ -634,6 +665,14 @@ export default function MultiplayerRoom() {
       </div>
 
       {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
+
+      {/* Character Customizer Modal */}
+      <CharacterCustomizerModal
+        isOpen={showCustomizer}
+        onClose={() => setShowCustomizer(false)}
+        initialConfig={myCharacterConfig}
+        onSave={handleSaveCharacter}
+      />
 
       {/* Falling Blossoms Effect */}
       <FallingBlossoms />
@@ -756,6 +795,16 @@ export default function MultiplayerRoom() {
                         {isMuted ? 'Bật âm' : 'Tắt âm'}
                       </button>
 
+                     {!isHost && (
+                     <button
+                        onClick={() => setShowCustomizer(true)}
+                        className="px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2 backdrop-blur-sm shadow-lg bg-black/20 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 hover:border-white/30 group"
+                      >
+                        <FontAwesomeIcon icon={faUserEdit} className="group-hover:scale-110 transition-transform" />
+                        Chỉnh trang phục
+                      </button>
+                     )}
+
                      <button
                        onClick={() => setShowLeaveModal(true)}
                        className="px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2 backdrop-blur-sm shadow-lg bg-black/20 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 hover:border-white/30 group"
@@ -794,13 +843,32 @@ export default function MultiplayerRoom() {
                                  <div className="mb-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                                     {p.displayName}
                                  </div>
-                                 
-                                 <ParticipantAvatar
-                                     name={p.displayName}
-                                     isHost={p.isHost}
-                                     isOnline={p.isOnline}
-                                     onRemove={isHost && !p.isHost ? () => handleRemoveParticipant(p.socketId) : undefined}
-                                 />
+                                                                  
+                                  {/* Use CharacterAvatar if config exists, else fallback to ParticipantAvatar (or just wrap logic) */}
+                                  {p.characterConfig && Object.keys(p.characterConfig).length > 0 ? (
+                                    <div className="relative flex flex-col items-center">
+                                      {/* Name Tag */}
+                                      <div className={`mb-2 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-lg transition-all
+                                        ${p.socketId === socketRef.current?.id
+                                          ? 'bg-yellow-400 text-red-900 border-2 border-yellow-200' 
+                                          : 'bg-black/50 text-white backdrop-blur-sm group-hover:bg-white group-hover:text-black'
+                                        }`}>
+                                        {p.displayName} {p.socketId === socketRef.current?.id && '(Bạn)'}
+                                      </div>
+
+                                      <CharacterAvatar 
+                                        config={p.characterConfig} 
+                                        size={120} 
+                                      />
+                                    </div>
+                                  ) : (
+                                    <ParticipantAvatar
+                                        name={p.displayName}
+                                        isHost={p.isHost}
+                                        isOnline={p.isOnline}
+                                        onRemove={isHost && !p.isHost ? () => handleRemoveParticipant(p.socketId) : undefined}
+                                    />
+                                  )}
                                  {/* Shadow directly on the "floor" */}
                                  <div className="w-16 h-4 bg-black/30 blur-sm rounded-[100%] mt-[-5px]" />
                              </motion.div>

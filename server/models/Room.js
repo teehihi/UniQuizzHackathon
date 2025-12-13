@@ -37,6 +37,10 @@ const ParticipantSchema = new mongoose.Schema({
   isOnline: {
     type: Boolean,
     default: true
+  },
+  characterConfig: {
+    type: Object,
+    default: {} // Stores skin, face, hair, etc.
   }
 });
 

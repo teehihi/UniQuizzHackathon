@@ -132,7 +132,7 @@ module.exports = (io) => {
     // JOIN ROOM - LOGIC ĐƠN GIẢN
     socket.on('join-room', async (data, callback) => {
       try {
-        const { roomCode, displayName } = data;
+        const { roomCode, displayName, characterConfig } = data;
         
         if (!roomCode || !displayName) {
           return callback({ error: 'Thiếu thông tin' });
@@ -236,7 +236,8 @@ module.exports = (io) => {
             score: 0,
             answers: [],
             isOnline: true,
-            socketId: socket.id
+            socketId: socket.id,
+            characterConfig: characterConfig || {}
           });
         }
         
@@ -261,6 +262,37 @@ module.exports = (io) => {
       } catch (error) {
         console.error('Error joining room:', error);
         callback({ error: error.message });
+      }
+    });
+
+    // UPDATE CHARACTER CONFIG
+    socket.on('update-character', async (data, callback) => {
+      try {
+        const { roomCode, characterConfig } = data;
+        
+        const room = await Room.findOne({ roomCode: roomCode.toUpperCase() });
+        if (!room) return callback && callback({ error: 'Room not found' });
+
+        const participant = room.participants.find(p => p.socketId === socket.id);
+        
+        // If host (not in participants), just acknowledge
+        if (!participant) {
+             return callback && callback({ success: true, message: 'Host updated (no-op)' });
+        }
+
+        participant.characterConfig = characterConfig;
+        await room.save();
+
+        // Broadcast to everyone
+        io.to(roomCode.toUpperCase()).emit('participants-updated', {
+          participants: room.participants,
+          count: room.participants.length
+        });
+
+        if (callback) callback({ success: true });
+      } catch (error) {
+        console.error('Error updating character:', error);
+        if (callback) callback({ error: error.message });
       }
     });
 

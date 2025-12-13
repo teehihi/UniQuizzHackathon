@@ -1,0 +1,331 @@
+{
+  "face": [
+    {
+      "id": "face1",
+      "path": "/character/face/face1.png",
+      "filename": "face1.png"
+    },
+    {
+      "id": "face2",
+      "path": "/character/face/face2.png",
+      "filename": "face2.png"
+    },
+    {
+      "id": "face3",
+      "path": "/character/face/face3.png",
+      "filename": "face3.png"
+    },
+    {
+      "id": "face4",
+      "path": "/character/face/face4.png",
+      "filename": "face4.png"
+    }
+  ],
+  "hat": [
+    {
+      "id": "11616_1763390808031",
+      "path": "/character/hat/11616_1763390808031.svg",
+      "filename": "11616_1763390808031.svg"
+    },
+    {
+      "id": "3150_1687269099928",
+      "path": "/character/hat/3150_1687269099928.svg",
+      "filename": "3150_1687269099928.svg"
+    },
+    {
+      "id": "3250_1687269133335",
+      "path": "/character/hat/3250_1687269133335.svg",
+      "filename": "3250_1687269133335.svg"
+    },
+    {
+      "id": "4100_1687269448758",
+      "path": "/character/hat/4100_1687269448758.svg",
+      "filename": "4100_1687269448758.svg"
+    },
+    {
+      "id": "5366_1703158360295",
+      "path": "/character/hat/5366_1703158360295.svg",
+      "filename": "5366_1703158360295.svg"
+    },
+    {
+      "id": "5367_1702041374570",
+      "path": "/character/hat/5367_1702041374570.svg",
+      "filename": "5367_1702041374570.svg"
+    },
+    {
+      "id": "5369_1703158343397",
+      "path": "/character/hat/5369_1703158343397.svg",
+      "filename": "5369_1703158343397.svg"
+    },
+    {
+      "id": "5370_1702041455710",
+      "path": "/character/hat/5370_1702041455710.svg",
+      "filename": "5370_1702041455710.svg"
+    },
+    {
+      "id": "5376_1703158436435",
+      "path": "/character/hat/5376_1703158436435.svg",
+      "filename": "5376_1703158436435.svg"
+    },
+    {
+      "id": "5402_1707384002357",
+      "path": "/character/hat/5402_1707384002357.svg",
+      "filename": "5402_1707384002357.svg"
+    },
+    {
+      "id": "backwards_cap",
+      "path": "/character/hat/backwards_cap.svg",
+      "filename": "backwards_cap.svg"
+    },
+    {
+      "id": "bl_bucket_hat",
+      "path": "/character/hat/bl_bucket_hat.svg",
+      "filename": "bl_bucket_hat.svg"
+    },
+    {
+      "id": "cap",
+      "path": "/character/hat/cap.svg",
+      "filename": "cap.svg"
+    },
+    {
+      "id": "football_helmet",
+      "path": "/character/hat/football_helmet.svg",
+      "filename": "football_helmet.svg"
+    },
+    {
+      "id": "hat",
+      "path": "/character/hat/hat.svg",
+      "filename": "hat.svg"
+    },
+    {
+      "id": "lb_beanie",
+      "path": "/character/hat/lb_beanie.svg",
+      "filename": "lb_beanie.svg"
+    },
+    {
+      "id": "lifeguard",
+      "path": "/character/hat/lifeguard.svg",
+      "filename": "lifeguard.svg"
+    },
+    {
+      "id": "smiley_cap",
+      "path": "/character/hat/smiley_cap.svg",
+      "filename": "smiley_cap.svg"
+    },
+    {
+      "id": "traffic_cone",
+      "path": "/character/hat/traffic_cone.svg",
+      "filename": "traffic_cone.svg"
+    }
+  ],
+  "pants": [
+    {
+      "id": "b_ripped_jeans",
+      "path": "/character/pants/b_ripped_jeans.svg",
+      "filename": "b_ripped_jeans.svg"
+    },
+    {
+      "id": "g_cargo_pants",
+      "path": "/character/pants/g_cargo_pants.svg",
+      "filename": "g_cargo_pants.svg"
+    },
+    {
+      "id": "lb_patch_jeans",
+      "path": "/character/pants/lb_patch_jeans.svg",
+      "filename": "lb_patch_jeans.svg"
+    },
+    {
+      "id": "p_sweats",
+      "path": "/character/pants/p_sweats.svg",
+      "filename": "p_sweats.svg"
+    },
+    {
+      "id": "plaid_skirt",
+      "path": "/character/pants/plaid_skirt.svg",
+      "filename": "plaid_skirt.svg"
+    }
+  ],
+  "shirts": [
+    {
+      "id": "aiute",
+      "path": "/character/shirts/aiute.svg",
+      "filename": "aiute.svg"
+    },
+    {
+      "id": "aohub",
+      "path": "/character/shirts/aohub.svg",
+      "filename": "aohub.svg"
+    },
+    {
+      "id": "br_brazilTee4",
+      "path": "/character/shirts/br_brazilTee4.svg",
+      "filename": "br_brazilTee4.svg"
+    },
+    {
+      "id": "br_brazilTee5",
+      "path": "/character/shirts/br_brazilTee5.svg",
+      "filename": "br_brazilTee5.svg"
+    },
+    {
+      "id": "br_brazilTee6",
+      "path": "/character/shirts/br_brazilTee6.svg",
+      "filename": "br_brazilTee6.svg"
+    },
+    {
+      "id": "g_varsity",
+      "path": "/character/shirts/g_varsity.svg",
+      "filename": "g_varsity.svg"
+    },
+    {
+      "id": "one_fb_jersey",
+      "path": "/character/shirts/one_fb_jersey.svg",
+      "filename": "one_fb_jersey.svg"
+    },
+    {
+      "id": "p_crop_sweater",
+      "path": "/character/shirts/p_crop_sweater.svg",
+      "filename": "p_crop_sweater.svg"
+    },
+    {
+      "id": "r_polkadot",
+      "path": "/character/shirts/r_polkadot.svg",
+      "filename": "r_polkadot.svg"
+    },
+    {
+      "id": "safari_jacket",
+      "path": "/character/shirts/safari_jacket.svg",
+      "filename": "safari_jacket.svg"
+    },
+    {
+      "id": "shirt",
+      "path": "/character/shirts/shirt.svg",
+      "filename": "shirt.svg"
+    },
+    {
+      "id": "y_flower_dress",
+      "path": "/character/shirts/y_flower_dress.svg",
+      "filename": "y_flower_dress.svg"
+    }
+  ],
+  "shoes": [
+    {
+      "id": "b_boots",
+      "path": "/character/shoes/b_boots.svg",
+      "filename": "b_boots.svg"
+    },
+    {
+      "id": "bl_gum_boots",
+      "path": "/character/shoes/bl_gum_boots.svg",
+      "filename": "bl_gum_boots.svg"
+    },
+    {
+      "id": "g_sports_shoes",
+      "path": "/character/shoes/g_sports_shoes.svg",
+      "filename": "g_sports_shoes.svg"
+    },
+    {
+      "id": "r_converse",
+      "path": "/character/shoes/r_converse.svg",
+      "filename": "r_converse.svg"
+    }
+  ],
+  "bundle": [
+    {
+      "id": "bundle-2",
+      "path": "/character/bundle/bundle-2.svg",
+      "filename": "bundle-2.svg"
+    },
+    {
+      "id": "bundle-3",
+      "path": "/character/bundle/bundle-3.svg",
+      "filename": "bundle-3.svg"
+    },
+    {
+      "id": "bundle",
+      "path": "/character/bundle/bundle.svg",
+      "filename": "bundle.svg"
+    }
+  ],
+  "skin": [
+    {
+      "id": "Tint 1",
+      "parts": {
+        "arm": "/character/skin/Tint 1/tint1_arm.png",
+        "hand": "/character/skin/Tint 1/tint1_hand.png",
+        "head": "/character/skin/Tint 1/tint1_head.png",
+        "leg": "/character/skin/Tint 1/tint1_leg.png",
+        "neck": "/character/skin/Tint 1/tint1_neck.png"
+      }
+    },
+    {
+      "id": "Tint 2",
+      "parts": {
+        "arm": "/character/skin/Tint 2/tint2_arm.png",
+        "hand": "/character/skin/Tint 2/tint2_hand.png",
+        "head": "/character/skin/Tint 2/tint2_head.png",
+        "leg": "/character/skin/Tint 2/tint2_leg.png",
+        "neck": "/character/skin/Tint 2/tint2_neck.png"
+      }
+    },
+    {
+      "id": "Tint 3",
+      "parts": {
+        "arm": "/character/skin/Tint 3/tint3_arm.png",
+        "hand": "/character/skin/Tint 3/tint3_hand.png",
+        "head": "/character/skin/Tint 3/tint3_head.png",
+        "leg": "/character/skin/Tint 3/tint3_leg.png",
+        "neck": "/character/skin/Tint 3/tint3_neck.png"
+      }
+    },
+    {
+      "id": "Tint 4",
+      "parts": {
+        "arm": "/character/skin/Tint 4/tint4_arm.png",
+        "hand": "/character/skin/Tint 4/tint4_hand.png",
+        "head": "/character/skin/Tint 4/tint4_head.png",
+        "leg": "/character/skin/Tint 4/tint4_leg.png",
+        "neck": "/character/skin/Tint 4/tint4_neck.png"
+      }
+    },
+    {
+      "id": "Tint 5",
+      "parts": {
+        "arm": "/character/skin/Tint 5/tint5_arm.png",
+        "hand": "/character/skin/Tint 5/tint5_hand.png",
+        "head": "/character/skin/Tint 5/tint5_head.png",
+        "leg": "/character/skin/Tint 5/tint5_leg.png",
+        "neck": "/character/skin/Tint 5/tint5_neck.png"
+      }
+    },
+    {
+      "id": "Tint 6",
+      "parts": {
+        "arm": "/character/skin/Tint 6/tint6_arm.png",
+        "hand": "/character/skin/Tint 6/tint6_hand.png",
+        "head": "/character/skin/Tint 6/tint6_head.png",
+        "leg": "/character/skin/Tint 6/tint6_leg.png",
+        "neck": "/character/skin/Tint 6/tint6_neck.png"
+      }
+    },
+    {
+      "id": "Tint 7",
+      "parts": {
+        "arm": "/character/skin/Tint 7/tint7_arm.png",
+        "hand": "/character/skin/Tint 7/tint7_hand.png",
+        "head": "/character/skin/Tint 7/tint7_head.png",
+        "leg": "/character/skin/Tint 7/tint7_leg.png",
+        "neck": "/character/skin/Tint 7/tint7_neck.png"
+      }
+    },
+    {
+      "id": "Tint 8",
+      "parts": {
+        "arm": "/character/skin/Tint 8/tint8_arm.png",
+        "hand": "/character/skin/Tint 8/tint8_hand.png",
+        "head": "/character/skin/Tint 8/tint8_head.png",
+        "leg": "/character/skin/Tint 8/tint8_leg.png",
+        "neck": "/character/skin/Tint 8/tint8_neck.png"
+      }
+    }
+  ]
+}
