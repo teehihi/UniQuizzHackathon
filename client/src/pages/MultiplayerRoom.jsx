@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { initSocket, getSocket, disconnectSocket } from '../utils/socket';
 import { soundManager } from '../utils/sounds';
+import HostGameHUD from '../components/HostGameHUD';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ConfirmModal from '../components/ConfirmModal';
@@ -11,6 +12,7 @@ import FallingBlossoms from '../components/FallingBlossoms';
 import StageBackground from '../components/StageBackground';
 import RoomCodeBanner from '../components/RoomCodeBanner';
 import ParticipantAvatar from '../components/ParticipantAvatar';
+import CountdownOverlay from '../components/CountdownOverlay';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -55,6 +57,8 @@ export default function MultiplayerRoom() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [pendingGameData, setPendingGameData] = useState(null);
   
   const socketRef = useRef(null);
   const timerRef = useRef(null);
@@ -204,22 +208,18 @@ export default function MultiplayerRoom() {
 
     socket.on('game-started', (data) => {
       soundManager.play('start');
-      soundManager.startMusic();
       
       // Luôn reload room data để đảm bảo có đầy đủ thông tin
       socket.emit('get-room-data', { roomCode }, (response) => {
         if (response?.success && response?.room && response?.quiz) {
-          setRoom(response.room);
-          setQuiz(response.quiz);
-          setGameStatus('playing');
-          setCurrentQuestionIndex(0);
+          // Lưu dữ liệu để dùng sau khi đếm ngược
+          setPendingGameData({
+            room: response.room,
+            quiz: response.quiz
+          });
           
-          if (response.quiz.questions && response.quiz.questions.length > 0) {
-            setCurrentQuestion(response.quiz.questions[0]);
-            const timePerQ = response.room.settings?.timePerQuestion || 30;
-            startTimer(timePerQ);
-            toast.success('Trò chơi bắt đầu!');
-          }
+          // Bắt đầu đếm ngược
+          setShowCountdown(true);
         } else {
           toast.error('Không thể tải dữ liệu game');
         }
@@ -541,6 +541,29 @@ export default function MultiplayerRoom() {
     });
   };
 
+
+  const handleCountdownComplete = () => {
+    setShowCountdown(false);
+    
+    if (pendingGameData) {
+      const { room, quiz } = pendingGameData;
+      setRoom(room);
+      setQuiz(quiz);
+      setGameStatus('playing');
+      setCurrentQuestionIndex(0);
+      
+      // Bắt đầu nhạc nền khi vào game
+      soundManager.startMusic();
+      
+      if (quiz.questions && quiz.questions.length > 0) {
+        setCurrentQuestion(quiz.questions[0]);
+        const timePerQ = room.settings?.timePerQuestion || 30;
+        startTimer(timePerQ);
+        toast.success('Trò chơi bắt đầu!');
+      }
+    }
+  };
+
   if (!room || !quiz) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -582,19 +605,20 @@ export default function MultiplayerRoom() {
 
   return (
     <div className="min-h-screen bg-gray-900 relative overflow-hidden custom-cursor">
-      {/* Global Festive Background - Waiting Mode */}
-      {gameStatus === 'waiting' && (
-        <div 
-          className="absolute inset-0 z-0 pointer-events-none transition-all duration-1000 ease-in-out"
-          style={{
-             backgroundImage: "url('/backgrounds/festive-bg.png')",
-             backgroundSize: 'cover',
-             backgroundPosition: 'center bottom',
-          }}
-        >
-           <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for readability */}
-        </div>
-      )}
+      {/* Global Festive Background - Always visible, fixed to prevent jitter */}
+      <div 
+        className="fixed inset-0 z-0 pointer-events-none transition-all duration-1000 ease-in-out"
+        style={{
+            backgroundImage: "url('/backgrounds/festive-bg.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundAttachment: 'fixed' // Ensure it doesn't scroll
+        }}
+      >
+          <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for readability */}
+      </div>
+
+      {showCountdown && <CountdownOverlay onComplete={handleCountdownComplete} />}
 
       {/* Falling Blossoms Effect */}
       <FallingBlossoms />
@@ -603,8 +627,8 @@ export default function MultiplayerRoom() {
          {gameStatus !== 'playing' && <Header />}
       </div>
       
-      {/* Quiz Info Bar - Hiện khi đang chơi thay cho header */}
-      {gameStatus === 'playing' && (
+      {/* Quiz Info Bar - Hiện khi đang chơi thay cho header (Chỉ hiện cho Player, Host có Dashboard riêng) */}
+      {gameStatus === 'playing' && !isHost && (
         <div className="bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700 relative z-40">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between mb-3">
@@ -658,8 +682,8 @@ export default function MultiplayerRoom() {
       )}
       
       <div className={`container mx-auto px-4 ${gameStatus === 'playing' ? 'py-4' : 'py-8'} relative z-30`}>
-        {/* Room Info - Chỉ hiện khi không chơi */}
-        {gameStatus !== 'playing' && (
+        {/* Room Info - Chỉ hiện khi kết thúc (Finished) */}
+        {gameStatus === 'finished' && (
           <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-md rounded-lg shadow-xl border border-white/10 p-6 mb-6 relative transition-all hover:bg-white/95 dark:hover:bg-gray-800/90">
           <div className="flex justify-between items-center">
             <div className="flex-1">
@@ -671,32 +695,8 @@ export default function MultiplayerRoom() {
               </p>
             </div>
             
-            {/* Center Status - Absolute Center or Flex */}
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-               <span className="bg-yellow-100/80 backdrop-blur text-yellow-800 text-xl md:text-2xl font-bold px-6 py-2 rounded-full border-2 border-yellow-400 dark:bg-yellow-900/50 dark:text-yellow-300 animate-pulse uppercase tracking-wider shadow-lg whitespace-nowrap">
-                  Đang chờ bắt đầu...
-               </span>
-            </div>
-
             <div className="text-right flex-1">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                Người chơi: {participants.filter(p => p.isOnline).length}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                Chế độ: {room.mode === 'auto' ? 'Tự động' : 'Thủ công'}
-              </p>
               <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => {
-                    const newMuted = soundManager.toggleMute();
-                    setIsMuted(newMuted);
-                    toast.info(newMuted ? '🔇 Đã tắt âm thanh' : '🔊 Đã bật âm thanh');
-                  }}
-                  className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-all duration-300 ease-in-out"
-                  title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-                >
-                  <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeHigh} />
-                </button>
                 <button
                   onClick={() => setShowLeaveModal(true)}
                   className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-all duration-300 ease-in-out flex items-center gap-1"
@@ -704,15 +704,6 @@ export default function MultiplayerRoom() {
                   <FontAwesomeIcon icon={faRightFromBracket} />
                   Rời phòng
                 </button>
-                {isHost && (
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-all duration-300 ease-in-out flex items-center gap-1"
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                    Xóa phòng
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -721,68 +712,108 @@ export default function MultiplayerRoom() {
 
         {/* Waiting Room */}
         {gameStatus === 'waiting' && (
-          <StageBackground>
-             <div className="h-full flex flex-col items-center pt-4 pb-4 px-4 relative z-20">
-                {/* Banner - Centered and Compact */}
-                <div className="w-full max-w-5xl shrink-0 z-30 mb-4">
-                   <RoomCodeBanner roomCode={roomCode} onShareClick={() => setShowShareModal(true)} />
-                </div>
-
-                {/* Participants Stage - Takes remaining space */}
-                <div className="flex-1 w-full flex flex-wrap justify-center items-end content-end gap-x-6 gap-y-2 pb-8 max-w-7xl mx-auto px-12 z-10 mt-20">
-                  {participants.map((p, index) => (
-                    <ParticipantAvatar 
-                      key={p.socketId || index}
-                      name={p.displayName} 
-                      isSelf={p.socketId === socketRef.current?.id}
-                      index={index}
-                    />
-                  ))}
-                  
-                  {/* Join Text */}
-                  {participants.length === 0 && (
-                    <div className="text-white/50 mt-10 text-xl font-medium animate-pulse">
-                      Waiting for players...
-                    </div>
-                  )}
-                </div>
-
-                {/* Host Controls */}
-                {isHost && (
-                    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-black/50 backdrop-blur-md px-6 py-3 rounded-full border border-yellow-500/30 z-50">
-                       <div className="text-yellow-400 font-bold mr-4 flex items-center gap-2">
-                          <FontAwesomeIcon icon={faUsers} />
-                          {participants.length} người chơi
-                       </div>
-                       
+          <div className="flex flex-col items-center relative z-20 w-full h-[calc(100vh-100px)]">
+             {/* Banner - Pushed to Top */}
+             <div className="w-full max-w-5xl shrink-0 z-30 mb-auto mt-2 md:mt-6 flex flex-col items-center">
+                <RoomCodeBanner roomCode={roomCode} onShareClick={() => setShowShareModal(true)} />
+                
+                {/* Utility Buttons - Centered below banner */}
+                <div className="flex items-center gap-4 mt-6">
+                     <button
+                       onClick={() => setShowLeaveModal(true)}
+                       className="px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2 backdrop-blur-sm shadow-lg bg-black/20 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 hover:border-white/30 group"
+                     >
+                       <FontAwesomeIcon icon={faRightFromBracket} className="group-hover:-translate-x-1 transition-transform" />
+                       Rời phòng
+                     </button>
+                     {isHost && (
                        <button
-                        onClick={handleDeleteRoom}
-                        className="px-4 py-2 bg-red-900/80 hover:bg-red-800 text-red-200 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-                      >
-                         <FontAwesomeIcon icon={faTrash} />
-                         Hủy
-                      </button>
-
-                       <button
-                        onClick={handleStartGame}
-                        disabled={participants.length === 0}
-                        className="px-8 py-3 bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-500 hover:to-yellow-500 text-white font-bold rounded-lg shadow-lg hover:shadow-yellow-500/20 transform hover:-translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-3 text-lg"
-                      >
-                         <FontAwesomeIcon icon={faPlay} />
-                         BẮT ĐẦU NGAY
-                      </button>
-                    </div>
-                )}
+                         onClick={() => setShowDeleteModal(true)}
+                         className="px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2 backdrop-blur-sm shadow-lg bg-red-900/30 hover:bg-red-600/50 text-red-200 hover:text-white border border-red-500/20 hover:border-red-500/50 group"
+                       >
+                         <FontAwesomeIcon icon={faTrash} className="group-hover:rotate-12 transition-transform" />
+                         Hủy phòng
+                       </button>
+                     )}
+                </div>
              </div>
-          </StageBackground>
+
+             {/* Participants Stage - Positioned on the "floor" */}
+             {/* Using absolute positioning to anchor to the bottom of the viewport/image */}
+             <div className="absolute bottom-[5%] left-0 right-0 z-10 px-4 pb-20">
+                 <div className="flex flex-wrap justify-center items-end gap-2 md:gap-6 max-w-7xl mx-auto perspective-1000">
+                      <AnimatePresence>
+                         {participants.map((p) => (
+                             <motion.div
+                                 key={p.socketId}
+                                 initial={{ opacity: 0, y: 100, scale: 0.5 }}
+                                 animate={{ opacity: 1, y: 0, scale: 1 }}
+                                 exit={{ opacity: 0, scale: 0, y: 50 }}
+                                 layout
+                                 className="relative group flex flex-col items-center"
+                                 style={{ transformStyle: 'preserve-3d' }}
+                             >
+                                 {/* Name Tag */}
+                                 <div className="mb-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                    {p.displayName}
+                                 </div>
+                                 
+                                 <ParticipantAvatar
+                                     name={p.displayName}
+                                     isHost={p.isHost}
+                                     isOnline={p.isOnline}
+                                     onRemove={isHost && !p.isHost ? () => handleRemoveParticipant(p.socketId) : undefined}
+                                 />
+                                 {/* Shadow directly on the "floor" */}
+                                 <div className="w-16 h-4 bg-black/30 blur-sm rounded-[100%] mt-[-5px]" />
+                             </motion.div>
+                         ))}
+                      </AnimatePresence>
+                      
+                      {participants.length === 0 && (
+                          <div className="text-white/50 text-center pb-8 flex flex-col items-center">
+                              <div className="w-20 h-4 bg-black/20 blur-md rounded-[100%]" />
+                              <p className="mt-4 text-lg font-medium text-yellow-200/80">Sàn diễn đang trống...</p>
+                          </div>
+                      )}
+                 </div>
+             </div>
+             
+             {/* Start Game Button - Fixed at bottom center, floating above the floor line */}
+             {gameStatus === 'waiting' && isHost && (
+                 <div className="flex-none z-50 mb-4 w-full flex justify-center absolute bottom-12">
+                   <button
+                     onClick={handleStartGame}
+                     disabled={participants.length === 0}
+                     className="px-12 py-4 bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-500 hover:to-yellow-500 text-white font-black text-2xl rounded-2xl shadow-[0_10px_30px_rgba(220,38,38,0.5)] hover:shadow-[0_10px_50px_rgba(250,204,21,0.6)] hover:-translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-4 border-2 border-yellow-400/50"
+                   >
+                      <FontAwesomeIcon icon={faPlay} className="text-yellow-300" />
+                      <span className="drop-shadow-md">BẮT ĐẦU</span>
+                   </button>
+                 </div>
+             )}
+          </div>
         )}
 
+      {/* Host Dashboard - Hiển thị khi Host đang chơi và chưa hiện leaderboard cuối game */}
+      {gameStatus === 'playing' && isHost && (
+        <HostGameHUD 
+          room={room}
+          quiz={quiz}
+          currentQuestion={currentQuestion}
+          currentQuestionIndex={currentQuestionIndex}
+          participants={participants}
+          timeLeft={timeLeft}
+          answeredCount={answeredCount}
+          leaderboard={leaderboard}
+        />
+      )}
 
         {/* Playing - Host luôn xem leaderboard, Players xem quiz */}
         {gameStatus === 'playing' && !isHost && currentQuestion && !showLeaderboard && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto min-h-[600px] flex items-center justify-center w-full">
             {/* Quiz Content - Giống QuizPlayer */}
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 md:p-10 rounded-2xl shadow-2xl border-2 border-red-100 dark:border-red-900">
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 md:p-10 rounded-2xl shadow-2xl border-2 border-red-100 dark:border-red-900 w-full">
               {/* Timer & Stats */}
               <div className="flex justify-between items-center mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div className="text-center">
@@ -990,119 +1021,7 @@ export default function MultiplayerRoom() {
           </div>
         )}
 
-        {/* Host Dashboard - Hiện khi đang chơi */}
-        {gameStatus === 'playing' && isHost && (
-          <div className="max-w-4xl mx-auto">
-            {/* Host Controls */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                <FontAwesomeIcon icon={faCrown} className="text-yellow-500" />
-                Bảng điều khiển Host
-              </h2>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center hover:scale-105 transition-all duration-500 ease-in-out shadow-sm hover:shadow-md">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Câu hiện tại</p>
-                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 transition-all duration-500 ease-in-out">
-                    {currentQuestionIndex + 1}/{quiz.questions.length}
-                  </p>
-                </div>
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center hover:scale-105 transition-all duration-500 ease-in-out shadow-sm hover:shadow-md">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Người chơi</p>
-                  <p className="text-3xl font-bold text-green-600 dark:text-green-400 transition-all duration-500 ease-in-out">
-                    {participants.filter(p => p.isOnline).length}
-                  </p>
-                </div>
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center hover:scale-105 transition-all duration-500 ease-in-out shadow-sm hover:shadow-md">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Đã trả lời</p>
-                  <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 transition-all duration-500 ease-in-out">
-                    {answeredCount}/{participants.filter(p => p.isOnline).length}
-                  </p>
-                </div>
-                <div className={`bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg text-center hover:scale-105 transition-all duration-500 ease-in-out shadow-sm hover:shadow-md ${timeLeft <= 5 ? 'animate-pulse' : ''}`}>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Thời gian</p>
-                  <p className={`text-3xl font-bold transition-all duration-500 ease-in-out ${timeLeft <= 5 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                    {timeLeft}s
-                  </p>
-                </div>
-              </div>
 
-              {room.mode === 'manual' && (
-                <div className="flex flex-wrap gap-3 justify-center">
-                  <button
-                    onClick={handleNextQuestion}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:scale-105 font-semibold shadow-md hover:shadow-xl transition-all duration-300 ease-in-out flex items-center gap-2"
-                  >
-                    <FontAwesomeIcon icon={faForward} />
-                    Câu tiếp theo
-                  </button>
-                  <button
-                    onClick={handleEndGame}
-                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 hover:scale-105 font-semibold shadow-md hover:shadow-xl transition-all duration-300 ease-in-out flex items-center gap-2"
-                  >
-                    <FontAwesomeIcon icon={faStop} />
-                    Kết thúc
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Realtime Leaderboard */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6 flex items-center justify-center gap-2">
-                <FontAwesomeIcon icon={faTrophy} className="text-yellow-500" />
-                Bảng xếp hạng Realtime
-              </h2>
-              
-              {leaderboard.length > 0 ? (
-                <div className="space-y-3">
-                  {leaderboard.map((player, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-                        index === 0
-                          ? 'bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-500 shadow-lg scale-105'
-                          : index === 1
-                          ? 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-400'
-                          : index === 2
-                          ? 'bg-orange-50 dark:bg-orange-900/10 border-2 border-orange-400'
-                          : 'bg-gray-50 dark:bg-gray-700/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className={`text-3xl font-bold ${
-                          index === 0 ? 'text-yellow-600' :
-                          index === 1 ? 'text-gray-600' :
-                          index === 2 ? 'text-orange-600' :
-                          'text-gray-400'
-                        }`}>
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                        </span>
-                        <div>
-                          <p className="font-bold text-lg text-gray-800 dark:text-white">
-                            {player.displayName}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {player.correctAnswers} / {player.totalAnswers} đúng
-                            {!player.isOnline && <span className="ml-2 text-red-500">(Offline)</span>}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-3xl font-bold text-red-600 dark:text-red-400">{player.score}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">điểm</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                  Chưa có dữ liệu xếp hạng
-                </p>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Leaderboard cho Players */}
         {showLeaderboard && !isHost && (
