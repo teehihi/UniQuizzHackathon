@@ -67,12 +67,13 @@ router.delete('/:roomCode', verifyToken, async (req, res) => {
     }
 
     const io = req.app.get('io');
+    let socketsInRoom = [];
     if (io) {
       // 1. Emit event để kick tất cả người chơi
       io.to(roomCode).emit('room-deleted');
       
       // 2. Force disconnect và cleanup TẤT CẢ sockets trong room
-      const socketsInRoom = await io.in(roomCode).fetchSockets();
+      socketsInRoom = await io.in(roomCode).fetchSockets();
       for (const socket of socketsInRoom) {
         console.log(`🚪 Force cleaning socket ${socket.id} from room ${roomCode}`);
         

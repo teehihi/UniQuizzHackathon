@@ -1,9 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const ParticipantAvatar = ({ name, isSelf, index }) => {
+const ParticipantAvatar = ({ name, isSelf, index, className }) => {
+  // Safe name check
+  const displayName = name || 'User';
+  
   // Generate random variation based on name
-  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hash = displayName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
   const shirtColor = colors[hash % colors.length];
   

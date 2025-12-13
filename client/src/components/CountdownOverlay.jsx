@@ -5,16 +5,46 @@ export default function CountdownOverlay({ onComplete }) {
   const [count, setCount] = useState(3);
 
   useEffect(() => {
+    // Play sound based on count
+    const sounds = {
+      3: '/sounds/three.wav',
+      2: '/sounds/two.wav',
+      1: '/sounds/one.wav',
+      0: '/sounds/go.wav'
+    };
+
+    const playSound = () => {
+      const audio = new Audio(sounds[count]);
+      audio.play().catch(err => console.log('Audio playback error:', err));
+    };
+
+    // Delay sound for counts < 3 due to AnimatePresence exit transition (0.5s)
+    let soundTimer;
+    if (count === 3) {
+      playSound();
+    } else {
+      soundTimer = setTimeout(playSound, 500);
+    }
+
     if (count === 0) {
-      onComplete();
-      return;
+      // "GO" state - wait longer so user sees/hears it (500ms delay + 1s display)
+      const timer = setTimeout(() => {
+        onComplete();
+      }, 1500);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(soundTimer);
+      };
     }
 
     const timer = setTimeout(() => {
       setCount((prev) => prev - 1);
     }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(soundTimer);
+    };
   }, [count, onComplete]);
 
   return (

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faCheckCircle, faClock, faTrophy, faStar, faChartBar, faListOl } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faCheckCircle, faClock, faTrophy, faStar, faChartBar, faListOl, faVolumeHigh, faVolumeMute } from '@fortawesome/free-solid-svg-icons';
 
-export default function HostGameHUD({ room, quiz, currentQuestion = {}, currentQuestionIndex, participants, timeLeft, answeredCount, leaderboard }) {
+export default function HostGameHUD({ 
+  room, quiz, currentQuestion = {}, currentQuestionIndex, participants, timeLeft, answeredCount, leaderboard,
+  isMuted, onToggleMute 
+}) {
   const totalParticipants = participants.filter(p => p.isOnline).length;
   const participationRate = totalParticipants > 0 ? Math.round((answeredCount / totalParticipants) * 100) : 0;
   
@@ -43,14 +46,27 @@ export default function HostGameHUD({ room, quiz, currentQuestion = {}, currentQ
                   </div>
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
+                  {/* Timer */}
                   <div className="text-center">
                       <div className={`${timeLeft <= 5 ? 'text-red-500' : 'text-blue-400'} text-xs font-bold uppercase`}>Thời gian</div>
                       <div className={`${timeLeft <= 5 ? 'text-red-500 animate-pulse' : 'text-white'} font-bold text-xl`}>{timeLeft}s</div>
                   </div>
+
+                  {/* Mute Button */}
+                  {onToggleMute && (
+                    <button
+                        onClick={onToggleMute}
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10"
+                        title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
+                    >
+                        <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeHigh} />
+                    </button>
+                  )}
               </div>
           </div>
       </div>
+
 
       {/* BOTTOM PANEL: Leaderboard & Tabs */}
       <div className="bg-[#262626]/60 backdrop-blur-xl rounded-t-3xl border-t-4 border-yellow-500 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col flex-1 mt-6 overflow-hidden">

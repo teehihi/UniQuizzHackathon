@@ -13,6 +13,9 @@ import StageBackground from '../components/StageBackground';
 import RoomCodeBanner from '../components/RoomCodeBanner';
 import ParticipantAvatar from '../components/ParticipantAvatar';
 import CountdownOverlay from '../components/CountdownOverlay';
+import MemeIntermission from '../components/MemeIntermission';
+import PlayerResultSummary from '../components/PlayerResultSummary';
+import HostLeaderboard from '../components/HostLeaderboard';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -58,11 +61,23 @@ export default function MultiplayerRoom() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
+  const [showMeme, setShowMeme] = useState(false);
   const [pendingGameData, setPendingGameData] = useState(null);
   
   const socketRef = useRef(null);
   const timerRef = useRef(null);
   const answerTimeRef = useRef(null);
+
+  // Handle new question updates - MEME TRIGGER
+  useEffect(() => {
+    // When currentQuestionIndex updates, check if we should show a meme
+    // Trigger Meme Intermission every 3rd question (Start of Q4, Q7, Q10...)
+    
+    // Only show for Players (not Host) AND every 3rd question
+    if (!isHost && currentQuestionIndex > 0 && currentQuestionIndex % 3 === 0) {
+        setShowMeme(true);
+    }
+  }, [currentQuestionIndex, isHost]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -704,6 +719,15 @@ export default function MultiplayerRoom() {
                   <FontAwesomeIcon icon={faRightFromBracket} />
                   Rời phòng
                 </button>
+                {isHost && (
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-all duration-300 ease-in-out flex items-center gap-1"
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                    Xóa phòng
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -719,6 +743,19 @@ export default function MultiplayerRoom() {
                 
                 {/* Utility Buttons - Centered below banner */}
                 <div className="flex items-center gap-4 mt-6">
+                     <button
+                        onClick={() => {
+                          const newMuted = soundManager.toggleMute();
+                          setIsMuted(newMuted);
+                          toast.info(newMuted ? '🔇 Đã tắt âm thanh' : '🔊 Đã bật âm thanh');
+                        }}
+                        className="px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2 backdrop-blur-sm shadow-lg bg-black/20 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 hover:border-white/30 group"
+                        title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
+                      >
+                        <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeHigh} className="group-hover:scale-110 transition-transform" />
+                        {isMuted ? 'Bật âm' : 'Tắt âm'}
+                      </button>
+
                      <button
                        onClick={() => setShowLeaveModal(true)}
                        className="px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2 backdrop-blur-sm shadow-lg bg-black/20 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 hover:border-white/30 group"
@@ -806,8 +843,21 @@ export default function MultiplayerRoom() {
           timeLeft={timeLeft}
           answeredCount={answeredCount}
           leaderboard={leaderboard}
+          isMuted={isMuted}
+          onToggleMute={() => {
+            const newMuted = soundManager.toggleMute();
+            setIsMuted(newMuted);
+            toast.info(newMuted ? 'Đã tắt âm thanh' : 'Đã bật âm thanh');
+          }}
         />
       )}
+
+      {/* MEME OVERLAY - Triggered by showMeme state */}
+      <AnimatePresence>
+        {showMeme && (
+          <MemeIntermission onComplete={() => setShowMeme(false)} />
+        )}
+      </AnimatePresence>
 
         {/* Playing - Host luôn xem leaderboard, Players xem quiz */}
         {gameStatus === 'playing' && !isHost && currentQuestion && !showLeaderboard && (
@@ -1023,8 +1073,39 @@ export default function MultiplayerRoom() {
 
 
 
-        {/* Leaderboard cho Players */}
-        {showLeaderboard && !isHost && (
+        {/* Player Result Summary - Hiển thị khi game finished */}
+        {gameStatus === 'finished' && !isHost && (
+          <PlayerResultSummary
+             playerData={{
+               ...(leaderboard.find(p => p.displayName === (location.state?.displayName || '')) || {
+                 displayName: location.state?.displayName || 'Me',
+                 score: 0,
+                 correctAnswers: 0
+               }),
+               totalAnswers: quiz?.questions?.length || room?.quiz?.questions?.length || 0
+             }}
+             leaderboard={leaderboard}
+             onExit={() => {
+               soundManager.stopBackgroundMusic();
+               navigate('/myquizzes');
+             }}
+          />
+        )}
+
+        {/* HOST LEADERBOARD (Podium) - Hiển thị khi game finished */}
+        {gameStatus === 'finished' && isHost && (
+          <HostLeaderboard 
+            leaderboard={leaderboard} 
+            onExit={() => {
+              if (window.confirm('Bạn có chắc chắn muốn kết thúc và xóa phòng này không?')) {
+                 handleDeleteRoom();
+              }
+            }} 
+          />
+        )}
+
+        {/* Leaderboard cho Players (Chỉ hiện khi chưa finish hoặc nếu muốn xem lại) */}
+        {showLeaderboard && !isHost && gameStatus !== 'finished' && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6 flex items-center justify-center gap-2">
               <FontAwesomeIcon icon={faTrophy} className="text-yellow-500" />
