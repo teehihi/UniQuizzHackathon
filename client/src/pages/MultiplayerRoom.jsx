@@ -791,14 +791,14 @@ export default function MultiplayerRoom() {
               <div className="w-full max-w-5xl shrink-0 z-30 mb-auto mt-2 md:mt-6 flex flex-col items-center">
                 <RoomCodeBanner roomCode={roomCode} onShareClick={() => setShowShareModal(true)} />
 
-                <div className="flex gap-4 mt-6 z-50 relative flex-wrap justify-center">
+                <div className="flex gap-2 md:gap-4 mt-4 md:mt-6 z-50 relative flex-wrap justify-center px-4">
                   <button
                     onClick={() => {
                       const newMuted = soundManager.toggleMute();
                       setIsMuted(newMuted);
                       toast.info(newMuted ? '🔇 Đã tắt âm thanh' : '🔊 Đã bật âm thanh');
                     }}
-                    className="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 bg-black/60 hover:bg-[#5D4037] text-[#EFEBE9] border-2 border-white/10 backdrop-blur-sm shadow-xl"
+                    className="px-4 py-2 md:px-6 md:py-3 rounded-2xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 bg-black/60 hover:bg-[#5D4037] text-[#EFEBE9] border-2 border-white/10 backdrop-blur-sm shadow-xl"
                     title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
                   >
                     <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeHigh} />
@@ -808,7 +808,7 @@ export default function MultiplayerRoom() {
                   {!isHost && (
                     <button
                       onClick={() => setShowCustomizer(true)}
-                      className="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 bg-black/60 hover:bg-[#5D4037] text-[#EFEBE9] border-2 border-white/10 backdrop-blur-sm shadow-xl"
+                      className="px-4 py-2 md:px-6 md:py-3 rounded-2xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 bg-black/60 hover:bg-[#5D4037] text-[#EFEBE9] border-2 border-white/10 backdrop-blur-sm shadow-xl"
                     >
                       <FontAwesomeIcon icon={faUserEdit} />
                       <span>Trang phục</span>
@@ -817,7 +817,7 @@ export default function MultiplayerRoom() {
 
                   <button
                     onClick={() => setShowLeaveModal(true)}
-                    className="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 bg-black/60 hover:bg-[#5D4037] text-[#EFEBE9] border-2 border-white/10 backdrop-blur-sm shadow-xl"
+                    className="px-4 py-2 md:px-6 md:py-3 rounded-2xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 bg-black/60 hover:bg-[#5D4037] text-[#EFEBE9] border-2 border-white/10 backdrop-blur-sm shadow-xl"
                   >
                     <FontAwesomeIcon icon={faRightFromBracket} />
                     <span>Rời phòng</span>
@@ -827,7 +827,7 @@ export default function MultiplayerRoom() {
                     <>
                       <button
                         onClick={() => setShowDeleteModal(true)}
-                        className="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 bg-black/60 hover:bg-[#5D4037] text-[#EFEBE9] border-2 border-white/10 backdrop-blur-sm shadow-xl"
+                        className="px-4 py-2 md:px-6 md:py-3 rounded-2xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 bg-black/60 hover:bg-[#5D4037] text-[#EFEBE9] border-2 border-white/10 backdrop-blur-sm shadow-xl"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                         <span className="hidden md:inline">Hủy phòng</span>
@@ -838,7 +838,7 @@ export default function MultiplayerRoom() {
               </div>
               {/* Participants Stage - Positioned on the "floor" */}
               {/* Using absolute positioning to anchor to the bottom of the viewport/image */}
-              <div className="absolute bottom-[20%] md:bottom-[15%] lg:bottom-[10%] left-0 right-0 z-10 px-4 pb-20 pointer-events-none">
+              <div className="absolute bottom-[10%] md:bottom-[15%] lg:bottom-[10%] left-0 right-0 z-10 px-4 pb-20 pointer-events-none">
                 <div className="flex flex-wrap justify-center items-end gap-2 md:gap-6 max-w-7xl mx-auto perspective-1000 pointer-events-auto">
                   <AnimatePresence>
                     {participants.map((p) => (

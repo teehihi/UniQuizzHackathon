@@ -87,7 +87,7 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-[#1a1a1a] md:rounded-3xl shadow-2xl w-full md:max-w-4xl overflow-hidden flex flex-col md:flex-row h-full md:h-[650px] border-none md:border border-gray-700"
+        className="bg-[#1a1a1a] md:rounded-3xl shadow-2xl w-full md:max-w-4xl overflow-hidden flex flex-col md:flex-row h-full md:h-[550px] border-none md:border border-gray-700"
       >
         {/* RIGHT PANEL (Preview) - Mobile: Top (Order 1) | Desktop: Right (Order 2) */}
         <div className="order-1 md:order-2 w-full md:w-[400px] bg-gradient-to-b from-gray-900 to-black relative flex flex-col items-center justify-center p-4 md:p-8 shrink-0 border-b md:border-b-0 md:border-l border-gray-700">
