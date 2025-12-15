@@ -566,7 +566,8 @@ module.exports = (io) => {
             displayName: p.displayName,
             score: p.score,
             correctAnswers: p.answers.filter(a => a.isCorrect).length,
-            totalAnswers: p.answers.length
+            totalAnswers: p.answers.length,
+            characterConfig: p.characterConfig
           }))
           .sort((a, b) => b.score - a.score);
 
@@ -600,7 +601,8 @@ module.exports = (io) => {
             score: p.score,
             correctAnswers: p.answers.filter(a => a.isCorrect).length,
             totalAnswers: p.answers.length,
-            isOnline: p.isOnline
+            isOnline: p.isOnline,
+            characterConfig: p.characterConfig
           }))
           .sort((a, b) => b.score - a.score);
 

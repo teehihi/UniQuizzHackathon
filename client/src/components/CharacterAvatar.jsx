@@ -171,7 +171,7 @@ const CharacterAvatar = ({ config, size = 200, className }) => {
 
   return (
     <div
-      className={`relative ${className} rounded-full overflow-hidden bg-gray-900/10`}
+      className={`relative ${className}`}
       style={{ width: size, height: size }}
     >
       {/* SCALE NHÂN VẬT – KHÔNG SCALE KHUNG */}
