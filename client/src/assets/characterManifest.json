@@ -1,26 +1,4 @@
 {
-  "face": [
-    {
-      "id": "face1",
-      "path": "/character/face/face1.png",
-      "filename": "face1.png"
-    },
-    {
-      "id": "face2",
-      "path": "/character/face/face2.png",
-      "filename": "face2.png"
-    },
-    {
-      "id": "face3",
-      "path": "/character/face/face3.png",
-      "filename": "face3.png"
-    },
-    {
-      "id": "face4",
-      "path": "/character/face/face4.png",
-      "filename": "face4.png"
-    }
-  ],
   "hat": [
     {
       "id": "11616_1763390808031",
@@ -48,21 +26,6 @@
       "filename": "5366_1703158360295.svg"
     },
     {
-      "id": "5367_1702041374570",
-      "path": "/character/hat/5367_1702041374570.svg",
-      "filename": "5367_1702041374570.svg"
-    },
-    {
-      "id": "5369_1703158343397",
-      "path": "/character/hat/5369_1703158343397.svg",
-      "filename": "5369_1703158343397.svg"
-    },
-    {
-      "id": "5370_1702041455710",
-      "path": "/character/hat/5370_1702041455710.svg",
-      "filename": "5370_1702041455710.svg"
-    },
-    {
       "id": "5376_1703158436435",
       "path": "/character/hat/5376_1703158436435.svg",
       "filename": "5376_1703158436435.svg"
@@ -83,19 +46,9 @@
       "filename": "bl_bucket_hat.svg"
     },
     {
-      "id": "cap",
-      "path": "/character/hat/cap.svg",
-      "filename": "cap.svg"
-    },
-    {
       "id": "football_helmet",
       "path": "/character/hat/football_helmet.svg",
       "filename": "football_helmet.svg"
-    },
-    {
-      "id": "hat",
-      "path": "/character/hat/hat.svg",
-      "filename": "hat.svg"
     },
     {
       "id": "lb_beanie",
@@ -116,6 +69,26 @@
       "id": "traffic_cone",
       "path": "/character/hat/traffic_cone.svg",
       "filename": "traffic_cone.svg"
+    },
+    {
+      "id": "frog_hat",
+      "path": "/character/hat/frog_hat.svg",
+      "filename": "frog_hat.svg"
+    },
+    {
+      "id": "yamulke",
+      "path": "/character/hat/yamulke.svg",
+      "filename": "yamulke.svg"
+    },
+    {
+      "id": "gr_skullcap",
+      "path": "/character/hat/gr_skullcap.svg",
+      "filename": "gr_skullcap.svg"
+    },
+    {
+      "id": "br_beanie",
+      "path": "/character/hat/br_beanie.svg",
+      "filename": "br_beanie.svg"
     }
   ],
   "pants": [
@@ -143,6 +116,21 @@
       "id": "plaid_skirt",
       "path": "/character/pants/plaid_skirt.svg",
       "filename": "plaid_skirt.svg"
+    },
+    {
+      "id": "bl_denim_skirt",
+      "path": "/character/pants/bl_denim_skirt.svg",
+      "filename": "bl_denim_skirt.svg"
+    },
+    {
+      "id": "gr_bermuda",
+      "path": "/character/pants/gr_bermuda.svg",
+      "filename": "gr_bermuda.svg"
+    },
+    {
+      "id": "rainbow_tights",
+      "path": "/character/pants/rainbow_tights.svg",
+      "filename": "rainbow_tights.svg"
     }
   ],
   "shirts": [
@@ -159,6 +147,11 @@
     {
       "id": "br_brazilTee4",
       "path": "/character/shirts/br_brazilTee4.svg",
+      "filename": "br_brazilTee4.svg"
+    },
+    {
+      "id": "br_brazilTee3",
+      "path": "/character/shirts/br_brazilTee3.svg",
       "filename": "br_brazilTee4.svg"
     },
     {
@@ -197,14 +190,14 @@
       "filename": "safari_jacket.svg"
     },
     {
-      "id": "shirt",
-      "path": "/character/shirts/shirt.svg",
-      "filename": "shirt.svg"
+      "id": "fire_tshirt",
+      "path": "/character/shirts/fire_tshirt.svg",
+      "filename": "fire_tshirt.svg"
     },
     {
-      "id": "y_flower_dress",
-      "path": "/character/shirts/y_flower_dress.svg",
-      "filename": "y_flower_dress.svg"
+      "id": "poncho",
+      "path": "/character/shirts/poncho.svg",
+      "filename": "poncho.svg"
     }
   ],
   "shoes": [
@@ -227,6 +220,11 @@
       "id": "r_converse",
       "path": "/character/shoes/r_converse.svg",
       "filename": "r_converse.svg"
+    },
+    {
+      "id": "pencil_shoe",
+      "path": "/character/shoes/pencil_shoe.svg",
+      "filename": "pencil_shoe.svg"
     }
   ],
   "bundle": [

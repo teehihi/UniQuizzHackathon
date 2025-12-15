@@ -18,7 +18,7 @@ const SLOTS = {
   pants: {
     style: {
       position: 'absolute',
-      top: '69%',
+      top: '66%',
       left: '46%',
       width: '35%',
       transform: 'translateX(-50%)',
@@ -29,7 +29,7 @@ const SLOTS = {
   shoes: {
     style: {
       position: 'absolute',
-      top: '92%',
+      top: '95%',
       left: '46%',
       width: '32%',
       transform: 'translateX(-50%)',

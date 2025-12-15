@@ -9,7 +9,7 @@ const TABS = [
   { id: 'bundle', icon: faBoxOpen, label: 'Set đồ' },
   { id: 'hat', icon: faHatCowboy, label: 'Mũ' },
   { id: 'shirts', icon: faTshirt, label: 'Áo' },
-  { id: 'pants', icon: 'P', label: 'Quần' }, // Custom icon text P
+  { id: 'pants', icon: 'P', label: 'Quần' },
   { id: 'shoes', icon: faShoePrints, label: 'Giày' },
 ];
 
@@ -101,11 +101,54 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
           {/* Spotlight Effect */}
           <div className="absolute top-0 inset-x-0 h-32 md:h-64 bg-gradient-to-b from-purple-500/20 to-transparent blur-3xl pointer-events-none"></div>
 
-          <div className="relative z-10 mb-4 md:mb-8 mt-4 md:mt-0">
-            <CharacterAvatar config={config} size={window.innerWidth < 768 ? 180 : 280} />
+          {/* BACKGROUND PODIUM */}
+          <div className="absolute top-[60%] md:top-[50%] left-1/2 -translate-x-1/2 w-[160px] md:w-[200px] pointer-events-none opacity-90 z-10">
+            <img src="/backgrounds/bgBuc.png" alt="Podium" className="w-full h-auto object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]" />
           </div>
 
-          <div className="flex gap-3 w-full px-4 md:px-8 mt-auto md:mt-0 mb-4 md:mb-0">
+          {/* VOLUMETRIC LIGHT BEAM */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-0"
+            style={{
+              top: 'auto',
+              bottom: '36%', // Align perfectly with podium top
+              width: '236px',
+              height: '400px',
+              background: 'linear-gradient(to top, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%)',
+              clipPath: 'polygon(30% 100%, 70% 100%, 100% 0, 0 0)', // Narrower base to fit INSIDE podium
+              filter: 'blur(8px)',
+            }}
+          ></div>
+
+          {/* Custom Float Animation */}
+          <style>{`
+            @keyframes float {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-15px); }
+            }
+            .animate-float {
+              animation: float 3s ease-in-out infinite;
+            }
+          `}</style>
+
+          {/* AVATAR DISPLAY - FLOATING ANIMATION */}
+          <div className="relative z-20 mb-4 md:mb-8 mt-4 md:mt-0 animate-float">
+            {/* 
+              Scale Width Fixed Logic:
+              Mobile (<768): 180px
+              Tablet (<1024): 220px
+              PC (>1024): 240px
+            */}
+            <CharacterAvatar
+              config={config}
+              size={
+                window.innerWidth < 768 ? 180 :
+                  window.innerWidth < 1024 ? 220 : 240
+              }
+            />
+          </div>
+
+          <div className="flex gap-3 w-full px-4 md:px-8 mt-auto md:mt-16 mb-4 md:mb-0">
             <button
               onClick={handleRandomize}
               className="px-4 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors"
@@ -115,7 +158,7 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 px-4 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2 text-sm md:text-base"
+              className="flex-1 px-4 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2 text-sm md:text-base z-99"
             >
               <FontAwesomeIcon icon={faSave} /> <span className="hidden md:inline">Lưu Qbit của tôi</span><span className="md:hidden">Lưu</span>
             </button>
@@ -147,12 +190,12 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
           </div>
 
           {/* Grid Selection */}
-          <div className="flex-1 p-4 overflow-y-auto grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 gap-3 content-start pb-20 md:pb-4">
+          <div className="flex-1 p-6 md:p-8 overflow-y-auto grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 gap-4 content-start auto-rows-min pb-20 md:pb-8">
             {/* None Option */}
             {(activeTab === 'hat' || activeTab === 'pants' || activeTab === 'shoes' || activeTab === 'bundle') && (
               <button
                 onClick={() => handleSelectItem(-1)}
-                className={`aspect-square rounded-xl flex items-center justify-center border-2 border-dashed border-gray-600 text-gray-500 hover:border-gray-400 hover:text-white
+                className={`aspect-square rounded-xl flex items-center justify-center border-2 border-dashed border-gray-600 text-gray-500 hover:border-gray-400 hover:text-white p-2
                     ${config[activeTab] === -1 ? 'bg-gray-700 border-solid border-purple-500 text-purple-400' : ''}`}
               >
                 <FontAwesomeIcon icon={faTimes} />
