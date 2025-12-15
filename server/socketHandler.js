@@ -7,6 +7,41 @@ const Deck = require('./models/Deck');
 const roomConnections = new Map(); // roomCode -> Set of socketIds
 const autoAdvanceLocks = new Map(); // roomCode -> timestamp
 
+// Helper to handle Mongoose VersionError with retry by re-fetching and re-applying logic
+const executeRoomTransaction = async (roomCode, transactionFn) => {
+  let retries = 5;
+  while (retries > 0) {
+    try {
+      // 1. Fetch Fresh Room
+      const room = await Room.findOne({ roomCode: roomCode.toUpperCase() }).populate('quizId');
+      if (!room) return { error: 'Room not found' };
+
+      // 2. Run Transaction Logic (Mutate Room)
+      const result = await transactionFn(room);
+      
+      // Allow transaction to cancel saving
+      if (result && result.cancel) {
+        return { success: false, ...result };
+      }
+
+      // 3. Attempt Save
+      await room.save();
+      return { success: true, room, data: result };
+
+    } catch (err) {
+      if (err.name === 'VersionError' && retries > 1) {
+        console.warn(`⚠️ Race condition on ${roomCode}. Retrying transaction... (${retries} left)`);
+        retries--;
+        await new Promise(r => setTimeout(r, 100 + Math.random() * 200)); // Random backoff
+        continue;
+      }
+      console.error('Transaction failed:', err);
+      throw err;
+    }
+  }
+  throw new Error('Server busy: Too many concurrent updates');
+};
+
 module.exports = (io) => {
   // Middleware xác thực
   io.use((socket, next) => {
@@ -90,6 +125,8 @@ module.exports = (io) => {
       try {
         const { quizId, mode, settings } = data;
         
+        console.log('🎮 [CREATE-ROOM] Received data:', { quizId, mode, settings });
+        
         if (!socket.userId) {
           return callback({ error: 'Chỉ người dùng đã đăng nhập mới có thể tạo phòng' });
         }
@@ -101,16 +138,25 @@ module.exports = (io) => {
 
         const roomCode = await Room.generateRoomCode();
         
+        const finalMode = mode || 'auto';
+        console.log('🎮 [CREATE-ROOM] Mode value - received:', mode, 'final:', finalMode);
+        
         const room = new Room({
           roomCode,
           quizId,
           hostId: socket.userId,
-          mode: mode || 'auto',
+          mode: finalMode,
           settings: settings || {},
           participants: [] // Host KHÔNG nằm trong participants
         });
 
         await room.save();
+        
+        console.log('🎮 [CREATE-ROOM] Room saved to DB:', {
+          roomCode,
+          mode: room.mode,
+          status: room.status
+        });
         
         socket.join(roomCode);
         
@@ -122,7 +168,7 @@ module.exports = (io) => {
 
         callback({ success: true, roomCode, room });
         
-        console.log(`🎮 Room created: ${roomCode} by ${socket.userId}`);
+        console.log(`🎮 Room created: ${roomCode} by ${socket.userId} with mode=${room.mode}`);
       } catch (error) {
         console.error('Error creating room:', error);
         callback({ error: error.message });
@@ -176,87 +222,89 @@ module.exports = (io) => {
           });
         }
 
-        // Nếu là PLAYER, xóa participants cũ và thêm mới
-        const uniqueKey = socket.userId || displayName;
-        
-        // BƯỚC 1: Xóa participants có socketId không còn active (cleanup)
-        const beforeCleanup = room.participants.length;
-        const activeSockets = Array.from(io.sockets.sockets.keys());
-        room.participants = room.participants.filter(p => {
-          // Giữ lại nếu socketId vẫn còn active
-          if (p.socketId && activeSockets.includes(p.socketId)) {
-            return true;
-          }
-          // Xóa nếu socketId không còn active
-          console.log(`🧹 Cleanup: Removing inactive participant ${p.displayName} (socketId: ${p.socketId})`);
-          return false;
-        });
-
-        // BƯỚC 2: Tìm TẤT CẢ participants cùng userId/displayName
-        const beforeRemove = room.participants.length;
-        const matchingParticipants = room.participants.filter(p => {
-          const pKey = p.userId ? p.userId.toString() : p.displayName;
-          return pKey === uniqueKey;
-        });
-
-        console.log(`🔍 Found ${matchingParticipants.length} matching participants for ${displayName}`);
-
-        if (matchingParticipants.length > 0) {
-          // Có participant cũ - REJOIN
-          // Xóa TẤT CẢ participants cũ
+        // Use helper with retry (all join logic moved inside transaction to be safe)
+        const result = await executeRoomTransaction(roomCode, async (room) => {
+          // BƯỚC 1: Xóa participants có socketId không còn active (cleanup)
+          const activeSockets = Array.from(io.sockets.sockets.keys());
           room.participants = room.participants.filter(p => {
+             // Giữ lại nếu socketId vẫn còn active HOẶC là chính user đang connect lại
+             if (p.socketId && (activeSockets.includes(p.socketId) || p.socketId === socket.id)) {
+               return true;
+             }
+             return false;
+          });
+
+          // BƯỚC 2: Tìm TẤT CẢ participants cùng userId/displayName
+          const uniqueKey = socket.userId || displayName;
+          const matchingParticipants = room.participants.filter(p => {
             const pKey = p.userId ? p.userId.toString() : p.displayName;
-            return pKey !== uniqueKey;
+            return pKey === uniqueKey;
           });
 
-          // Chọn participant có progress cao nhất để giữ lại
-          const bestParticipant = matchingParticipants.reduce((best, current) => {
-            return (current.score > best.score) ? current : best;
-          });
+          if (matchingParticipants.length > 0) {
+            // Có participant cũ - REJOIN
+            // Xóa TẤT CẢ participants cũ của user này
+            room.participants = room.participants.filter(p => {
+              const pKey = p.userId ? p.userId.toString() : p.displayName;
+              return pKey !== uniqueKey;
+            });
 
-          console.log(`🔄 Rejoin: ${displayName} - keeping best progress (${bestParticipant.answers.length} answers, ${bestParticipant.score} points)`);
-          
-          // Thêm lại với socketId mới
-          room.participants.push({
-            userId: bestParticipant.userId,
-            displayName,
-            isGuest: bestParticipant.isGuest,
-            score: bestParticipant.score,
-            answers: bestParticipant.answers,
-            isOnline: true,
-            socketId: socket.id
-          });
-        } else {
-          // Không có participant cũ - NEW JOIN
-          console.log(`➕ New join: ${displayName}`);
-          room.participants.push({
-            userId: socket.userId || null,
-            displayName,
-            isGuest: !socket.userId,
-            score: 0,
-            answers: [],
-            isOnline: true,
-            socketId: socket.id,
-            characterConfig: characterConfig || {}
-          });
+            // Chọn participant có progress cao nhất để giữ lại
+            const bestParticipant = matchingParticipants.reduce((best, current) => {
+              return (current.score > best.score) ? current : best;
+            }, matchingParticipants[0]);
+            
+            // Thêm lại với socketId mới
+            room.participants.push({
+              userId: bestParticipant.userId,
+              displayName,
+              isGuest: bestParticipant.isGuest,
+              score: bestParticipant.score,
+              answers: bestParticipant.answers,
+              isOnline: true,
+              socketId: socket.id,
+              characterConfig: bestParticipant.characterConfig || characterConfig || {}
+            });
+            console.log(`🔄 Rejoin: ${displayName}`);
+          } else {
+            // Không có participant cũ - NEW JOIN
+            console.log(`➕ New join: ${displayName}`);
+            room.participants.push({
+              userId: socket.userId || null,
+              displayName,
+              isGuest: !socket.userId,
+              score: 0,
+              answers: [],
+              isOnline: true,
+              socketId: socket.id,
+              characterConfig: characterConfig || {}
+            });
+          }
+        });
+
+        if (!result.success) {
+           throw new Error('Could not join room due to high load, please try again');
         }
-        
-        console.log(`📊 Cleanup stats: ${beforeCleanup} → ${beforeRemove} (inactive) → ${room.participants.length} (final)`);
-        
-        await room.save();
+
+        const savedRoom = result.room;
 
         callback({ 
           success: true, 
-          room,
-          quiz: room.quizId,
+          room: savedRoom,
+          quiz: savedRoom.quizId,
           isHost: false
         });
 
         // Broadcast to ALL in room (including host)
         io.to(roomCode.toUpperCase()).emit('participants-updated', {
-          participants: room.participants,
-          count: room.participants.length
+          participants: savedRoom.participants,
+          count: savedRoom.participants.length
         });
+        
+        // Broadcast join notification
+        io.to(roomCode.toUpperCase()).emit('participant-joined', { displayName });
+        
+        console.log(`👤 ${displayName} joined ${roomCode.toUpperCase()} (Total: ${savedRoom.participants.length})`);
 
         console.log(`👤 ${displayName} joined ${roomCode.toUpperCase()} (Total: ${room.participants.length})`);
       } catch (error) {
@@ -265,31 +313,38 @@ module.exports = (io) => {
       }
     });
 
-    // UPDATE CHARACTER CONFIG
+    // UPDATE CHARACTER CONFIG - FIXED WITH TRANSACTION
     socket.on('update-character', async (data, callback) => {
       try {
         const { roomCode, characterConfig } = data;
         
-        const room = await Room.findOne({ roomCode: roomCode.toUpperCase() });
-        if (!room) return callback && callback({ error: 'Room not found' });
+        const result = await executeRoomTransaction(roomCode, async (room) => {
+             const participant = room.participants.find(p => p.socketId === socket.id);
+             
+             // If host (not in participants), just acknowledge
+             if (!participant) {
+                // If not participant, maybe host? Return success but don't save
+                return { cancel: true, success: true, message: 'Host updated (no-op)' };
+             }
 
-        const participant = room.participants.find(p => p.socketId === socket.id);
-        
-        // If host (not in participants), just acknowledge
-        if (!participant) {
-             return callback && callback({ success: true, message: 'Host updated (no-op)' });
-        }
-
-        participant.characterConfig = characterConfig;
-        await room.save();
-
-        // Broadcast to everyone
-        io.to(roomCode.toUpperCase()).emit('participants-updated', {
-          participants: room.participants,
-          count: room.participants.length
+             participant.characterConfig = characterConfig;
         });
 
+        if (!result.success && !result.cancel) {
+             throw new Error('Failed to update character configuration');
+        }
+
+        // Broadcast to everyone (result.room contains the saved room)
+        const room = result.room || (await Room.findOne({ roomCode: roomCode.toUpperCase() }));
+        if (room) {
+            io.to(roomCode.toUpperCase()).emit('participants-updated', {
+              participants: room.participants,
+              count: room.participants.length
+            });
+        }
+
         if (callback) callback({ success: true });
+        
       } catch (error) {
         console.error('Error updating character:', error);
         if (callback) callback({ error: error.message });
@@ -386,6 +441,7 @@ module.exports = (io) => {
         
         const room = await Room.findOne({ roomCode }).populate('quizId');
         if (!room || room.mode !== 'auto') {
+          console.warn(`⚠️ Auto-advance failed: Room=${roomCode}, Mode=${room?.mode}, Found=${!!room}`);
           autoAdvanceLocks.delete(roomCode);
           if (callback) callback({ error: 'Phòng không hợp lệ' });
           return;
@@ -399,6 +455,7 @@ module.exports = (io) => {
         }
 
         await room.save();
+        console.log(`✅ Auto-advance SAVED: Room=${roomCode}, Mode=${room.mode}, Q=${room.currentQuestionIndex}`);
 
         io.to(roomCode).emit('question-changed', {
           questionIndex: room.currentQuestionIndex,
@@ -564,6 +621,8 @@ module.exports = (io) => {
           return callback({ error: 'Không tìm thấy phòng' });
         }
 
+        console.log(`📡 [GET-ROOM-DATA] Room: ${roomCode} | Mode: ${room.mode} | Status: ${room.status}`);
+
         callback({ 
           success: true, 
           room,
@@ -576,8 +635,9 @@ module.exports = (io) => {
     });
 
     // DISCONNECT - XÓA PARTICIPANT DỰA TRÊN SOCKETID
-    socket.on('disconnect', async () => {
-      console.log(`❌ Socket disconnected: ${socket.id}`);
+    // Using 'disconnecting' to access socket.rooms before they are cleared
+    socket.on('disconnecting', async () => {
+      console.log(`❌ Socket disconnecting: ${socket.id}`);
       
       try {
         // Tìm tất cả rooms mà socket này đang ở
@@ -589,26 +649,24 @@ module.exports = (io) => {
           const room = await Room.findOne({ roomCode });
           if (!room) continue;
 
-          // Xóa participant dựa trên socketId
-          const beforeCount = room.participants.length;
-          
-          room.participants = room.participants.filter(p => {
-            // Xóa nếu socketId match
-            return p.socketId !== socket.id;
+          // Xóa participant dựa trên socketId (use transaction)
+          const result = await executeRoomTransaction(roomCode, async (room) => {
+              const beforeCount = room.participants.length;
+              room.participants = room.participants.filter(p => p.socketId !== socket.id);
+              const afterCount = room.participants.length;
+
+              if (beforeCount === afterCount) {
+                  return { cancel: true }; // No changes needed
+              }
           });
 
-          const afterCount = room.participants.length;
-          
-          if (beforeCount !== afterCount) {
-            await room.save();
-            
-            // Broadcast update to ALL (including host)
-            io.to(roomCode).emit('participants-updated', {
-              participants: room.participants,
-              count: room.participants.length
+          if (result.success) {
+            // Broadcast update
+             io.to(roomCode).emit('participants-updated', {
+              participants: result.room.participants,
+              count: result.room.participants.length
             });
-            
-            console.log(`🚪 Removed participant from ${roomCode} (${beforeCount} → ${afterCount})`);
+            console.log(`🚪 Removed participant from ${roomCode}`);
           }
 
           // Cleanup tracking

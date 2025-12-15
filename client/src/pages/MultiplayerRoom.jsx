@@ -75,6 +75,12 @@ export default function MultiplayerRoom() {
   const timerRef = useRef(null);
   const answerTimeRef = useRef(null);
 
+  // FIX: Use REF to track room state for event listeners (Moved to top level)
+  const roomRef = useRef(room);
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
+
   // Handle new question updates - MEME TRIGGER
   useEffect(() => {
     // When currentQuestionIndex updates, check if we should show a meme
@@ -236,10 +242,12 @@ export default function MultiplayerRoom() {
     });
 
     socket.on('game-started', (data) => {
+      console.log('🎮 [GAME-STARTED] Event received!');
       soundManager.play('start');
 
       // Luôn reload room data để đảm bảo có đầy đủ thông tin
       socket.emit('get-room-data', { roomCode }, (response) => {
+        console.log('🎮 [GAME-STARTED] Room data response:', response ? 'Available' : 'Missing');
         if (response?.success && response?.room && response?.quiz) {
           // Lưu dữ liệu để dùng sau khi đếm ngược
           setPendingGameData({
@@ -289,10 +297,12 @@ export default function MultiplayerRoom() {
     });
 
     socket.on('answer-submitted', (data) => {
+      console.log('[Answer Submit] Progress:', data.answeredCount, '/', data.totalParticipants);
       setAnsweredCount(data.answeredCount);
 
-      // Nếu tất cả đã trả lời, hiển thị đáp án đúng
-      if (data.answeredCount === data.totalParticipants && !showCorrectAnswer) {
+      // Nếu tất cả đã trả lời, hiển thị đáp án đúng và start auto-advance
+      if (data.answeredCount === data.totalParticipants) {
+        console.log('[All Answered] Starting auto-advance...');
         setTimeout(() => {
           setShowCorrectAnswer(true);
           startNextQuestionProgress();
@@ -360,7 +370,7 @@ export default function MultiplayerRoom() {
         socketRef.current.off('room-deleted');
       }
     };
-  }, [roomCode, navigate, location, myCharacterConfig]); // Added myCharacterConfig to dependencies for re-render if it changes
+  }, [roomCode, navigate, location]); // Removed myCharacterConfig to prevent re-join on outfit change
 
   const startTimer = (seconds) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -403,6 +413,15 @@ export default function MultiplayerRoom() {
 
   // Function để start progress bar và auto next question
   const startNextQuestionProgress = () => {
+    // FIX: Get fresh room state directly from ref to avoid stale closure
+    const currentRoom = roomRef.current;
+
+    // Fallback to mode 'auto' if undefined, assuming user intent is auto when ambiguous
+    // This is safer than defaulting to 'manual' which breaks the flow
+    const currentMode = currentRoom?.mode || 'auto';
+    const currentRoomCode = roomCode;
+
+    console.log('[Progress] Starting 3s countdown. Mode:', currentMode, 'Room:', currentRoomCode);
     const duration = 3000; // 3 giây
     const interval = 50; // Update mỗi 50ms
     const steps = duration / interval;
@@ -416,7 +435,31 @@ export default function MultiplayerRoom() {
         clearInterval(progressInterval);
         setNextQuestionProgress(0);
 
-        // Logic auto next (chỉ Host mới có quyền gọi)
+        // Check ref again just to be super safe
+        const freshRoom = roomRef.current;
+        const freshMode = freshRoom?.mode || currentMode;
+
+        console.log('[Progress Complete] Attempting auto-advance. Mode:', freshMode);
+
+        // Auto advance to next question in auto mode
+        // Only trigger if we're in auto mode (server will handle the progression)
+        if (freshMode === 'auto') {
+          console.log('[Auto Mode] Emitting auto-next-question event...');
+          const socket = getSocket();
+          if (socket && currentRoomCode) {
+            socket.emit('auto-next-question', { roomCode: currentRoomCode }, (response) => {
+              if (response?.error) {
+                console.error('[Auto-advance ERROR]:', response.error);
+              } else {
+                console.log('[Auto-advance SUCCESS]', response);
+              }
+            });
+          } else {
+            console.error('[Auto-advance] Socket or roomCode not available');
+          }
+        } else {
+          console.log('[Manual Mode] Waiting for host to advance manually');
+        }
       }
     }, interval);
   };
@@ -580,22 +623,34 @@ export default function MultiplayerRoom() {
   };
 
   const handleSaveCharacter = (newConfig) => {
+    console.log('[Character Save] Starting...', newConfig);
     setMyCharacterConfig(newConfig);
     localStorage.setItem('myCharacterConfig', JSON.stringify(newConfig));
+    console.log('[Character Save] Saved to localStorage');
 
     // Broadcast update to room if connected
     if (socketRef.current && roomCode) {
+      console.log('[Character Save] Broadcasting to room:', roomCode);
       socketRef.current.emit('update-character', {
         roomCode,
         characterConfig: newConfig
       }, (response) => {
         if (response?.error) {
-          console.error('Error updating character:', response.error);
+          console.error('[Character Save] ERROR:', response.error);
+          toast.error('Không thể cập nhật trang phục');
         } else {
-          console.log('Character updated successfully');
+          console.log('[Character Save] SUCCESS:', response);
+          toast.success('Đã lưu trang phục!');
         }
       });
+    } else {
+      console.warn('[Character Save] Not connected to room');
+      toast.success('Đã lưu trang phục!');
     }
+
+    console.log('[Character Save] Complete - NO NAVIGATION');
+    // Close modal is handled by CharacterCustomizerModal component
+    // No navigation should occur here
   };
 
   const handleCountdownComplete = () => {
@@ -975,13 +1030,13 @@ export default function MultiplayerRoom() {
                       {currentQuestionIndex + 1}
                     </div>
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white leading-tight">
-                      {currentQuestion.question}
+                      {currentQuestion?.question || 'Đang tải câu hỏi...'}
                     </h2>
                   </div>
 
                   {/* Options */}
                   <div className="grid grid-cols-1 gap-4">
-                    {currentQuestion.options.map((option, index) => {
+                    {currentQuestion?.options?.map((option, index) => {
                       const isCorrect = option === currentQuestion.answer;
                       const isSelected = option === selectedAnswer;
 
@@ -1038,7 +1093,7 @@ export default function MultiplayerRoom() {
                           )}
                         </button>
                       );
-                    })}
+                    }) || []}
                   </div>
 
                   {/* Waiting Message - Hiển thị khi đã trả lời nhưng chưa hết giờ */}
