@@ -89,6 +89,21 @@
       "id": "br_beanie",
       "path": "/character/hat/br_beanie.svg",
       "filename": "br_beanie.svg"
+    },
+    {
+      "id": "elf_hat",
+      "path": "/character/hat/elf_hat.svg",
+      "filename": "elf_hat.svg"
+    },
+    {
+      "id": "noodles_hat",
+      "path": "/character/hat/noodles_hat.svg",
+      "filename": "noodles_hat.svg"
+    },
+    {
+      "id": "panda_cap",
+      "path": "/character/hat/panda_cap.svg",
+      "filename": "panda_cap.svg"
     }
   ],
   "pants": [
@@ -131,6 +146,26 @@
       "id": "rainbow_tights",
       "path": "/character/pants/rainbow_tights.svg",
       "filename": "rainbow_tights.svg"
+    },
+    {
+      "id": "beach_shorts",
+      "path": "/character/pants/beach_shorts.svg",
+      "filename": "beach_shorts.svg"
+    },
+    {
+      "id": "dino_pants",
+      "path": "/character/pants/dino_pants.svg",
+      "filename": "dino_pants.svg"
+    },
+    {
+      "id": "p_tskirt",
+      "path": "/character/pants/p_tskirt.svg",
+      "filename": "p_tskirt.svg"
+    },
+    {
+      "id": "pi_tskirt",
+      "path": "/character/pants/pi_tskirt.svg",
+      "filename": "pi_tskirt.svg"
     }
   ],
   "shirts": [
@@ -173,7 +208,7 @@
     {
       "id": "br_brazilTee3",
       "path": "/character/shirts/br_brazilTee3.svg",
-      "filename": "br_brazilTee4.svg"
+      "filename": "br_brazilTee3.svg"
     },
     {
       "id": "br_brazilTee5",
@@ -219,6 +254,51 @@
       "id": "poncho",
       "path": "/character/shirts/poncho.svg",
       "filename": "poncho.svg"
+    },
+    {
+      "id": "bl_usa",
+      "path": "/character/shirts/bl_usa.svg",
+      "filename": "bl_usa.svg"
+    },
+    {
+      "id": "disco_tee",
+      "path": "/character/shirts/disco_tee.svg",
+      "filename": "disco_tee.svg"
+    },
+    {
+      "id": "pi_tswift",
+      "path": "/character/shirts/pi_tswift.svg",
+      "filename": "pi_tswift.svg"
+    },
+    {
+      "id": "r_canada",
+      "path": "/character/shirts/r_canada.svg",
+      "filename": "r_canada.svg"
+    },
+    {
+      "id": "t_akatsuki",
+      "path": "/character/shirts/t_akatsuki.svg",
+      "filename": "t_akatsuki.svg"
+    },
+    {
+      "id": "w_animetop",
+      "path": "/character/shirts/w_animetop.svg",
+      "filename": "w_animetop.svg"
+    },
+    {
+      "id": "w_pokemon",
+      "path": "/character/shirts/w_pokemon.svg",
+      "filename": "w_pokemon.svg"
+    },
+    {
+      "id": "xmas_sweater",
+      "path": "/character/shirts/xmas_sweater.svg",
+      "filename": "xmas_sweater.svg"
+    },
+    {
+      "id": "y_brazil",
+      "path": "/character/shirts/y_brazil.svg",
+      "filename": "y_brazil.svg"
     }
   ],
   "shoes": [
@@ -246,6 +326,26 @@
       "id": "pencil_shoe",
       "path": "/character/shoes/pencil_shoe.svg",
       "filename": "pencil_shoe.svg"
+    },
+    {
+      "id": "b_hightops",
+      "path": "/character/shoes/b_hightops.svg",
+      "filename": "b_hightops.svg"
+    },
+    {
+      "id": "frog_shoe",
+      "path": "/character/shoes/frog_shoe.svg",
+      "filename": "frog_shoe.svg"
+    },
+    {
+      "id": "p_crocs",
+      "path": "/character/shoes/p_crocs.svg",
+      "filename": "p_crocs.svg"
+    },
+    {
+      "id": "r_jordans",
+      "path": "/character/shoes/r_jordans.svg",
+      "filename": "r_jordans.svg"
     }
   ],
   "bundle": [
