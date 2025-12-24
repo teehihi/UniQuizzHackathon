@@ -1253,129 +1253,401 @@ router.use('/rooms', roomRoutes);
    RAG (Retrieval-Augmented Generation) ENDPOINTS
 ======================================================= */
 
+// Import validation middleware and error handler
+const {
+  validateSearchQuery,
+  validatePagination,
+  validateSearchOptions,
+  validateAdvancedSearch,
+  validateUserId,
+  validateSuggestionRequest,
+  validateFeedbackRequest,
+  validateClickRequest,
+  createRateLimiter
+} = require('./middleware/searchValidation');
+
+const { errorHandler } = require('./utils/errorHandler');
+const { searchLogger } = require('./utils/searchLogger');
+const { InputValidator } = require('./utils/errorHandler');
+
+// Rate limiting for search operations
+const searchRateLimit = createRateLimiter(60, 60000); // 60 requests per minute
+const suggestionRateLimit = createRateLimiter(120, 60000); // 120 requests per minute for suggestions
+
 // Lấy danh sách documents của user
-router.get('/rag/documents', verifyToken, async (req, res) => {
-  try {
-    const { page = 1, limit = 20, fileType, search, sortBy = 'createdAt' } = req.query;
+router.get('/rag/documents', 
+  verifyToken, 
+  validateUserId,
+  validatePagination,
+  searchRateLimit,
+  errorHandler.wrapAsync(async (req, res) => {
+    const { fileType, search, sortBy = 'createdAt' } = req.query;
+    const { page, limit } = req.validatedPagination;
     
-    const result = await RAGService.getUserDocuments(req.userId, {
-      page: parseInt(page),
-      limit: parseInt(limit),
+    const result = await RAGService.getUserDocuments(req.validatedUserId, {
+      page,
+      limit,
       fileType,
       search,
       sortBy
     });
     
-    res.json(result);
-  } catch (error) {
-    console.error('[RAG API] Error getting documents:', error);
-    res.status(500).json({ message: 'Lỗi server: ' + error.message });
-  }
-});
+    res.json({
+      success: true,
+      documents: result.items,
+      pagination: result.pagination
+    });
+  })
+);
 
-// Tìm kiếm documents
-router.get('/rag/search', verifyToken, async (req, res) => {
-  try {
-    const { q: query, limit = 10, fileTypes, tags, includePublic = false } = req.query;
+// Tìm kiếm documents với enhanced filtering
+router.get('/rag/search', 
+  verifyToken,
+  validateUserId,
+  validateSearchQuery,
+  validatePagination,
+  validateSearchOptions,
+  searchRateLimit,
+  errorHandler.wrapAsync(async (req, res) => {
+    const { highlightTerms = true } = req.validatedOptions;
+    const { page, limit } = req.validatedPagination;
     
-    if (!query) {
-      return res.status(400).json({ message: 'Thiếu query tìm kiếm' });
-    }
+    const startTime = Date.now();
     
-    const documents = await RAGService.searchDocuments(req.userId, query, {
-      limit: parseInt(limit),
-      fileTypes: fileTypes ? fileTypes.split(',') : [],
-      tags: tags ? tags.split(',') : [],
-      includePublic: includePublic === 'true'
+    const documents = await RAGService.searchDocuments(req.validatedUserId, req.validatedQuery, {
+      ...req.validatedOptions,
+      page,
+      limit,
+      highlightTerms
     });
     
-    res.json({ documents });
-  } catch (error) {
-    console.error('[RAG API] Error searching documents:', error);
-    res.status(500).json({ message: 'Lỗi server: ' + error.message });
-  }
-});
+    const responseTime = Date.now() - startTime;
+    
+    // Record search in history for suggestions (async, don't wait)
+    const SuggestionEngine = require('./utils/suggestionEngine');
+    const suggestionEngine = new SuggestionEngine();
+    
+    suggestionEngine.recordSearch(req.validatedUserId, req.validatedQuery, documents, {
+      ...req.validatedOptions,
+      page,
+      limit
+    }, {
+      strategy: req.validatedOptions.searchStrategies ? req.validatedOptions.searchStrategies[0] : 'exact',
+      responseTime,
+      userAgent: req.get('User-Agent'),
+      ipAddress: req.ip || req.connection.remoteAddress
+    }).catch(error => {
+      searchLogger.error('Failed to record search history', { 
+        error: error.message,
+        userId: req.validatedUserId,
+        query: req.validatedQuery
+      });
+    });
+    
+    res.json({
+      success: true,
+      documents: documents.items || documents,
+      pagination: documents.pagination,
+      searchMetrics: {
+        responseTime,
+        query: req.validatedQuery,
+        totalResults: documents.items?.length || documents.length || 0
+      }
+    });
+  })
+);
+
+// Advanced search with boolean operators and enhanced filters
+router.post('/rag/search/advanced', 
+  verifyToken,
+  validateUserId,
+  validateAdvancedSearch,
+  searchRateLimit,
+  errorHandler.wrapAsync(async (req, res) => {
+    const startTime = Date.now();
+    
+    const documents = await RAGService.advancedSearch(req.validatedUserId, req.validatedQuery, {
+      ...req.validatedOptions,
+      limit: req.validatedLimit,
+      sortBy: req.validatedSortBy,
+      sortOrder: req.validatedSortOrder,
+      dateRange: req.validatedDateRange
+    });
+    
+    const responseTime = Date.now() - startTime;
+    
+    // Record search in history for suggestions (async, don't wait)
+    const SuggestionEngine = require('./utils/suggestionEngine');
+    const suggestionEngine = new SuggestionEngine();
+    
+    suggestionEngine.recordSearch(req.validatedUserId, req.validatedQuery, documents, {
+      ...req.validatedOptions,
+      limit: req.validatedLimit,
+      dateRange: req.validatedDateRange
+    }, {
+      strategy: 'advanced',
+      responseTime,
+      userAgent: req.get('User-Agent'),
+      ipAddress: req.ip || req.connection.remoteAddress
+    }).catch(error => {
+      searchLogger.error('Failed to record advanced search history', { 
+        error: error.message,
+        userId: req.validatedUserId,
+        query: req.validatedQuery
+      });
+    });
+    
+    res.json({
+      success: true,
+      documents,
+      query: {
+        original: req.validatedQuery,
+        parsed: RAGService.parseAdvancedQuery(req.validatedQuery)
+      },
+      appliedFilters: {
+        ...req.validatedOptions,
+        totalFilters: Object.values(req.validatedOptions).filter(f => 
+          f && (Array.isArray(f) ? f.length > 0 : Object.keys(f).length > 0)
+        ).length
+      },
+      searchMetrics: {
+        responseTime,
+        totalResults: documents.items?.length || documents.length || 0
+      }
+    });
+  })
+);
 
 // Lấy context liên quan cho một query
-router.post('/rag/context', verifyToken, async (req, res) => {
-  try {
+router.post('/rag/context', 
+  verifyToken,
+  validateUserId,
+  errorHandler.wrapAsync(async (req, res) => {
     const { query, maxChunks = 5, maxContextLength = 3000, includePublic = false } = req.body;
     
     if (!query) {
-      return res.status(400).json({ message: 'Thiếu query' });
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Query is required',
+          field: 'query'
+        }
+      });
     }
     
-    const result = await RAGService.getRelevantContext(req.userId, query, {
-      maxChunks: parseInt(maxChunks),
-      maxContextLength: parseInt(maxContextLength),
-      includePublic
+    // Validate query
+    const validatedQuery = InputValidator.validateSearchQuery(query);
+    
+    // Validate numeric parameters
+    const validatedMaxChunks = Math.min(Math.max(parseInt(maxChunks) || 5, 1), 20);
+    const validatedMaxContextLength = Math.min(Math.max(parseInt(maxContextLength) || 3000, 100), 10000);
+    
+    const result = await RAGService.getRelevantContext(req.validatedUserId, validatedQuery, {
+      maxChunks: validatedMaxChunks,
+      maxContextLength: validatedMaxContextLength,
+      includePublic: Boolean(includePublic)
     });
     
-    res.json(result);
-  } catch (error) {
-    console.error('[RAG API] Error getting context:', error);
-    res.status(500).json({ message: 'Lỗi server: ' + error.message });
-  }
-});
+    res.json({
+      success: true,
+      ...result
+    });
+  })
+);
 
 // Xóa document
-router.delete('/rag/documents/:id', verifyToken, async (req, res) => {
-  try {
+router.delete('/rag/documents/:id', 
+  verifyToken,
+  validateUserId,
+  errorHandler.wrapAsync(async (req, res) => {
+    const documentId = req.params.id;
+    
+    // Validate document ID format
+    if (!/^[0-9a-fA-F]{24}$/.test(documentId)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid document ID format',
+          field: 'documentId'
+        }
+      });
+    }
+    
     const Document = require('./models/Document');
     
     const document = await Document.findOne({
-      _id: req.params.id,
-      userId: req.userId
+      _id: documentId,
+      userId: req.validatedUserId
     });
     
     if (!document) {
-      return res.status(404).json({ message: 'Không tìm thấy document' });
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Document not found or access denied'
+        }
+      });
     }
     
-    await Document.deleteOne({ _id: req.params.id });
+    await Document.deleteOne({ _id: documentId });
     
-    res.json({ message: 'Đã xóa document thành công' });
-  } catch (error) {
-    console.error('[RAG API] Error deleting document:', error);
-    res.status(500).json({ message: 'Lỗi server: ' + error.message });
-  }
-});
+    // Log document deletion
+    searchLogger.info('Document deleted', {
+      documentId,
+      userId: req.validatedUserId,
+      title: document.title
+    });
+    
+    res.json({
+      success: true,
+      message: 'Document deleted successfully',
+      documentId
+    });
+  })
+);
 
 // Cập nhật document (title, tags, isPublic)
-router.put('/rag/documents/:id', verifyToken, async (req, res) => {
-  try {
-    const Document = require('./models/Document');
+router.put('/rag/documents/:id', 
+  verifyToken,
+  validateUserId,
+  errorHandler.wrapAsync(async (req, res) => {
+    const documentId = req.params.id;
     const { title, tags, isPublic } = req.body;
     
+    // Validate document ID format
+    if (!/^[0-9a-fA-F]{24}$/.test(documentId)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid document ID format',
+          field: 'documentId'
+        }
+      });
+    }
+    
+    // Validate title if provided
+    if (title !== undefined) {
+      if (typeof title !== 'string' || title.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Title must be a non-empty string',
+            field: 'title'
+          }
+        });
+      }
+      
+      if (title.length > 200) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Title is too long (max 200 characters)',
+            field: 'title'
+          }
+        });
+      }
+    }
+    
+    // Validate tags if provided
+    if (tags !== undefined) {
+      if (!Array.isArray(tags)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Tags must be an array',
+            field: 'tags'
+          }
+        });
+      }
+      
+      if (tags.length > 20) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Too many tags (max 20)',
+            field: 'tags'
+          }
+        });
+      }
+    }
+    
+    const Document = require('./models/Document');
+    
     const document = await Document.findOne({
-      _id: req.params.id,
-      userId: req.userId
+      _id: documentId,
+      userId: req.validatedUserId
     });
     
     if (!document) {
-      return res.status(404).json({ message: 'Không tìm thấy document' });
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Document not found or access denied'
+        }
+      });
     }
     
-    if (title) document.title = title;
-    if (tags !== undefined) document.tags = Array.isArray(tags) ? tags : [];
+    // Apply updates
+    if (title !== undefined) document.title = title.trim();
+    if (tags !== undefined) document.tags = tags.filter(tag => tag && typeof tag === 'string' && tag.trim().length > 0);
     if (isPublic !== undefined) document.isPublic = Boolean(isPublic);
     
     await document.save();
     
-    res.json(document);
-  } catch (error) {
-    console.error('[RAG API] Error updating document:', error);
-    res.status(500).json({ message: 'Lỗi server: ' + error.message });
-  }
-});
+    // Log document update
+    searchLogger.info('Document updated', {
+      documentId,
+      userId: req.validatedUserId,
+      updates: { title: title !== undefined, tags: tags !== undefined, isPublic: isPublic !== undefined }
+    });
+    
+    res.json({
+      success: true,
+      document
+    });
+  })
+);
 
 // Nâng cấp mentor response với RAG
-router.post('/mentor/chat-rag', verifyToken, async (req, res) => {
-  try {
+router.post('/mentor/chat-rag', 
+  verifyToken,
+  validateUserId,
+  errorHandler.wrapAsync(async (req, res) => {
     const { question, lectureId, useRAG = true } = req.body;
     
     if (!question) {
-      return res.status(400).json({ message: 'Thiếu câu hỏi' });
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Question is required',
+          field: 'question'
+        }
+      });
+    }
+    
+    // Validate question
+    const validatedQuestion = InputValidator.validateSearchQuery(question);
+    
+    // Validate lecture ID if provided
+    if (lectureId && !/^[0-9a-fA-F]{24}$/.test(lectureId)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid lecture ID format',
+          field: 'lectureId'
+        }
+      });
     }
     
     // Lấy lecture context nếu có
@@ -1383,7 +1655,7 @@ router.post('/mentor/chat-rag', verifyToken, async (req, res) => {
     if (lectureId) {
       const lecture = await Lecture.findOne({
         _id: lectureId,
-        userId: req.userId
+        userId: req.validatedUserId
       });
       
       if (lecture) {
@@ -1397,17 +1669,285 @@ router.post('/mentor/chat-rag', verifyToken, async (req, res) => {
     }
     
     // Generate response với RAG
-    const response = await generateMentorResponse(question, lectureContext, {
-      userId: req.userId,
-      useRAG,
+    const response = await generateMentorResponse(validatedQuestion, lectureContext, {
+      userId: req.validatedUserId,
+      useRAG: Boolean(useRAG),
       customInstructions: 'Trả lời như một giảng viên thân thiện, dễ hiểu.'
     });
     
-    res.json(response);
-  } catch (error) {
-    console.error('[RAG API] Error in mentor chat:', error);
-    res.status(500).json({ message: 'Lỗi server: ' + error.message });
-  }
+    // Log mentor interaction
+    searchLogger.info('Mentor chat interaction', {
+      userId: req.validatedUserId,
+      question: validatedQuestion.substring(0, 100),
+      lectureId,
+      useRAG: Boolean(useRAG)
+    });
+    
+    res.json({
+      success: true,
+      ...response
+    });
+  })
+);
+
+/* =======================================================
+   RAG SEARCH SUGGESTIONS AND HISTORY ENDPOINTS
+======================================================= */
+
+const SuggestionEngine = require('./utils/suggestionEngine');
+const SearchHistory = require('./models/SearchHistory');
+
+// Initialize suggestion engine
+const suggestionEngine = new SuggestionEngine({
+  maxSuggestions: 10,
+  minQueryLength: 1,
+  cacheTimeout: 5 * 60 * 1000 // 5 minutes
 });
+
+// Get real-time search suggestions (Requirements 3.1, 3.2, 3.5)
+router.get('/rag/search/suggestions', 
+  verifyToken,
+  validateUserId,
+  validateSuggestionRequest,
+  suggestionRateLimit,
+  errorHandler.wrapAsync(async (req, res) => {
+    const suggestions = await suggestionEngine.getSuggestions(req.validatedUserId, req.validatedPartialQuery, {
+      maxSuggestions: req.validatedLimit,
+      includeContentSuggestions: req.validatedIncludeContent,
+      includeHistorySuggestions: req.validatedIncludeHistory,
+      includeRecentSearches: req.validatedIncludeRecent,
+      timeWindow: req.validatedTimeWindow
+    });
+    
+    res.json({
+      success: true,
+      query: req.validatedPartialQuery,
+      suggestions: suggestions.map(s => ({
+        text: s.text,
+        type: s.type,
+        source: s.source,
+        frequency: s.frequency,
+        relevanceScore: s.relevanceScore
+      })),
+      count: suggestions.length,
+      cached: false // Could implement cache hit detection
+    });
+  })
+);
+
+// Get user search history (Requirement 3.4)
+router.get('/rag/search/history', 
+  verifyToken,
+  validateUserId,
+  validatePagination,
+  errorHandler.wrapAsync(async (req, res) => {
+    const { timeWindow } = req.query;
+    const { page, limit } = req.validatedPagination;
+    
+    // Validate time window
+    let validatedTimeWindow = null;
+    if (timeWindow) {
+      const numericTimeWindow = parseInt(timeWindow);
+      if (isNaN(numericTimeWindow) || numericTimeWindow < 1 || numericTimeWindow > 365) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Time window must be between 1 and 365 days',
+            field: 'timeWindow'
+          }
+        });
+      }
+      validatedTimeWindow = numericTimeWindow;
+    }
+    
+    const skip = (page - 1) * limit;
+    
+    let query = { userId: req.validatedUserId };
+    
+    // Add time window filter if provided
+    if (validatedTimeWindow) {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - validatedTimeWindow);
+      query.createdAt = { $gte: cutoffDate };
+    }
+    
+    const [history, total] = await Promise.all([
+      SearchHistory.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('query normalizedQuery createdAt resultCount satisfaction searchFilters searchMetadata')
+        .lean(),
+      SearchHistory.countDocuments(query)
+    ]);
+    
+    res.json({
+      success: true,
+      history,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  })
+);
+
+// Record search query and results for suggestions (Internal use by search endpoints)
+router.post('/rag/search/record', 
+  verifyToken,
+  validateUserId,
+  errorHandler.wrapAsync(async (req, res) => {
+    const { 
+      query,
+      resultCount,
+      searchFilters = {},
+      searchMetadata = {}
+    } = req.body;
+    
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Query is required',
+          field: 'query'
+        }
+      });
+    }
+    
+    // Validate query
+    const validatedQuery = InputValidator.validateSearchQuery(query);
+    
+    // Validate result count
+    const validatedResultCount = Math.max(0, parseInt(resultCount) || 0);
+    
+    // Add request metadata
+    const metadata = {
+      ...searchMetadata,
+      userAgent: req.get('User-Agent'),
+      ipAddress: req.ip || req.connection.remoteAddress
+    };
+    
+    const searchHistory = await suggestionEngine.recordSearch(
+      req.validatedUserId,
+      validatedQuery,
+      { length: validatedResultCount }, // Mock results array for count
+      searchFilters,
+      metadata
+    );
+    
+    res.json({
+      success: true,
+      searchId: searchHistory._id,
+      message: 'Search recorded successfully'
+    });
+  })
+);
+
+// Record click on search result (Requirement 3.3)
+router.post('/rag/search/click', 
+  verifyToken,
+  validateUserId,
+  validateClickRequest,
+  errorHandler.wrapAsync(async (req, res) => {
+    await suggestionEngine.recordClick(
+      req.validatedUserId,
+      req.validatedQuery,
+      req.validatedDocumentId,
+      req.validatedPosition
+    );
+    
+    res.json({
+      success: true,
+      message: 'Click recorded successfully'
+    });
+  })
+);
+
+// Update search satisfaction rating
+router.post('/rag/search/feedback', 
+  verifyToken,
+  validateUserId,
+  validateFeedbackRequest,
+  errorHandler.wrapAsync(async (req, res) => {
+    await suggestionEngine.updateSatisfaction(
+      req.validatedUserId,
+      req.validatedQuery,
+      req.validatedRating
+    );
+    
+    res.json({
+      success: true,
+      message: 'Feedback recorded successfully'
+    });
+  })
+);
+
+// Get search analytics
+router.get('/rag/search/analytics', 
+  verifyToken,
+  validateUserId,
+  errorHandler.wrapAsync(async (req, res) => {
+    const { timeWindow = 30 } = req.query;
+    
+    // Validate time window
+    const validatedTimeWindow = Math.min(Math.max(parseInt(timeWindow) || 30, 1), 365);
+    
+    const analytics = await suggestionEngine.getSearchAnalytics(
+      req.validatedUserId,
+      validatedTimeWindow
+    );
+    
+    res.json({
+      success: true,
+      analytics,
+      timeWindow: validatedTimeWindow,
+      generatedAt: new Date()
+    });
+  })
+);
+
+// Clear suggestion cache (Admin/Debug endpoint)
+router.post('/rag/search/clear-cache', 
+  verifyToken,
+  validateUserId,
+  errorHandler.wrapAsync(async (req, res) => {
+    const { userId } = req.body;
+    
+    // Validate user ID if provided
+    let targetUserId = null;
+    if (userId) {
+      targetUserId = InputValidator.validateUserId(userId);
+    }
+    
+    if (targetUserId) {
+      suggestionEngine.clearCacheForUser(targetUserId);
+    } else {
+      suggestionEngine.clearCache();
+    }
+    
+    res.json({
+      success: true,
+      message: targetUserId ? 'User cache cleared' : 'All cache cleared',
+      cacheStats: suggestionEngine.getCacheStats()
+    });
+  })
+);
+
+// System health endpoint
+router.get('/rag/health', 
+  verifyToken,
+  errorHandler.wrapAsync(async (req, res) => {
+    const health = errorHandler.getSystemHealth();
+    
+    res.json({
+      success: true,
+      ...health
+    });
+  })
+);
 
 module.exports = router;

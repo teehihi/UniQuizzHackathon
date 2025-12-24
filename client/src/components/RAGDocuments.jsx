@@ -5,20 +5,40 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faFile, faFileText, faFilePdf, faFileWord, faFileImage,
   faSearch, faTrash, faEdit, faEye, faGlobe, faLock,
-  faChartBar, faCalendar, faTag
+  faChartBar, faCalendar, faTag, faStar
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
+import EnhancedSearchInput from './EnhancedSearchInput';
+import HighlightedText from './HighlightedText';
+import API_BASE_URL from '../config/api.js';
+import { isAuthenticated } from '../utils/auth.js';
 
 const RAGDocuments = ({ userId }) => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFileType, setSelectedFileType] = useState('');
+  const [searchFilters, setSearchFilters] = useState({
+    fileType: '',
+    dateFrom: '',
+    dateTo: '',
+    tags: '',
+    includePublic: false,
+    caseSensitive: false,
+    highlightTerms: true
+  });
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerms, setSearchTerms] = useState([]);
 
-  // Fetch documents
+  // Fetch documents with enhanced search
   const fetchDocuments = async (page = 1) => {
+    // Check authentication first
+    if (!isAuthenticated()) {
+      toast.error('Vui lòng đăng nhập để xem tài liệu');
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -28,10 +48,31 @@ const RAGDocuments = ({ userId }) => {
         limit: '12'
       });
       
-      if (searchQuery) params.append('search', searchQuery);
-      if (selectedFileType) params.append('fileType', selectedFileType);
+      if (searchQuery) {
+        params.append('q', searchQuery);
+        // Store search terms for highlighting
+        setSearchTerms(searchQuery.split(/\s+/).filter(term => term.length > 0));
+      } else {
+        setSearchTerms([]);
+      }
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rag/documents?${params}`, {
+      // Add filters
+      if (searchFilters.fileType) params.append('fileTypes', searchFilters.fileType);
+      if (searchFilters.tags) params.append('tags', searchFilters.tags);
+      if (searchFilters.includePublic) params.append('includePublic', 'true');
+      if (searchFilters.caseSensitive) params.append('caseSensitive', 'true');
+      if (searchFilters.highlightTerms) params.append('highlightTerms', 'true');
+      
+      // Add date range filter
+      if (searchFilters.dateFrom || searchFilters.dateTo) {
+        const dateRange = {};
+        if (searchFilters.dateFrom) dateRange.start = searchFilters.dateFrom;
+        if (searchFilters.dateTo) dateRange.end = searchFilters.dateTo;
+        params.append('dateRange', JSON.stringify(dateRange));
+      }
+      
+      const endpoint = searchQuery ? '/api/rag/search' : '/api/rag/documents';
+      const response = await fetch(`${API_BASE_URL}${endpoint}?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -39,10 +80,22 @@ const RAGDocuments = ({ userId }) => {
       
       if (response.ok) {
         const data = await response.json();
-        setDocuments(data.documents);
-        setPagination(data.pagination);
+        setDocuments(data.documents || []);
+        setPagination(data.pagination || {});
+        
+        // Record search if it was a search query
+        if (searchQuery && data.documents) {
+          recordSearch(searchQuery, data.documents);
+        }
+      } else if (response.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem('token');
+        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        window.location.href = '/login';
+        return;
       } else {
-        throw new Error('Lỗi tải documents');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Lỗi tải documents');
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -52,17 +105,87 @@ const RAGDocuments = ({ userId }) => {
     }
   };
 
-  useEffect(() => {
-    fetchDocuments(currentPage);
-  }, [currentPage, searchQuery, selectedFileType]);
+  // Record search for analytics
+  const recordSearch = async (query, results) => {
+    if (!isAuthenticated()) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE_URL}/api/rag/search/record`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query,
+          resultCount: results.length,
+          filters: searchFilters,
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (error) {
+      console.error('Error recording search:', error);
+    }
+  };
 
+  // Handle search
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  // Handle filter changes
+  const handleFiltersChange = (newFilters) => {
+    setSearchFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      fetchDocuments(currentPage);
+    }
+  }, [currentPage, searchQuery, searchFilters]);
+
+  // Rate search result
+  const rateSearchResult = async (documentId, rating) => {
+    if (!isAuthenticated()) {
+      toast.error('Vui lòng đăng nhập để đánh giá');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE_URL}/api/rag/search/feedback`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+          documentId,
+          rating,
+          timestamp: new Date().toISOString()
+        })
+      });
+      toast.success('Cảm ơn phản hồi của bạn!');
+    } catch (error) {
+      console.error('Error rating search result:', error);
+    }
+  };
   // Delete document
   const handleDelete = async (documentId) => {
+    if (!isAuthenticated()) {
+      toast.error('Vui lòng đăng nhập để xóa tài liệu');
+      return;
+    }
+    
     if (!confirm('Bạn có chắc muốn xóa tài liệu này?')) return;
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/rag/documents/${documentId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/rag/documents/${documentId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -103,6 +226,31 @@ const RAGDocuments = ({ userId }) => {
     });
   };
 
+  // Show login message if not authenticated
+  if (!isAuthenticated()) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center py-20">
+            <FontAwesomeIcon icon={faLock} className="text-6xl text-gray-400 dark:text-gray-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Cần đăng nhập
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Vui lòng đăng nhập để truy cập thư viện tài liệu RAG
+            </p>
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              Đăng nhập ngay
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Header */}
@@ -115,42 +263,31 @@ const RAGDocuments = ({ userId }) => {
         </p>
       </div>
 
-      {/* Search & Filter */}
+      {/* Enhanced Search & Filter */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 mb-6 border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <FontAwesomeIcon 
-              icon={faSearch} 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
-            />
-            <input
-              type="text"
-              placeholder="Tìm kiếm tài liệu..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg 
-                       bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
-                       focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
-            />
+        <EnhancedSearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onSearch={handleSearch}
+          placeholder="Tìm kiếm tài liệu... (hỗ trợ từ khóa ngắn, cụm từ trong dấu ngoặc kép)"
+          showFilters={true}
+          filters={searchFilters}
+          onFiltersChange={handleFiltersChange}
+        />
+        
+        {/* Search Results Info */}
+        {searchQuery && (
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            {loading ? (
+              <span>Đang tìm kiếm...</span>
+            ) : (
+              <span>
+                Tìm thấy {documents?.length || 0} kết quả cho "{searchQuery}"
+                {searchFilters.fileType && ` trong file ${searchFilters.fileType.toUpperCase()}`}
+              </span>
+            )}
           </div>
-          
-          {/* File Type Filter */}
-          <select
-            value={selectedFileType}
-            onChange={(e) => setSelectedFileType(e.target.value)}
-            className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
-                     bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                     focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
-          >
-            <option value="">Tất cả loại file</option>
-            <option value="pdf">PDF</option>
-            <option value="docx">Word</option>
-            <option value="txt">Text</option>
-            <option value="url">Website</option>
-            <option value="youtube">YouTube</option>
-          </select>
-        </div>
+        )}
       </div>
 
       {/* Documents Grid */}
@@ -158,7 +295,7 @@ const RAGDocuments = ({ userId }) => {
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 dark:border-blue-400"></div>
         </div>
-      ) : documents.length === 0 ? (
+      ) : (!documents || documents.length === 0) ? (
         <div className="text-center py-12">
           <FontAwesomeIcon icon={faFile} className="text-6xl text-gray-300 dark:text-gray-600 mb-4" />
           <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
@@ -196,7 +333,10 @@ const RAGDocuments = ({ userId }) => {
                 </div>
                 
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 text-sm sm:text-base">
-                  {doc.title}
+                  <HighlightedText 
+                    text={doc.title} 
+                    searchTerms={searchTerms}
+                  />
                 </h3>
                 
                 <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
@@ -210,6 +350,44 @@ const RAGDocuments = ({ userId }) => {
                   </span>
                 </div>
               </div>
+
+              {/* Content Preview with Highlighting */}
+              {doc.searchSnippet && searchQuery && (
+                <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500">
+                  <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+                    Đoạn văn liên quan:
+                  </div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+                    <HighlightedText 
+                      text={doc.searchSnippet} 
+                      searchTerms={searchTerms}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Search Result Rating (only show for search results) */}
+              {searchQuery && (
+                <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Kết quả này có hữu ích?
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <button
+                          key={rating}
+                          onClick={() => rateSearchResult(doc._id, rating)}
+                          className="text-gray-300 hover:text-yellow-500 transition-colors"
+                          title={`Đánh giá ${rating} sao`}
+                        >
+                          <FontAwesomeIcon icon={faStar} className="text-xs" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Stats */}
               <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50">
@@ -256,7 +434,7 @@ const RAGDocuments = ({ userId }) => {
               </div>
 
               {/* Tags */}
-              {doc.tags && doc.tags.length > 0 && (
+              {doc.tags && Array.isArray(doc.tags) && doc.tags.length > 0 && (
                 <div className="px-3 sm:px-4 pb-3 sm:pb-4">
                   <div className="flex flex-wrap gap-1">
                     {doc.tags.slice(0, 3).map((tag, index) => (

@@ -171,7 +171,7 @@ runner.test('PPTX Placeholder Error', async () => {
     await ContentExtractor.extractFromPptx(Buffer.from('fake'));
     throw new Error('Should throw error');
   } catch (error) {
-    if (!error.message.includes('PPTX parser chưa được implement')) {
+    if (!error.message.includes('Không thể đọc file PPTX')) {
       throw new Error('Wrong error message');
     }
   }
