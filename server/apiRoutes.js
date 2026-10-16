@@ -209,7 +209,7 @@ router.post('/extract-content', verifyToken, upload.single('file'), async (req, 
 // UPLOAD MULTI-FORMAT → QUIZ (Hỗ trợ PDF, DOCX, URL, YouTube)
 router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   try {
-    const { title, courseCode, questionCount, url, text, useRAG, storeDocument } = req.body;
+    const { title, courseCode, questionCount, url, text, useRAG, storeDocument, preview } = req.body;
     const numQuestions = parseInt(questionCount) || 10;
 
     if (!title)
@@ -293,11 +293,54 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
     if (!ai.summary || !ai.questions)
       throw new Error('AI trả về dữ liệu không hợp lệ');
 
+    // Chuẩn hóa và làm sạch câu hỏi & đáp án
+    const normalizedQuestions = (ai.questions || []).map((q) => {
+      const opts = Array.isArray(q.options)
+        ? q.options.map((opt) => String(opt || '').trim()).filter((opt) => opt.length > 0)
+        : [];
+      let ans = String(q.answer || '').trim();
+
+      // Nếu answer là A, B, C, D hoặc ký tự chỉ mục
+      if (!opts.includes(ans)) {
+        const letterIndex = ans.length === 1 ? ans.toUpperCase().charCodeAt(0) - 65 : -1;
+        if (letterIndex >= 0 && letterIndex < opts.length) {
+          ans = opts[letterIndex];
+        } else if (opts.length > 0) {
+          ans = opts[0];
+        }
+      }
+
+      return {
+        question: String(q.question || '').trim(),
+        options: opts,
+        answer: ans
+      };
+    });
+
+    const isPreview = preview === 'true' || preview === true || req.query.preview === 'true';
+
+    // Nếu là chế độ preview: trả về dữ liệu câu hỏi để người dùng kiểm tra trước khi lưu
+    if (isPreview) {
+      return res.json({
+        title,
+        courseCode: courseCode || 'GENERAL',
+        summary: ai.summary || [],
+        questions: normalizedQuestions,
+        ragMetadata: ai.ragMetadata || null,
+        storedDocument: storedDocument ? {
+          id: storedDocument._id,
+          title: storedDocument.title,
+          chunks: storedDocument.metadata?.totalChunks
+        } : null,
+        preview: true
+      });
+    }
+
     const deck = new Deck({
       title,
       courseCode,
       summary: ai.summary,
-      questions: ai.questions,
+      questions: normalizedQuestions,
       userId: req.userId
     });
 
@@ -319,6 +362,66 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   } catch (error) {
     console.error('[Quiz Upload] Error:', error);
     res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
+// CREATE DECK (Save verified quiz with user edits)
+router.post('/decks', verifyToken, async (req, res) => {
+  try {
+    const { title, courseCode, summary, questions, isPublic } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: 'Thiếu tiêu đề bộ quiz.' });
+    }
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ message: 'Bộ quiz phải có ít nhất 1 câu hỏi.' });
+    }
+
+    const cleanedQuestions = questions.map((q, idx) => {
+      const qText = String(q.question || '').trim();
+      const opts = Array.isArray(q.options)
+        ? q.options.map((o) => String(o || '').trim()).filter((o) => o.length > 0)
+        : [];
+      let ans = String(q.answer || '').trim();
+
+      if (!qText) {
+        throw new Error(`Câu hỏi số ${idx + 1} chưa có nội dung.`);
+      }
+      if (opts.length < 2) {
+        throw new Error(`Câu hỏi số ${idx + 1} phải có ít nhất 2 phương án lựa chọn.`);
+      }
+
+      if (!ans) {
+        ans = opts[0];
+      } else if (!opts.includes(ans)) {
+        const letterIndex = ans.length === 1 ? ans.toUpperCase().charCodeAt(0) - 65 : -1;
+        if (letterIndex >= 0 && letterIndex < opts.length) {
+          ans = opts[letterIndex];
+        } else {
+          ans = opts[0];
+        }
+      }
+
+      return {
+        question: qText,
+        options: opts,
+        answer: ans,
+      };
+    });
+
+    const deck = new Deck({
+      title: title.trim(),
+      courseCode: (courseCode || 'GENERAL').trim(),
+      summary: Array.isArray(summary) ? summary : [],
+      questions: cleanedQuestions,
+      userId: req.userId,
+      isPublic: Boolean(isPublic)
+    });
+
+    const saved = await deck.save();
+    res.status(201).json(saved);
+  } catch (error) {
+    console.error('Lỗi khi lưu deck:', error);
+    res.status(400).json({ message: error.message || 'Lỗi khi lưu bộ quiz.' });
   }
 });
 
@@ -366,6 +469,78 @@ router.get('/decks/public/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching public deck:', error);
     res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// UPDATE DECK (Authenticated - for owner)
+router.put('/decks/:id', verifyToken, async (req, res) => {
+  try {
+    const deck = await Deck.findOne({
+      _id: req.params.id,
+      userId: new mongoose.Types.ObjectId(req.userId)
+    });
+
+    if (!deck) {
+      return res.status(404).json({ message: 'Không tìm thấy deck hoặc bạn không có quyền chỉnh sửa' });
+    }
+
+    const { title, courseCode, summary, questions, isPublic } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: 'Thiếu tiêu đề bộ quiz.' });
+    }
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ message: 'Bộ quiz phải có ít nhất 1 câu hỏi.' });
+    }
+
+    const cleanedQuestions = questions.map((q, idx) => {
+      const qText = String(q.question || '').trim();
+      const opts = Array.isArray(q.options)
+        ? q.options.map((o) => String(o || '').trim()).filter((o) => o.length > 0)
+        : [];
+      let ans = String(q.answer || '').trim();
+
+      if (!qText) {
+        throw new Error(`Câu hỏi số ${idx + 1} chưa có nội dung.`);
+      }
+      if (opts.length < 2) {
+        throw new Error(`Câu hỏi số ${idx + 1} phải có ít nhất 2 phương án lựa chọn.`);
+      }
+
+      if (!ans) {
+        ans = opts[0];
+      } else if (!opts.includes(ans)) {
+        const letterIndex = ans.length === 1 ? ans.toUpperCase().charCodeAt(0) - 65 : -1;
+        if (letterIndex >= 0 && letterIndex < opts.length) {
+          ans = opts[letterIndex];
+        } else {
+          ans = opts[0];
+        }
+      }
+
+      return {
+        question: qText,
+        options: opts,
+        answer: ans,
+      };
+    });
+
+    deck.title = title.trim();
+    if (courseCode !== undefined) {
+      deck.courseCode = (courseCode || 'GENERAL').trim();
+    }
+    if (summary !== undefined && Array.isArray(summary)) {
+      deck.summary = summary;
+    }
+    deck.questions = cleanedQuestions;
+    if (isPublic !== undefined) {
+      deck.isPublic = Boolean(isPublic);
+    }
+
+    const updatedDeck = await deck.save();
+    res.json(updatedDeck);
+  } catch (error) {
+    console.error('Lỗi khi cập nhật deck:', error);
+    res.status(400).json({ message: error.message || 'Lỗi khi cập nhật bộ quiz.' });
   }
 });
 

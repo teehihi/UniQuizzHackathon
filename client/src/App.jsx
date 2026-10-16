@@ -14,6 +14,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import MyQuizzes from "./pages/MyQuizzes";
 import CreateQuiz from "./pages/CreateQuiz";
+import EditQuiz from "./pages/EditQuiz";
 import QuizPlayer from "./pages/QuizPlayer";
 import MentorPage from "./pages/MentorPage";
 import Dashboard from "./pages/Dashboard";
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="/myquizzes" element={<MyQuizzes />} />
 
         <Route path="/create" element={<CreateQuiz />} />
+        <Route path="/edit-quiz/:id" element={<EditQuiz />} />
 
         <Route path="/quiz/:quizId" element={<QuizPlayer />} />
         <Route path="/mentor" element={<MentorPage />} />

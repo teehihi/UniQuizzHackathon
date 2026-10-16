@@ -168,7 +168,11 @@ class QueryNormalizer {
     const frequency = new Map();
     
     for (const term of terms) {
-      frequency.set(term, (frequency.get(term) || 0) + 1);
+      // Mongoose Maps do not support keys containing "." or starting with "$"
+      const safeTerm = term.replace(/\./g, '_').replace(/^\$/, '');
+      if (safeTerm) {
+        frequency.set(safeTerm, (frequency.get(safeTerm) || 0) + 1);
+      }
     }
     
     return frequency;

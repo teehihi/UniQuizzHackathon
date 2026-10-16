@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ShareButton from "./ShareButton";
 import { API_ENDPOINTS } from "../config/api.js";
 import { getAuthToken } from "../utils/auth.js";
 
 // Component này nhận 'quiz' làm prop, chứa thông tin như title, questionCount
 export default function QuizCard({ quiz, onDelete, onPublicToggle }) {
+  const navigate = useNavigate();
   const [isPublic, setIsPublic] = useState(quiz.isPublic || false);
   const [isTogglingPublic, setIsTogglingPublic] = useState(false);
 
@@ -104,14 +105,39 @@ export default function QuizCard({ quiz, onDelete, onPublicToggle }) {
         </div>
 
         {/* Đẩy các nút xuống dưới cùng */}
-        <div className="mt-auto flex gap-3">
-          <div className="flex-1 px-4 py-2 rounded-lg bg-red-600 dark:bg-red-500 text-white font-semibold text-center group-hover:bg-red-700 dark:group-hover:bg-red-600 transition">
+        <div className="mt-auto flex gap-2">
+          <div className="flex-1 px-4 py-2 rounded-lg bg-red-600 dark:bg-red-500 text-white font-semibold text-center group-hover:bg-red-700 dark:group-hover:bg-red-600 transition flex items-center justify-center text-sm">
             Làm ngay
           </div>
           <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/edit-quiz/${quiz.id}`);
+            }}
+            title="Chỉnh sửa quiz"
+            className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-600 dark:hover:text-blue-300 transition z-10 flex items-center justify-center cursor-pointer"
+          >
+            {/* Icon bút chì chỉnh sửa */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+          <button
             onClick={handleDelete}
             title="Xóa"
-            className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-200 dark:hover:bg-red-900 hover:text-red-800 dark:hover:text-red-300 transition z-10"
+            className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-200 dark:hover:bg-red-900 hover:text-red-800 dark:hover:text-red-300 transition z-10 flex items-center justify-center cursor-pointer"
           >
             {/* Icon thùng rác */}
             <svg

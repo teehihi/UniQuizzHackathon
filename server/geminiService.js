@@ -184,11 +184,18 @@ async function generateQuizFromText(text, numQuestions = 10, options = {}) {
             // Tạo search query từ text input
             const searchQuery = text.substring(0, 200); // Lấy 200 ký tự đầu làm query
             
-            const ragResult = await RAGService.getRelevantContext(options.userId, searchQuery, {
+            // Đặt timeout 3.5s tối đa cho RAG để tránh nghẽn CPU và treo server
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('RAG search timeout (3500ms exceeded)')), 3500)
+            );
+            
+            const ragPromise = RAGService.getRelevantContext(options.userId, searchQuery, {
                 maxChunks: 3,
                 maxContextLength: 2000,
                 includePublic: true
             });
+
+            const ragResult = await Promise.race([ragPromise, timeoutPromise]);
             
             if (ragResult.context) {
                 enhancedText = `NGỮ CẢNH LIÊN QUAN:\n${ragResult.context}\n\nNỘI DUNG CHÍNH:\n${text}`;
@@ -203,7 +210,7 @@ async function generateQuizFromText(text, numQuestions = 10, options = {}) {
                 console.log('[RAG] ⚠️ Không tìm thấy context liên quan, sử dụng text gốc');
             }
         } catch (error) {
-            console.error('[RAG] ❌ Lỗi RAG, fallback về text gốc:', error.message);
+            console.error('[RAG] ❌ Lỗi RAG hoặc timeout, fallback về text gốc:', error.message);
         }
     }
 
