@@ -182,21 +182,6 @@ export default function JoinRoom() {
                   ) : 'THAM GIA NGAY'}
                 </button>
 
-                {/* Dòng nhỏ không icon cho chủ phòng đăng nhập gọn gàng */}
-                {roomCode && !token && (
-                  <p className="text-center text-xs text-gray-400 -mt-2">
-                    Bạn là chủ phòng?{' '}
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/login?redirect=${encodeURIComponent(`/room/${roomCode}`)}`)}
-                      className="text-[#fbbf24] hover:underline font-semibold hover:text-amber-300 transition-colors cursor-pointer"
-                    >
-                      Đăng nhập
-                    </button>
-                    {' '}để quản lý
-                  </p>
-                )}
-
                 {/* Divider */}
                 <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
@@ -224,6 +209,21 @@ export default function JoinRoom() {
                   >
                     Đăng nhập để tạo phòng
                   </button>
+                )}
+
+                {/* Dòng nhỏ không icon cho chủ phòng đăng nhập gọn gàng (nằm bên dưới Đăng nhập để tạo phòng) */}
+                {roomCode && !token && (
+                  <p className="text-center text-xs text-gray-400 pt-2">
+                    Bạn là chủ phòng?{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/login?redirect=${encodeURIComponent(`/room/${roomCode}`)}`)}
+                      className="text-[#fbbf24] hover:underline font-semibold hover:text-amber-300 transition-colors cursor-pointer"
+                    >
+                      Đăng nhập
+                    </button>
+                    {' '}để quản lý
+                  </p>
                 )}
               </div>
             </div>
