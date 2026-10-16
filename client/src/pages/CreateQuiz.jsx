@@ -19,12 +19,8 @@ import {
   faCopy,
   faPlus,
   faArrowLeft,
-<<<<<<< Updated upstream
-  faSave
-=======
   faSave,
   faPenToSquare
->>>>>>> Stashed changes
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function CreateQuiz() {
@@ -135,8 +131,6 @@ export default function CreateQuiz() {
     setError("");
   };
 
-<<<<<<< Updated upstream
-=======
   // CHẾ ĐỘ TỰ SOẠN CÂU HỎI THỦ CÔNG: Chuyển thẳng sang Step 3 không cần qua AI
   const handleStartManual = (e) => {
     if (e) e.preventDefault();
@@ -163,7 +157,6 @@ export default function CreateQuiz() {
     setStep(3);
   };
 
->>>>>>> Stashed changes
   // STEP 1 -> STEP 2 -> STEP 3: Gọi API tạo bản xem trước câu hỏi
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -728,11 +721,7 @@ export default function CreateQuiz() {
                     </label>
                     
                     {/* Tab Buttons */}
-<<<<<<< Updated upstream
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
-=======
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-6">
->>>>>>> Stashed changes
                       <button
                         type="button"
                         onClick={() => setActiveTab('file')}
@@ -743,11 +732,7 @@ export default function CreateQuiz() {
                         }`}
                       >
                         <FontAwesomeIcon icon={faFile} className="text-2xl" />
-<<<<<<< Updated upstream
-                        <span>File (PDF/DOCX/PPTX)</span>
-=======
                         <span>File (PDF/DOCX)</span>
->>>>>>> Stashed changes
                       </button>
 
                       <button
@@ -787,8 +772,6 @@ export default function CreateQuiz() {
                       >
                         <span className="text-2xl font-bold">Aa</span>
                         <span>Văn bản</span>
-<<<<<<< Updated upstream
-=======
                       </button>
 
                       <button
@@ -802,65 +785,11 @@ export default function CreateQuiz() {
                       >
                         <FontAwesomeIcon icon={faPenToSquare} className="text-2xl" />
                         <span>Tự soạn thủ công</span>
->>>>>>> Stashed changes
                       </button>
                     </div>
 
                     {/* Tab Contents */}
                     <div>
-<<<<<<< Updated upstream
-                      {activeTab === 'file' && (
-                        <div
-                          onClick={handleUploadAreaClick}
-                          onDragEnter={handleDragEnter}
-                          onDragOver={handleDragOver}
-                          onDragLeave={handleDragLeave}
-                          onDrop={handleDrop}
-                          className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition ${
-                            isDragging
-                              ? "border-red-500 bg-red-50 dark:bg-red-900/20 scale-[1.01]"
-                              : file
-                              ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                              : "border-gray-300 dark:border-gray-600 hover:border-red-400 dark:hover:border-red-500 bg-gray-50/50 dark:bg-gray-900/50"
-                          }`}
-                        >
-                          {file ? (
-                            <div className="space-y-4">
-                              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto text-green-600 dark:text-green-400 text-2xl">
-                                <FontAwesomeIcon icon={faFile} />
-                              </div>
-                              <div>
-                                <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{file.name}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={removeFile}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 transition text-sm font-medium cursor-pointer"
-                              >
-                                <FontAwesomeIcon icon={faTrash} />
-                                <span>Chọn file khác</span>
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto">
-                                <FontAwesomeIcon icon={faFile} className="text-2xl" />
-                              </div>
-                              <div>
-                                <p className="text-base font-semibold text-gray-800 dark:text-gray-200">
-                                  Kéo thả file vào đây hoặc <span className="text-red-600 dark:text-red-400 underline">chọn từ máy tính</span>
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                  Hỗ trợ PDF, DOCX, PPTX (tối đa 10MB)
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-=======
                       {activeTab === 'manual' && (
                         <div className="bg-gradient-to-br from-red-50/80 to-orange-50/80 dark:from-red-950/20 dark:to-orange-950/20 border-2 border-dashed border-red-300 dark:border-red-800 rounded-2xl p-8 text-center space-y-4">
                           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
@@ -931,7 +860,6 @@ export default function CreateQuiz() {
                         </div>
                       )}
 
->>>>>>> Stashed changes
                       {activeTab === 'url' && (
                         <div className="space-y-4">
                           <input
@@ -984,23 +912,6 @@ export default function CreateQuiz() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                   >
-<<<<<<< Updated upstream
-                    <button
-                      type="submit"
-                      disabled={
-                        isLoading || 
-                        !title || 
-                        (activeTab === 'file' && !file) ||
-                        (activeTab === 'url' && !url) ||
-                        (activeTab === 'youtube' && !youtubeUrl) ||
-                        (activeTab === 'text' && text.length < 50)
-                      }
-                      className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:from-red-700 hover:to-orange-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <FontAwesomeIcon icon={faRocket} />
-                      <span>Tạo câu hỏi & Chuyển sang kiểm duyệt đáp án</span>
-                    </button>
-=======
                     {activeTab === 'manual' ? (
                       <button
                         type="button"
@@ -1028,7 +939,6 @@ export default function CreateQuiz() {
                         <span>Tạo câu hỏi & Chuyển sang kiểm duyệt đáp án</span>
                       </button>
                     )}
->>>>>>> Stashed changes
                   </motion.div>
 
                   {/* Báo lỗi */}
