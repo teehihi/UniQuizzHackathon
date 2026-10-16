@@ -10,6 +10,17 @@ export default function HostDashboard({ room, quiz, currentQuestion, currentQues
   // Tab state for the bottom panel
   const [activeTab, setActiveTab] = useState('leaderboard'); // 'leaderboard' or 'questions'
 
+  // Bảng xếp hạng hiển thị: ưu tiên leaderboard từ server, nếu chưa có thì lấy danh sách participants hiện tại
+  const displayLeaderboard = (leaderboard && leaderboard.length > 0)
+    ? [...leaderboard].sort((a, b) => (b.score || 0) - (a.score || 0))
+    : (participants && participants.length > 0)
+      ? [...participants].map((p, idx) => ({
+          displayName: p.displayName,
+          score: p.score || 0,
+          socketId: p.socketId || `p-${idx}`
+        })).sort((a, b) => (b.score || 0) - (a.score || 0))
+      : [];
+
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 relative z-10 flex flex-col h-[calc(100vh-100px)]">
       
@@ -108,12 +119,12 @@ export default function HostDashboard({ room, quiz, currentQuestion, currentQues
           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-[url('/patterns/topography.svg')] bg-opacity-5">
               {activeTab === 'leaderboard' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {[...leaderboard].sort((a, b) => b.score - a.score).map((player, idx) => (
+                      {displayLeaderboard.map((player, idx) => (
                         <motion.div 
                             layout
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            key={player.socketId}
+                            key={player.socketId || idx}
                             className={`flex items-center gap-3 p-3 rounded-xl border ${
                                 idx === 0 ? 'bg-gradient-to-r from-yellow-900/50 to-black/50 border-yellow-500' :
                                 idx === 1 ? 'bg-gradient-to-r from-gray-800/50 to-black/50 border-gray-400' :
@@ -134,7 +145,7 @@ export default function HostDashboard({ room, quiz, currentQuestion, currentQues
                         </motion.div>
                       ))}
                       
-                      {leaderboard.length === 0 && (
+                      {displayLeaderboard.length === 0 && (
                           <div className="col-span-full text-center text-gray-500 py-8">
                               <FontAwesomeIcon icon={faUsers} className="text-3xl mb-2 opacity-50" />
                               <p>Chưa có dữ liệu xếp hạng...</p>

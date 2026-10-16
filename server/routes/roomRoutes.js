@@ -38,6 +38,48 @@ router.get('/:roomCode', async (req, res) => {
   }
 });
 
+// GET leaderboard of a room (được lưu trữ trong 15 ngày)
+router.get('/:roomCode/leaderboard', async (req, res) => {
+  try {
+    const roomCode = req.params.roomCode.toUpperCase();
+    const RoomLeaderboard = require('../models/RoomLeaderboard');
+
+    // 1. Thử lấy từ collection RoomLeaderboard (TTL 15 ngày)
+    let doc = await RoomLeaderboard.findOne({ roomCode }).sort({ createdAt: -1 });
+
+    if (!doc) {
+      // 2. Fallback sang Room document
+      const room = await Room.findOne({ roomCode }).populate('quizId', 'title');
+      if (room) {
+        // Kiểm tra xem bảng xếp hạng trong room đã quá 15 ngày chưa
+        if (room.leaderboardExpiresAt && new Date() > room.leaderboardExpiresAt) {
+          return res.status(404).json({ message: 'Bảng xếp hạng của phòng này đã hết hạn 15 ngày.' });
+        }
+        if (room.finalLeaderboard && room.finalLeaderboard.length > 0) {
+          return res.json({
+            roomCode,
+            quizTitle: room.quizId?.title || '',
+            rankings: room.finalLeaderboard,
+            finishedAt: room.finishedAt,
+            expiresAt: room.leaderboardExpiresAt
+          });
+        }
+      }
+      return res.status(404).json({ message: 'Chưa có bảng xếp hạng cho phòng này hoặc đã hết hạn 15 ngày.' });
+    }
+
+    res.json({
+      roomCode: doc.roomCode,
+      quizTitle: doc.quizTitle,
+      rankings: doc.rankings,
+      finishedAt: doc.finishedAt,
+      createdAt: doc.createdAt
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server: ' + error.message });
+  }
+});
+
 // GET my rooms (cần auth)
 router.get('/my/rooms', verifyToken, async (req, res) => {
   try {
@@ -128,22 +170,17 @@ router.post('/:roomCode/reset-participants', verifyToken, async (req, res) => {
   }
 });
 
-// CLEANUP old rooms (for admin/testing)
+// CLEANUP old rooms (chỉ xóa các phòng cũ hơn 60 ngày - 2 tháng)
 router.post('/cleanup/all', verifyToken, async (req, res) => {
   try {
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
     
-    // Xóa phòng cũ hoặc đã kết thúc
     const result = await Room.deleteMany({
-      $or: [
-        { status: 'finished' },
-        { createdAt: { $lt: thirtyMinutesAgo } },
-        { 'participants.isOnline': { $ne: true } }
-      ]
+      createdAt: { $lt: sixtyDaysAgo }
     });
 
     res.json({ 
-      message: `Đã xóa ${result.deletedCount} phòng`,
+      message: `Đã xóa ${result.deletedCount} phòng quá hạn 2 tháng`,
       deletedCount: result.deletedCount 
     });
   } catch (error) {

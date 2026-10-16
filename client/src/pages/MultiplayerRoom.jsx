@@ -75,11 +75,17 @@ export default function MultiplayerRoom() {
   const timerRef = useRef(null);
   const answerTimeRef = useRef(null);
 
-  // FIX: Use REF to track room state for event listeners (Moved to top level)
+  // FIX: Use REF to track room state and isHost for event listeners
   const roomRef = useRef(room);
+  const isHostRef = useRef(isHost);
+
   useEffect(() => {
     roomRef.current = room;
   }, [room]);
+
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
 
   // Handle new question updates - MEME TRIGGER
   useEffect(() => {
@@ -140,6 +146,7 @@ export default function MultiplayerRoom() {
 
           setRoom(response.room);
           setQuiz(response.quiz);
+          isHostRef.current = true;
           setIsHost(true);
           setGameStatus(response.room.status);
           setParticipants(response.room.participants);
@@ -185,6 +192,9 @@ export default function MultiplayerRoom() {
 
           setRoom(response.room);
           setQuiz(response.quiz);
+          if (response.isHost) {
+            isHostRef.current = true;
+          }
           setIsHost(response.isHost);
           setGameStatus(response.room.status);
           setParticipants(response.room.participants);
@@ -242,22 +252,34 @@ export default function MultiplayerRoom() {
       });
 
       // Nếu là host, reload leaderboard
-      if (isCreator) {
+      if (isHostRef.current || isCreator) {
         loadLeaderboard();
       }
     });
 
     socket.on('participant-joined', (data) => {
       toast.info(`${data.displayName} đã tham gia phòng`);
+      if (isHostRef.current || isCreator) {
+        loadLeaderboard();
+      }
     });
 
     socket.on('participant-left', (data) => {
       toast.info(`${data.displayName} đã rời phòng`);
+      if (isHostRef.current || isCreator) {
+        loadLeaderboard();
+      }
     });
 
     socket.on('game-started', (data) => {
       console.log('🎮 [GAME-STARTED] Event received!');
       soundManager.play('start');
+
+      if (data?.leaderboard) {
+        setLeaderboard(data.leaderboard);
+      } else if (isHostRef.current || isCreator) {
+        loadLeaderboard();
+      }
 
       // Luôn reload room data để đảm bảo có đầy đủ thông tin
       socket.emit('get-room-data', { roomCode }, (response) => {
@@ -278,6 +300,10 @@ export default function MultiplayerRoom() {
     });
 
     socket.on('question-changed', (data) => {
+      if (isHostRef.current || isCreator) {
+        loadLeaderboard();
+      }
+
       if (data.isFinished) {
         setGameStatus('finished');
         loadLeaderboard();
@@ -314,6 +340,13 @@ export default function MultiplayerRoom() {
       console.log('[Answer Submit] Progress:', data.answeredCount, '/', data.totalParticipants);
       setAnsweredCount(data.answeredCount);
 
+      // Cập nhật ngay bảng xếp hạng nếu server gửi kèm, hoặc gọi loadLeaderboard nếu là Host
+      if (data?.leaderboard) {
+        setLeaderboard(data.leaderboard);
+      } else if (isHostRef.current || isCreator) {
+        loadLeaderboard();
+      }
+
       // Nếu tất cả đã trả lời, hiển thị đáp án đúng và start auto-advance
       if (data.answeredCount === data.totalParticipants) {
         console.log('[All Answered] Starting auto-advance...');
@@ -321,11 +354,6 @@ export default function MultiplayerRoom() {
           setShowCorrectAnswer(true);
           startNextQuestionProgress();
         }, 500);
-      }
-
-      // Host tự động reload leaderboard khi có người trả lời
-      if (isCreator) {
-        loadLeaderboard();
       }
     });
 
@@ -1252,9 +1280,11 @@ export default function MultiplayerRoom() {
             <HostLeaderboard
               leaderboard={leaderboard}
               onExit={() => {
-                if (window.confirm('Bạn có chắc chắn muốn kết thúc và xóa phòng này không?')) {
-                  handleDeleteRoom();
+                soundManager.stopBackgroundMusic();
+                if (socketRef.current) {
+                  socketRef.current.disconnect();
                 }
+                navigate('/create-room');
               }}
             />
           )

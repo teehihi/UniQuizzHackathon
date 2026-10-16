@@ -96,6 +96,17 @@ const RoomSchema = new mongoose.Schema({
   finishedAt: {
     type: Date
   },
+  finalLeaderboard: [{
+    displayName: String,
+    score: Number,
+    correctAnswers: Number,
+    totalAnswers: Number,
+    rank: Number,
+    characterConfig: Object
+  }],
+  leaderboardExpiresAt: {
+    type: Date
+  },
   createdAt: {
     type: Date,
     default: Date.now

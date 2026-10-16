@@ -5,7 +5,7 @@ import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faSignInAlt, faUsers, faClock, faGamepad } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faSignInAlt, faUsers, faClock, faGamepad, faTrophy, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -15,6 +15,9 @@ export default function CreateRoom() {
   const [myRooms, setMyRooms] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
+  const [selectedLeaderboard, setSelectedLeaderboard] = useState(null);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedQuiz, setSelectedQuiz] = useState('');
   const [mode, setMode] = useState('auto');
@@ -91,6 +94,21 @@ export default function CreateRoom() {
     navigate(`/room/${roomCode}`, {
       state: { displayName, isCreator: true }
     });
+  };
+
+  const handleViewLeaderboard = async (roomCode) => {
+    try {
+      setLoadingLeaderboard(true);
+      setShowLeaderboardModal(true);
+      setSelectedLeaderboard(null);
+      const res = await axios.get(`${API_URL}/api/rooms/${roomCode}/leaderboard`);
+      setSelectedLeaderboard(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Chưa có bảng xếp hạng cho phòng này hoặc đã hết hạn 15 ngày');
+      setShowLeaderboardModal(false);
+    } finally {
+      setLoadingLeaderboard(false);
+    }
   };
 
   const handleCreateRoom = async () => {
@@ -342,16 +360,23 @@ export default function CreateRoom() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => handleJoinExistingRoom(room.roomCode)}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm text-sm"
                     >
                       <FontAwesomeIcon icon={faSignInAlt} /> Vào lại
                     </button>
                     <button
+                      onClick={() => handleViewLeaderboard(room.roomCode)}
+                      className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm text-sm"
+                      title="Xem Bảng xếp hạng (lưu 15 ngày)"
+                    >
+                      <FontAwesomeIcon icon={faTrophy} /> BXH
+                    </button>
+                    <button
                       onClick={() => handleDeleteRoom(room)}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg transition-colors"
+                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg transition-colors text-sm"
                       title="Xóa phòng"
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -396,6 +421,102 @@ export default function CreateRoom() {
                 className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-bold shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02]"
               >
                 Xóa ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🏆 Leaderboard Modal (Lưu trữ 15 ngày) */}
+      {showLeaderboardModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 transform transition-all scale-100 animate-scaleIn border border-gray-200 dark:border-gray-700 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600">
+                  <FontAwesomeIcon icon={faTrophy} className="text-xl" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Bảng xếp hạng phòng: <span className="font-mono text-blue-600 dark:text-blue-400">{selectedLeaderboard?.roomCode}</span>
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {selectedLeaderboard?.quizTitle || 'Quiz'} • ⏱️ Lưu trữ 15 ngày
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowLeaderboardModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2 rounded-lg"
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4 space-y-2">
+              {loadingLeaderboard ? (
+                <div className="text-center py-10 text-gray-400">Đang tải bảng xếp hạng...</div>
+              ) : selectedLeaderboard?.rankings?.length > 0 ? (
+                selectedLeaderboard.rankings.map((player, idx) => {
+                  const rank = player.rank || idx + 1;
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
+                        rank === 1
+                          ? 'bg-amber-50/80 border-amber-300 dark:bg-amber-950/20 dark:border-amber-700'
+                          : rank === 2
+                          ? 'bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-700'
+                          : rank === 3
+                          ? 'bg-orange-50/60 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800'
+                          : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                            rank === 1
+                              ? 'bg-amber-400 text-amber-950 shadow-sm'
+                              : rank === 2
+                              ? 'bg-slate-300 text-slate-800'
+                              : rank === 3
+                              ? 'bg-amber-700 text-white'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                          }`}
+                        >
+                          {rank}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                            {player.displayName}
+                          </p>
+                          {player.totalAnswers > 0 && (
+                            <p className="text-xs text-gray-400">
+                              Đúng {player.correctAnswers}/{player.totalAnswers} câu
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-amber-600 dark:text-amber-400 text-base">
+                          {player.score?.toLocaleString() || 0}
+                        </span>
+                        <span className="text-xs text-gray-400 block">điểm</span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-10 text-gray-400">Chưa có ai thi đấu trong phòng này</div>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+              <button
+                onClick={() => setShowLeaderboardModal(false)}
+                className="px-5 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold text-sm transition-colors"
+              >
+                Đóng
               </button>
             </div>
           </div>

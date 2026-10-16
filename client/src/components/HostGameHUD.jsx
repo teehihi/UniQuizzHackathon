@@ -13,6 +13,17 @@ export default function HostGameHUD({
   // Tab state for the bottom panel
   const [activeTab, setActiveTab] = useState('leaderboard'); // 'leaderboard' or 'questions'
 
+  // Bảng xếp hạng hiển thị: ưu tiên leaderboard từ server, nếu chưa có thì lấy danh sách participants hiện tại
+  const displayLeaderboard = (leaderboard && leaderboard.length > 0)
+    ? [...leaderboard].sort((a, b) => (b.score || 0) - (a.score || 0))
+    : (participants && participants.length > 0)
+      ? [...participants].map((p, idx) => ({
+          displayName: p.displayName,
+          score: p.score || 0,
+          socketId: p.socketId || `p-${idx}`
+        })).sort((a, b) => (b.score || 0) - (a.score || 0))
+      : [];
+
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 relative z-10 flex flex-col h-[calc(100vh-100px)]">
       
@@ -90,14 +101,14 @@ export default function HostGameHUD({
               {activeTab === 'leaderboard' && (
                   <div className="grid grid-cols-1 gap-3">
                       <AnimatePresence>
-                      {[...leaderboard].sort((a, b) => b.score - a.score).map((player, idx) => (
+                      {displayLeaderboard.map((player, idx) => (
                         <motion.div 
                             layout
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            key={player.socketId}
+                            key={player.socketId || idx}
                             className={`flex items-center gap-4 p-4 rounded-xl border-b-2 ${
                                 idx === 0 ? 'bg-gradient-to-r from-yellow-900/60 to-black/40 border-yellow-500' :
                                 idx === 1 ? 'bg-gradient-to-r from-gray-800/60 to-black/40 border-gray-400' :
@@ -122,7 +133,7 @@ export default function HostGameHUD({
                       ))}
                       </AnimatePresence>
                       
-                      {leaderboard.length === 0 && (
+                      {displayLeaderboard.length === 0 && (
                           <div className="col-span-full text-center text-gray-500 py-12">
                               <FontAwesomeIcon icon={faUsers} className="text-5xl mb-4 opacity-30" />
                               <p className="text-xl">Chưa có dữ liệu xếp hạng...</p>

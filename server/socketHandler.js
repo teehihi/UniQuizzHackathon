@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken');
 const Room = require('./models/Room');
 const Deck = require('./models/Deck');
+const RoomLeaderboard = require('./models/RoomLeaderboard');
 
 // Store để track connections
 const roomConnections = new Map(); // roomCode -> Set of socketIds
@@ -77,22 +78,29 @@ module.exports = (io) => {
           return callback?.({ success: true, message: 'Room not found' });
         }
 
-        // Xóa participant dựa trên socketId
+        // Nếu phòng đang chờ ('waiting'): xóa khỏi danh sách participants để không chiếm slot sảnh
+        // Nếu phòng đang chơi hoặc đã kết thúc: GIỮ NGUYÊN điểm số, chỉ đánh dấu offline
         const beforeCount = room.participants.length;
-        room.participants = room.participants.filter(p => p.socketId !== socket.id);
-        const afterCount = room.participants.length;
-
-        if (beforeCount !== afterCount) {
-          await room.save();
-          
-          // Broadcast update
-          io.to(roomCode.toUpperCase()).emit('participants-updated', {
-            participants: room.participants,
-            count: room.participants.length
-          });
-          
-          console.log(`🚪 Socket ${socket.id} left ${roomCode.toUpperCase()} (${beforeCount} → ${afterCount})`);
+        if (room.status === 'waiting') {
+          room.participants = room.participants.filter(p => p.socketId !== socket.id);
+        } else {
+          const participant = room.participants.find(p => p.socketId === socket.id);
+          if (participant) {
+            participant.isOnline = false;
+            participant.socketId = null;
+          }
         }
+        const afterCount = room.participants.filter(p => p.isOnline !== false).length;
+
+        await room.save();
+        
+        // Broadcast update
+        io.to(roomCode.toUpperCase()).emit('participants-updated', {
+          participants: room.participants,
+          count: room.participants.length
+        });
+        
+        console.log(`🚪 Socket ${socket.id} left ${roomCode.toUpperCase()} (status: ${room.status})`);
 
         // Leave socket room
         socket.leave(roomCode.toUpperCase());
@@ -410,10 +418,24 @@ module.exports = (io) => {
           p.answers.some(a => a.questionIndex === questionIndex)
         ).length;
 
+        const currentLeaderboard = room.participants
+          .map(p => ({
+            displayName: p.displayName,
+            score: p.score,
+            correctAnswers: p.answers.filter(a => a.isCorrect).length,
+            totalAnswers: p.answers.length,
+            isOnline: p.isOnline,
+            socketId: p.socketId,
+            characterConfig: p.characterConfig
+          }))
+          .sort((a, b) => b.score - a.score)
+          .map((item, idx) => ({ ...item, rank: idx + 1 }));
+
         io.to(roomCode).emit('answer-submitted', {
           participantName: participant.displayName,
           answeredCount,
-          totalParticipants: room.participants.length
+          totalParticipants: room.participants.length,
+          leaderboard: currentLeaderboard
         });
 
         console.log(`✅ ${participant.displayName} answered Q${questionIndex}: ${isCorrect ? 'correct' : 'wrong'} (+${points})`);
@@ -530,13 +552,27 @@ module.exports = (io) => {
         room.startedAt = new Date();
         await room.save();
 
+        const initialLeaderboard = room.participants
+          .map(p => ({
+            displayName: p.displayName,
+            score: p.score || 0,
+            correctAnswers: 0,
+            totalAnswers: 0,
+            isOnline: p.isOnline,
+            socketId: p.socketId,
+            characterConfig: p.characterConfig
+          }))
+          .sort((a, b) => b.score - a.score)
+          .map((item, idx) => ({ ...item, rank: idx + 1 }));
+
         io.to(roomCode).emit('game-started', {
-          startedAt: room.startedAt
+          startedAt: room.startedAt,
+          leaderboard: initialLeaderboard
         });
 
-        callback({ success: true });
+        callback({ success: true, leaderboard: initialLeaderboard });
         
-        console.log(`🎮 Game started: ${roomCode}`);
+        console.log(`🎮 Game started: ${roomCode} with ${initialLeaderboard.length} participants`);
       } catch (error) {
         console.error('Error starting game:', error);
         callback({ error: error.message });
@@ -559,7 +595,6 @@ module.exports = (io) => {
 
         room.status = 'finished';
         room.finishedAt = new Date();
-        await room.save();
 
         const leaderboard = room.participants
           .map(p => ({
@@ -569,16 +604,41 @@ module.exports = (io) => {
             totalAnswers: p.answers.length,
             characterConfig: p.characterConfig
           }))
-          .sort((a, b) => b.score - a.score);
+          .sort((a, b) => b.score - a.score)
+          .map((item, idx) => ({ ...item, rank: idx + 1 }));
+
+        // Lưu bảng xếp hạng trực tiếp vào Room với hạn 15 ngày
+        room.finalLeaderboard = leaderboard;
+        room.leaderboardExpiresAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000); // 15 ngày
+        await room.save();
+
+        // Lưu vào RoomLeaderboard (tự động xóa sau 15 ngày nhờ TTL Index)
+        try {
+          const quizDoc = await Deck.findById(room.quizId);
+          await RoomLeaderboard.findOneAndUpdate(
+            { roomCode: roomCode.toUpperCase() },
+            {
+              roomCode: roomCode.toUpperCase(),
+              quizTitle: quizDoc?.title || '',
+              hostId: room.hostId,
+              rankings: leaderboard,
+              finishedAt: room.finishedAt,
+              createdAt: new Date()
+            },
+            { upsert: true, new: true }
+          );
+        } catch (lbErr) {
+          console.error('Error saving RoomLeaderboard:', lbErr);
+        }
 
         io.to(roomCode).emit('game-ended', {
           leaderboard,
           finishedAt: room.finishedAt
         });
 
-        callback({ success: true });
+        callback({ success: true, leaderboard });
         
-        console.log(`🏁 Game ended: ${roomCode}`);
+        console.log(`🏁 Game ended: ${roomCode} with ${leaderboard.length} players ranked`);
       } catch (error) {
         console.error('Error ending game:', error);
         callback({ error: error.message });
@@ -595,6 +655,14 @@ module.exports = (io) => {
           return callback({ error: 'Không tìm thấy phòng' });
         }
 
+        // Ưu tiên trả về finalLeaderboard nếu còn hạn 15 ngày
+        if (room.finalLeaderboard && room.finalLeaderboard.length > 0) {
+          const isExpired = room.leaderboardExpiresAt && new Date() > room.leaderboardExpiresAt;
+          if (!isExpired) {
+            return callback({ success: true, leaderboard: room.finalLeaderboard });
+          }
+        }
+
         const leaderboard = room.participants
           .map(p => ({
             displayName: p.displayName,
@@ -604,7 +672,8 @@ module.exports = (io) => {
             isOnline: p.isOnline,
             characterConfig: p.characterConfig
           }))
-          .sort((a, b) => b.score - a.score);
+          .sort((a, b) => b.score - a.score)
+          .map((item, idx) => ({ ...item, rank: idx + 1 }));
 
         callback({ success: true, leaderboard });
       } catch (error) {
@@ -651,14 +720,25 @@ module.exports = (io) => {
           const room = await Room.findOne({ roomCode });
           if (!room) continue;
 
-          // Xóa participant dựa trên socketId (use transaction)
+          // Xử lý participant dựa trên socketId (use transaction)
           const result = await executeRoomTransaction(roomCode, async (room) => {
-              const beforeCount = room.participants.length;
-              room.participants = room.participants.filter(p => p.socketId !== socket.id);
-              const afterCount = room.participants.length;
-
-              if (beforeCount === afterCount) {
-                  return { cancel: true }; // No changes needed
+              if (room.status === 'waiting') {
+                // Sảnh chờ: xóa hẳn để không chiếm chỗ
+                const beforeCount = room.participants.length;
+                room.participants = room.participants.filter(p => p.socketId !== socket.id);
+                const afterCount = room.participants.length;
+                if (beforeCount === afterCount) {
+                  return { cancel: true };
+                }
+              } else {
+                // Đang chơi hoặc đã kết thúc: giữ nguyên để bảo toàn điểm và xếp hạng
+                const participant = room.participants.find(p => p.socketId === socket.id);
+                if (participant) {
+                  participant.isOnline = false;
+                  participant.socketId = null;
+                } else {
+                  return { cancel: true };
+                }
               }
           });
 
@@ -668,7 +748,7 @@ module.exports = (io) => {
               participants: result.room.participants,
               count: result.room.participants.length
             });
-            console.log(`🚪 Removed participant from ${roomCode}`);
+            console.log(`🚪 Disconnected socket from ${roomCode} (status: ${result.room.status})`);
           }
 
           // Cleanup tracking
