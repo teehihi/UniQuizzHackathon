@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrophy, faMedal, faCrown, faHome } from '@fortawesome/free-solid-svg-icons';
+import { faTrophy, faMedal, faCrown, faHome, faRotateRight } from '@fortawesome/free-solid-svg-icons';
 import ReactConfetti from 'react-confetti';
 import ParticipantAvatar from './ParticipantAvatar';
 import CharacterAvatar from './CharacterAvatar';
 
-const HostLeaderboard = ({ leaderboard, onExit }) => {
+const HostLeaderboard = ({ leaderboard, onExit, onRestart }) => {
   const [windowSize, setWindowSize] = React.useState({ width: window.innerWidth, height: window.innerHeight });
 
   useEffect(() => {
@@ -165,6 +165,15 @@ const HostLeaderboard = ({ leaderboard, onExit }) => {
 
         {/* FOOTER ACTIONS */}
         <div className="mt-8 mb-8 flex gap-4">
+          {onRestart && (
+            <button
+              onClick={onRestart}
+              className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transform hover:scale-105 transition"
+            >
+              <FontAwesomeIcon icon={faRotateRight} />
+              Bắt đầu lượt mới
+            </button>
+          )}
           <button
             onClick={onExit}
             className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transform hover:scale-105 transition"

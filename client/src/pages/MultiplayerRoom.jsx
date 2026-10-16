@@ -233,6 +233,7 @@ export default function MultiplayerRoom() {
     socket.off('leaderboard-show');
     socket.off('game-ended');
     socket.off('room-deleted');
+    socket.off('room-restarted');
 
     // QUAN TRỌNG: Listen participants-updated để cập nhật realtime
     socket.on('participants-updated', (data) => {
@@ -388,6 +389,24 @@ export default function MultiplayerRoom() {
       navigate('/myquizzes');
     });
 
+    socket.on('room-restarted', (data) => {
+      toast.info(data?.message || 'Phòng đã được làm mới để bắt đầu lượt mới!');
+      setGameStatus('waiting');
+      setCurrentQuestionIndex(0);
+      setParticipants(data?.room?.participants || []);
+      setShowLeaderboard(false);
+      setSelectedAnswer(null);
+      setHasAnswered(false);
+      setAnsweredCount(0);
+      setAnswerResult(null);
+      setShowCorrectAnswer(false);
+      setNextQuestionProgress(0);
+      if (data?.room) {
+        setRoom(data.room);
+      }
+      soundManager.stopBackgroundMusic();
+    });
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
 
@@ -410,6 +429,7 @@ export default function MultiplayerRoom() {
         socketRef.current.off('leaderboard-show');
         socketRef.current.off('game-ended');
         socketRef.current.off('room-deleted');
+        socketRef.current.off('room-restarted');
       }
     };
   }, [roomCode, navigate, location]); // Removed myCharacterConfig to prevent re-join on outfit change
@@ -582,6 +602,31 @@ export default function MultiplayerRoom() {
     socket.emit('end-game', { roomCode }, (response) => {
       if (response.error) {
         toast.error(response.error);
+      }
+    });
+  };
+
+  const handleRestartRoom = () => {
+    const socket = getSocket();
+    socket.emit('restart-room', { roomCode }, (response) => {
+      if (response?.error) {
+        toast.error(response.error);
+      } else {
+        toast.success('Đã làm mới phòng để bắt đầu lượt mới!');
+        setGameStatus('waiting');
+        setCurrentQuestionIndex(0);
+        setParticipants(response.room?.participants || []);
+        setShowLeaderboard(false);
+        setSelectedAnswer(null);
+        setHasAnswered(false);
+        setAnsweredCount(0);
+        setAnswerResult(null);
+        setShowCorrectAnswer(false);
+        setNextQuestionProgress(0);
+        if (response.room) {
+          setRoom(response.room);
+        }
+        soundManager.stopBackgroundMusic();
       }
     });
   };
@@ -1279,6 +1324,7 @@ export default function MultiplayerRoom() {
           gameStatus === 'finished' && isHost && (
             <HostLeaderboard
               leaderboard={leaderboard}
+              onRestart={handleRestartRoom}
               onExit={() => {
                 soundManager.stopBackgroundMusic();
                 if (socketRef.current) {

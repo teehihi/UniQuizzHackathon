@@ -198,16 +198,47 @@ module.exports = (io) => {
           return callback({ error: 'Không tìm thấy phòng' });
         }
 
+        const isHost = socket.userId && socket.userId === room.hostId.toString();
+
+        // NẾU LÀ HOST:
+        if (isHost) {
+          // Nếu phòng đã chơi xong (finished), tự động reset phòng để bắt đầu lại thành phòng mới gọn gàng
+          if (room.status === 'finished') {
+            room.status = 'waiting';
+            room.currentQuestionIndex = 0;
+            room.participants = []; // Reset danh sách thí sinh cũ để đón đợt mới
+            room.startedAt = null;
+            room.finishedAt = null;
+            await room.save();
+            console.log(`🔄 Host reopened finished room ${roomCode.toUpperCase()} -> auto-reset to waiting room!`);
+          }
+
+          // Join socket room để nhận events
+          socket.join(roomCode.toUpperCase());
+          if (!roomConnections.has(roomCode.toUpperCase())) {
+            roomConnections.set(roomCode.toUpperCase(), new Set());
+          }
+          roomConnections.get(roomCode.toUpperCase()).add(socket.id);
+
+          console.log(`👑 Host ${displayName} joined ${roomCode.toUpperCase()} (monitoring only)`);
+
+          return callback({ 
+            success: true, 
+            room,
+            quiz: room.quizId,
+            isHost: true
+          });
+        }
+
+        // NẾU LÀ NGƯỜI CHƠI (PLAYER):
         if (room.status === 'finished') {
-          return callback({ error: 'Phòng đã kết thúc' });
+          return callback({ error: 'Phòng đã kết thúc ván trước. Vui lòng chờ chủ phòng mở lại!' });
         }
 
         // Kiểm tra allowLateJoin setting
         if (room.status === 'playing' && !room.settings.allowLateJoin) {
           return callback({ error: 'Không thể tham gia khi game đang chơi' });
         }
-
-        const isHost = socket.userId && socket.userId === room.hostId.toString();
 
         // Join socket room để nhận events
         socket.join(roomCode.toUpperCase());
@@ -217,18 +248,6 @@ module.exports = (io) => {
           roomConnections.set(roomCode.toUpperCase(), new Set());
         }
         roomConnections.get(roomCode.toUpperCase()).add(socket.id);
-
-        // Nếu là HOST, không thêm vào participants, chỉ join để nhận events
-        if (isHost) {
-          console.log(`👑 Host ${displayName} joined ${roomCode.toUpperCase()} (monitoring only)`);
-          
-          return callback({ 
-            success: true, 
-            room,
-            quiz: room.quizId,
-            isHost: true
-          });
-        }
 
         // Use helper with retry (all join logic moved inside transaction to be safe)
         const result = await executeRoomTransaction(roomCode, async (room) => {
@@ -642,6 +661,38 @@ module.exports = (io) => {
       } catch (error) {
         console.error('Error ending game:', error);
         callback({ error: error.message });
+      }
+    });
+
+    // RESTART ROOM (Chỉ Host) - Làm mới phòng để bắt đầu lượt mới gọn gàng
+    socket.on('restart-room', async (data, callback) => {
+      try {
+        const { roomCode } = data;
+        const room = await Room.findOne({ roomCode: roomCode.toUpperCase() }).populate('quizId');
+        if (!room) {
+          return callback?.({ error: 'Không tìm thấy phòng' });
+        }
+        if (room.hostId.toString() !== socket.userId) {
+          return callback?.({ error: 'Chỉ chủ phòng mới có thể bắt đầu lại' });
+        }
+
+        room.status = 'waiting';
+        room.currentQuestionIndex = 0;
+        room.participants = [];
+        room.startedAt = null;
+        room.finishedAt = null;
+        await room.save();
+
+        io.to(roomCode.toUpperCase()).emit('room-restarted', { 
+          room, 
+          message: 'Chủ phòng đã làm mới phòng để bắt đầu lượt chơi mới!' 
+        });
+
+        callback?.({ success: true, room });
+        console.log(`🔄 Room ${roomCode.toUpperCase()} explicitly restarted by host`);
+      } catch (error) {
+        console.error('Error restarting room:', error);
+        callback?.({ error: error.message });
       }
     });
 
