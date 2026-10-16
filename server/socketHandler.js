@@ -683,23 +683,21 @@ module.exports = (io) => {
   });
 };
 
-// Cleanup job
+// Cleanup job - Định kỳ dọn các phòng đã kết thúc từ lâu (việc xóa sau 2 tháng do TTL Index của MongoDB tự đảm nhiệm)
 setInterval(async () => {
   try {
     const Room = require('./models/Room');
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const twoMonthsAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
     
     const result = await Room.deleteMany({
-      $or: [
-        { status: 'finished', finishedAt: { $lt: thirtyMinutesAgo } },
-        { createdAt: { $lt: thirtyMinutesAgo }, participants: { $size: 0 } }
-      ]
+      status: 'finished',
+      finishedAt: { $lt: twoMonthsAgo }
     });
 
     if (result.deletedCount > 0) {
-      console.log(`🧹 Cleanup: Deleted ${result.deletedCount} old rooms`);
+      console.log(`🧹 Cleanup: Deleted ${result.deletedCount} old finished rooms`);
     }
   } catch (error) {
     console.error('Error in cleanup job:', error);
   }
-}, 30 * 60 * 1000);
+}, 24 * 60 * 60 * 1000);

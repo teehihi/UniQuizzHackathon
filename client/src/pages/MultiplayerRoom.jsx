@@ -94,14 +94,22 @@ export default function MultiplayerRoom() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const displayName = location.state?.displayName;
+    const userStr = localStorage.getItem('user');
+    let userObj = null;
+    try {
+      userObj = userStr ? JSON.parse(userStr) : null;
+    } catch (e) {}
+
+    const displayName = location.state?.displayName || userObj?.fullName || userObj?.email;
     const isCreator = location.state?.isCreator; // Check nếu là người tạo phòng
 
     if (!displayName && !token) {
-      toast.error('Vui lòng nhập tên để tham gia');
-      navigate('/');
+      // Nếu chưa có tên và chưa đăng nhập, chuyển sang trang nhập tên để tham gia
+      navigate(`/join-room?code=${roomCode}`, { replace: true });
       return;
     }
+
+    const activeDisplayName = displayName || 'Người chơi';
 
     // Khởi tạo socket
     socketRef.current = initSocket(token);
@@ -116,7 +124,7 @@ export default function MultiplayerRoom() {
         hasJoined = true;
 
         // Host join room để nhận socket events
-        socket.emit('join-room', { roomCode, displayName: displayName || 'Host' }, (response) => {
+        socket.emit('join-room', { roomCode, displayName: activeDisplayName }, (response) => {
 
           if (response?.error) {
             toast.error(response.error);
@@ -151,7 +159,7 @@ export default function MultiplayerRoom() {
 
       // Host không return ở đây, vẫn cần listen các events
     } else {
-      // Đợi socket connect nếu chưa (cho players)
+      // Đợi socket connect nếu chưa (cho players hoặc host vào lại bằng link)
       const joinRoom = () => {
         if (hasJoined) return;
 
@@ -159,7 +167,7 @@ export default function MultiplayerRoom() {
 
         socket.emit('join-room', {
           roomCode,
-          displayName,
+          displayName: activeDisplayName,
           characterConfig: myCharacterConfig // Send saved character
         }, (response) => {
 
@@ -181,6 +189,12 @@ export default function MultiplayerRoom() {
           setGameStatus(response.room.status);
           setParticipants(response.room.participants);
           setCurrentQuestionIndex(response.room.currentQuestionIndex);
+
+          if (response.isHost) {
+            // Tự động kích hoạt quyền host và leaderboard nếu server xác nhận là Host
+            setShowLeaderboard(true);
+            loadLeaderboard();
+          }
 
           if (response.room.status === 'playing' && response.quiz.questions) {
             const question = response.quiz.questions[response.room.currentQuestionIndex];

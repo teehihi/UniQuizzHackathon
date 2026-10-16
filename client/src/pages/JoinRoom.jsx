@@ -11,13 +11,43 @@ export default function JoinRoom() {
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Auto-fill room code from URL query parameter
+  // Auto-fill room code from URL query parameter & Auto-detect host
   useEffect(() => {
     const codeFromUrl = searchParams.get('code');
     if (codeFromUrl) {
-      setRoomCode(codeFromUrl.toUpperCase());
+      const upperCode = codeFromUrl.toUpperCase();
+      setRoomCode(upperCode);
+
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      if (token && user) {
+        try {
+          const userObj = JSON.parse(user);
+          const currentUserId = userObj.id || userObj._id;
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+          fetch(`${API_URL}/api/rooms/${upperCode}`)
+            .then(res => res.json())
+            .then(roomData => {
+              if (roomData && roomData.hostId) {
+                const hostId = roomData.hostId._id || roomData.hostId;
+                if (hostId && currentUserId && hostId.toString() === currentUserId.toString()) {
+                  // Người dùng đang đăng nhập chính là chủ phòng! Vào thẳng giao diện Host
+                  navigate(`/room/${upperCode}`, {
+                    replace: true,
+                    state: {
+                      isCreator: true,
+                      displayName: userObj.fullName || userObj.email
+                    }
+                  });
+                }
+              }
+            })
+            .catch(() => {});
+        } catch (e) {}
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const handleJoin = async () => {
     if (!roomCode.trim()) {
@@ -151,6 +181,21 @@ export default function JoinRoom() {
                     </span>
                   ) : 'THAM GIA NGAY'}
                 </button>
+
+                {/* Dòng nhỏ không icon cho chủ phòng đăng nhập gọn gàng */}
+                {roomCode && !token && (
+                  <p className="text-center text-xs text-gray-400 -mt-2">
+                    Bạn là chủ phòng?{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/login?redirect=${encodeURIComponent(`/room/${roomCode}`)}`)}
+                      className="text-[#fbbf24] hover:underline font-semibold hover:text-amber-300 transition-colors cursor-pointer"
+                    >
+                      Đăng nhập
+                    </button>
+                    {' '}để quản lý
+                  </p>
+                )}
 
                 {/* Divider */}
                 <div className="relative my-6">

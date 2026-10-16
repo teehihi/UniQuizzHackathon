@@ -102,6 +102,9 @@ const RoomSchema = new mongoose.Schema({
   }
 });
 
+// TTL Index: Tự động xóa phòng sau 60 ngày (~ 2 tháng)
+RoomSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });
+
 // Generate unique room code
 RoomSchema.statics.generateRoomCode = async function() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

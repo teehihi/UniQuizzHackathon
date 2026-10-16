@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from "../config/api.js";
 
 export default function Login() {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -86,10 +87,11 @@ export default function Login() {
 
       toast.success(`Chào mừng ${data.user.fullName || data.user.email}!`);
 
-      // Chuyển về trang chủ hoặc trang trước đó
+      // Chuyển về trang redirect hoặc trang chủ
+      const redirectUrl = searchParams.get('redirect') || location.state?.from || "/";
       setTimeout(() => {
-        navigate("/");
-      }, 1000);
+        navigate(redirectUrl, { replace: true });
+      }, 800);
     } catch (err) {
       setError(err.message || "Có lỗi xảy ra khi đăng nhập");
       toast.error(err.message || "Đăng nhập thất bại!");
