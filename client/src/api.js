@@ -7,7 +7,7 @@ import { getAuthToken } from './utils/auth.js';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL 
     ? `${import.meta.env.VITE_API_URL}/api` 
-    : 'http://localhost:5001/api',
+    : 'http://localhost:5002/api',
 });
 
 // Đây là phần tự động gắn Token

@@ -24,7 +24,7 @@ export default function JoinRoom() {
         try {
           const userObj = JSON.parse(user);
           const currentUserId = userObj.id || userObj._id;
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
 
           fetch(`${API_URL}/api/rooms/${upperCode}`)
             .then(res => res.json())

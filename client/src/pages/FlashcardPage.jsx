@@ -15,7 +15,7 @@ import api from "../api.js";
 const fetchFlashcardSetById = async (setId) => {
   try {
     // Thử fetch public flashcard set trước (không cần token)
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/flashcards/public/${setId}`);
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002'}/api/flashcards/public/${setId}`);
     if (response.ok) {
       return await response.json();
     }

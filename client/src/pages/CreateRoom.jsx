@@ -7,7 +7,7 @@ import Footer from '../components/Footer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faSignInAlt, faUsers, faClock, faGamepad, faTrophy, faTimes } from '@fortawesome/free-solid-svg-icons';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
 
 export default function CreateRoom() {
   const navigate = useNavigate();

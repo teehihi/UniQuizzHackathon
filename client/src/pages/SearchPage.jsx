@@ -40,7 +40,7 @@ function SearchPage() {
         : '/search/flashcards';
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api${endpoint}?${params}`
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5002'}/api${endpoint}?${params}`
       );
 
       const data = await response.json();
