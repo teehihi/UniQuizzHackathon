@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import characterManifest from '../assets/characterManifest.json';
 
 /* ================= SLOT STYLES ================= */
-const ITEM_SCALE = 0.92;
 const SLOTS = {
   base: {
     style: {
@@ -73,7 +72,7 @@ const SLOTS = {
 
 /* ================= COMPONENT ================= */
 
-const CharacterAvatar = ({ config, size = 200, className }) => {
+const CharacterAvatar = ({ config, size = 200, className = '' }) => {
   const activeConfig = {
     skin: 0,
     face: 0,
@@ -81,8 +80,19 @@ const CharacterAvatar = ({ config, size = 200, className }) => {
     shirts: 0,
     pants: -1,
     shoes: -1,
+    set: -1,
     ...config
   };
+
+  const activeSet = useMemo(() => {
+    if (activeConfig.set == null || activeConfig.set === -1) return null;
+    if (typeof activeConfig.set === 'number') {
+      return characterManifest.sets?.[activeConfig.set] || null;
+    }
+    return characterManifest.sets?.find(
+      s => s.id === activeConfig.set || s.key === activeConfig.set
+    ) || null;
+  }, [activeConfig.set]);
 
   const defaultShirtIndex = useMemo(() => {
     return characterManifest.shirts.findIndex(
@@ -91,6 +101,8 @@ const CharacterAvatar = ({ config, size = 200, className }) => {
   }, []);
 
   const layers = useMemo(() => {
+    if (activeSet) return [];
+
     const list = [];
 
     /* ===== BASE BODY ===== */
@@ -147,38 +159,120 @@ const CharacterAvatar = ({ config, size = 200, className }) => {
     }
 
     return list;
-  }, [activeConfig, defaultShirtIndex]);
+  }, [activeConfig, defaultShirtIndex, activeSet]);
 
   return (
     <div
       className={`relative ${className}`}
       style={{ width: size, height: size }}
     >
-      {/* SCALE NHÂN VẬT – KHÔNG SCALE KHUNG */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          transform: 'scale(0.8)',
-          transformOrigin: 'center top'
-        }}
-      >
-        {layers.map((layer, idx) => {
-          const style =
-            SLOTS[layer.type]?.style || SLOTS.base.style;
+      {activeSet ? (
+        /* NRO Dragon Ball Set with Part-Based Breathing Animation */
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: '6%',
+            width: activeSet.width,
+            height: activeSet.height,
+            transform: `translateX(-50%) scale(${(size * 0.84) / activeSet.height})`,
+            transformOrigin: 'center bottom'
+          }}
+        >
+          <style>{`
+            @keyframes nro-breathe {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-2px); }
+            }
+            .animate-nro-breathe {
+              animation: nro-breathe 1.2s ease-in-out infinite;
+            }
+          `}</style>
 
-          return (
+          {/* Quần (Legs fixed on ground) */}
+          {activeSet.pants && (
             <img
-              key={`${layer.type}-${idx}`}
-              src={layer.src}
-              alt={layer.type}
-              style={style}
+              src={activeSet.pants.path}
+              alt="nro-pants"
+              style={{
+                position: 'absolute',
+                left: activeSet.pants.x,
+                top: activeSet.pants.y,
+                width: activeSet.pants.width,
+                height: activeSet.pants.height,
+                zIndex: 1,
+                imageRendering: 'pixelated'
+              }}
               draggable={false}
               className="pointer-events-none select-none"
             />
-          );
-        })}
-      </div>
+          )}
+
+          {/* Áo (Torso with breathing animation) */}
+          {activeSet.shirt && (
+            <img
+              src={activeSet.shirt.path}
+              alt="nro-shirt"
+              className="animate-nro-breathe pointer-events-none select-none"
+              style={{
+                position: 'absolute',
+                left: activeSet.shirt.x,
+                top: activeSet.shirt.y,
+                width: activeSet.shirt.width,
+                height: activeSet.shirt.height,
+                zIndex: 2,
+                imageRendering: 'pixelated'
+              }}
+              draggable={false}
+            />
+          )}
+
+          {/* Đầu / Tóc (Head with breathing animation matching torso) */}
+          {activeSet.head && (
+            <img
+              src={activeSet.head.path}
+              alt="nro-head"
+              className="animate-nro-breathe pointer-events-none select-none"
+              style={{
+                position: 'absolute',
+                left: activeSet.head.x,
+                top: activeSet.head.y,
+                width: activeSet.head.width,
+                height: activeSet.head.height,
+                zIndex: 3,
+                imageRendering: 'pixelated'
+              }}
+              draggable={false}
+            />
+          )}
+        </div>
+      ) : (
+        /* SCALE NHÂN VẬT – KHÔNG SCALE KHUNG */
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            transform: 'scale(0.8)',
+            transformOrigin: 'center top'
+          }}
+        >
+          {layers.map((layer, idx) => {
+            const style =
+              SLOTS[layer.type]?.style || SLOTS.base.style;
+
+            return (
+              <img
+                key={`${layer.type}-${idx}`}
+                src={layer.src}
+                alt={layer.type}
+                style={style}
+                draggable={false}
+                className="pointer-events-none select-none"
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

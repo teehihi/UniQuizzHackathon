@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faDice, faSave, faUser, faTshirt, faShoePrints, faSmile, faHatCowboy, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 
 const TABS = [
+  { id: 'sets', icon: faBoxOpen, label: 'Bộ đồ' },
   { id: 'hat', icon: faHatCowboy, label: 'Mũ' },
   { id: 'shirts', icon: faTshirt, label: 'Áo' },
   { id: 'pants', icon: 'P', label: 'Quần' },
@@ -14,26 +15,58 @@ const TABS = [
 
 const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) => {
   const [config, setConfig] = useState(initialConfig || {
-    skin: 0, face: 0, hat: -1, shirts: 0, pants: -1, shoes: -1
+    skin: 0, face: 0, hat: -1, shirts: 0, pants: -1, shoes: -1, set: -1
   });
-  const [activeTab, setActiveTab] = useState('shirts');
+  const [activeTab, setActiveTab] = useState(
+    initialConfig?.set !== -1 && initialConfig?.set != null ? 'sets' : 'sets'
+  );
+
+  useEffect(() => {
+    if (initialConfig) {
+      setConfig({
+        skin: 0,
+        face: 0,
+        hat: -1,
+        shirts: 0,
+        pants: -1,
+        shoes: -1,
+        set: -1,
+        ...initialConfig
+      });
+    }
+  }, [initialConfig]);
 
   if (!isOpen) return null;
 
   const handleSelectItem = (index) => {
-    setConfig(prev => ({ ...prev, [activeTab]: index }));
+    if (activeTab === 'sets') {
+      setConfig(prev => ({ ...prev, set: index }));
+    } else {
+      setConfig(prev => ({ ...prev, set: -1, [activeTab]: index }));
+    }
   };
 
   const handleRandomize = () => {
-    const newConfig = {
-      skin: 0,
-      face: 0,
-      hat: Math.random() < 0.5 ? -1 : Math.floor(Math.random() * (characterManifest.hat?.length || 1)),
-      shirts: Math.floor(Math.random() * (characterManifest.shirts?.length || 1)),
-      pants: Math.random() < 0.2 ? -1 : Math.floor(Math.random() * (characterManifest.pants?.length || 1)),
-      shoes: Math.random() < 0.2 ? -1 : Math.floor(Math.random() * (characterManifest.shoes?.length || 1)),
-    };
-    setConfig(newConfig);
+    const pickSet = Math.random() < 0.35 && characterManifest.sets?.length > 0;
+    if (pickSet) {
+      const randomSetIdx = Math.floor(Math.random() * characterManifest.sets.length);
+      setConfig(prev => ({
+        ...prev,
+        set: randomSetIdx
+      }));
+      setActiveTab('sets');
+    } else {
+      const newConfig = {
+        skin: 0,
+        face: 0,
+        set: -1,
+        hat: Math.random() < 0.5 ? -1 : Math.floor(Math.random() * (characterManifest.hat?.length || 1)),
+        shirts: Math.floor(Math.random() * (characterManifest.shirts?.length || 1)),
+        pants: Math.random() < 0.2 ? -1 : Math.floor(Math.random() * (characterManifest.pants?.length || 1)),
+        shoes: Math.random() < 0.2 ? -1 : Math.floor(Math.random() * (characterManifest.shoes?.length || 1)),
+      };
+      setConfig(newConfig);
+    }
   };
 
   const handleSave = () => {
@@ -95,17 +128,12 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
 
           {/* AVATAR DISPLAY - FLOATING ANIMATION */}
           <div className="relative z-20 mb-4 md:mb-8 mt-4 md:mt-0 animate-float">
-            {/* 
-              Scale Width Fixed Logic:
-              Mobile (<768): 180px
-              Tablet (<1024): 220px
-              PC (>1024): 240px
-            */}
             <CharacterAvatar
               config={config}
               size={
-                window.innerWidth < 768 ? 180 :
-                  window.innerWidth < 1024 ? 220 : 240
+                typeof window !== 'undefined'
+                  ? (window.innerWidth < 768 ? 180 : window.innerWidth < 1024 ? 220 : 240)
+                  : 240
               }
             />
           </div>
@@ -154,32 +182,51 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
           {/* Grid Selection */}
           <div className="flex-1 p-6 md:p-8 overflow-y-auto grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 gap-4 content-start auto-rows-min pb-20 md:pb-8">
             {/* None Option */}
-            {(activeTab === 'hat' || activeTab === 'pants' || activeTab === 'shoes') && (
+            {(activeTab === 'sets' || activeTab === 'hat' || activeTab === 'pants' || activeTab === 'shoes') && (
               <button
                 onClick={() => handleSelectItem(-1)}
                 className={`aspect-square rounded-xl flex items-center justify-center border-2 border-dashed border-gray-600 text-gray-500 hover:border-gray-400 hover:text-white p-2
-                    ${config[activeTab] === -1 ? 'bg-gray-700 border-solid border-purple-500 text-purple-400' : ''}`}
+                    ${(activeTab === 'sets' ? (config.set === -1 || config.set == null) : config[activeTab] === -1)
+                      ? 'bg-gray-700 border-solid border-purple-500 text-purple-400'
+                      : ''}`}
+                title="Bỏ chọn"
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             )}
 
-            {items.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => handleSelectItem(index)}
-                className={`aspect-square rounded-xl flex items-center justify-center relative overflow-hidden group transition-all p-2
-                    ${config[activeTab] === index
-                    ? 'bg-purple-900/50 border-2 border-purple-500'
-                    : 'bg-gray-800 border border-gray-700 hover:border-gray-500'}`}
-              >
-                <img
-                  src={activeTab === 'skin' ? item.parts.head : item.path}
-                  alt={item.id}
-                  className="w-full h-full object-contain drop-shadow-md"
-                />
-              </button>
-            ))}
+            {items.map((item, index) => {
+              const isSelected = activeTab === 'sets'
+                ? config.set === index || config.set === item.id || config.set === item.key
+                : config[activeTab] === index;
+
+              const imgSrc = activeTab === 'sets'
+                ? (item.full?.path || item.path)
+                : (activeTab === 'skin' ? item.parts?.head : item.path);
+
+              return (
+                <button
+                  key={item.id || index}
+                  onClick={() => handleSelectItem(index)}
+                  className={`aspect-square rounded-xl flex flex-col items-center justify-center relative overflow-hidden group transition-all p-2
+                      ${isSelected
+                      ? 'bg-purple-900/50 border-2 border-purple-500 ring-2 ring-purple-400/50'
+                      : 'bg-gray-800 border border-gray-700 hover:border-gray-500'}`}
+                  title={item.name || item.id}
+                >
+                  <img
+                    src={imgSrc}
+                    alt={item.name || item.id}
+                    className="w-full h-full object-contain drop-shadow-md"
+                  />
+                  {activeTab === 'sets' && item.name && (
+                    <span className="absolute bottom-1 inset-x-1 text-[9px] text-center truncate text-gray-200 bg-black/70 rounded px-1 py-0.5">
+                      {item.name}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
