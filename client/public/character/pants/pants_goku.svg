@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="116" height="92" fill="none" viewBox="0 0 116 92">
+  <!-- Navy Blue Sash Belt at waistline (top y=1.5, x: 25.5..97) -->
+  <path fill="#1B3F73" stroke="#10284D" stroke-width="1.5" d="M25.5 1.5 C40 4.5 82 4.5 97 1.5 L97 9 C82 12 40 12 25.5 9 Z" />
+  <!-- Belt knot hanging down -->
+  <path fill="#1B3F73" d="M46 6 C43 14 38 28 35 34 L42 33 C44 26 48 15 49 9 Z" />
+  <path fill="#244F8F" d="M50 7 C51 15 54 26 57 32 L63 30 C59 23 55 14 53 7 Z" />
+
+  <!-- Orange Pants Body -->
+  <path fill="#FF6B00" stroke="#D95200" stroke-width="1.5" d="M25.5 9 C18 28 15 55 13 78 C25 82 46 83 54 77 L58 42 L62 77 C70 83 91 82 103 78 C101 55 98 28 97 9 Z" />
+  
+  <!-- Gi Folds / Creases & Shading -->
+  <path fill="#E55500" d="M22 35 C30 42 42 40 48 45 C40 48 26 44 20 40 Z" opacity="0.5" />
+  <path fill="#E55500" d="M94 35 C86 42 74 40 68 45 C76 48 90 44 96 40 Z" opacity="0.5" />
+  <path stroke="#B84000" stroke-width="1.5" stroke-linecap="round" d="M32 52 C35 62 38 72 36 78" />
+  <path stroke="#B84000" stroke-width="1.5" stroke-linecap="round" d="M84 52 C81 62 78 72 80 78" />
+
+  <!-- Elastic/Tied Ankle Cuffs -->
+  <path fill="#E55500" stroke="#B84000" stroke-width="1" d="M13 78 C22 83 45 83 54 77 L53 82 C44 86 22 86 14 82 Z" />
+  <path fill="#E55500" stroke="#B84000" stroke-width="1" d="M62 77 C71 83 94 83 103 78 L102 82 C93 86 71 86 63 82 Z" />
+</svg>

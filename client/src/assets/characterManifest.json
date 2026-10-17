@@ -1,6 +1,24 @@
 {
   "hat": [
     {
+      "id": "hair_goku",
+      "path": "/character/hat/hair_goku.svg",
+      "filename": "hair_goku.svg",
+      "name": "Tóc Goku"
+    },
+    {
+      "id": "hair_vegeta",
+      "path": "/character/hat/hair_vegeta.svg",
+      "filename": "hair_vegeta.svg",
+      "name": "Tóc Ca-đíc"
+    },
+    {
+      "id": "hair_super_saiyan",
+      "path": "/character/hat/hair_super_saiyan.svg",
+      "filename": "hair_super_saiyan.svg",
+      "name": "Tóc Super Saiyan"
+    },
+    {
       "id": "11616_1763390808031",
       "path": "/character/hat/11616_1763390808031.svg",
       "filename": "11616_1763390808031.svg"
@@ -108,6 +126,18 @@
   ],
   "pants": [
     {
+      "id": "pants_goku",
+      "path": "/character/pants/pants_goku.svg",
+      "filename": "pants_goku.svg",
+      "name": "Quần Võ Goku"
+    },
+    {
+      "id": "pants_vegeta",
+      "path": "/character/pants/pants_vegeta.svg",
+      "filename": "pants_vegeta.svg",
+      "name": "Quần Chiến Binh Saiyan"
+    },
+    {
       "id": "b_ripped_jeans",
       "path": "/character/pants/b_ripped_jeans.svg",
       "filename": "b_ripped_jeans.svg"
@@ -170,6 +200,18 @@
   ],
   "shirts": [
     {
+      "id": "shirt_goku",
+      "path": "/character/shirts/shirt_goku.svg",
+      "filename": "shirt_goku.svg",
+      "name": "Áo Võ Goku"
+    },
+    {
+      "id": "shirt_vegeta",
+      "path": "/character/shirts/shirt_vegeta.svg",
+      "filename": "shirt_vegeta.svg",
+      "name": "Áo Giáp Saiyan"
+    },
+    {
       "id": "aiute",
       "path": "/character/shirts/aiute.svg",
       "filename": "aiute.svg"
@@ -199,7 +241,6 @@
       "path": "/character/shirts/aoASN.svg",
       "filename": "aoASN.svg"
     },
-    
     {
       "id": "br_brazilTee4",
       "path": "/character/shirts/br_brazilTee4.svg",
@@ -303,6 +344,18 @@
   ],
   "shoes": [
     {
+      "id": "shoes_goku",
+      "path": "/character/shoes/shoes_goku.svg",
+      "filename": "shoes_goku.svg",
+      "name": "Giày Võ Goku"
+    },
+    {
+      "id": "shoes_vegeta",
+      "path": "/character/shoes/shoes_vegeta.svg",
+      "filename": "shoes_vegeta.svg",
+      "name": "Giày Saiyan Ca-đíc"
+    },
+    {
       "id": "b_boots",
       "path": "/character/shoes/b_boots.svg",
       "filename": "b_boots.svg"
@@ -346,23 +399,6 @@
       "id": "r_jordans",
       "path": "/character/shoes/r_jordans.svg",
       "filename": "r_jordans.svg"
-    }
-  ],
-  "bundle": [
-    {
-      "id": "bundle-2",
-      "path": "/character/bundle/bundle-2.svg",
-      "filename": "bundle-2.svg"
-    },
-    {
-      "id": "bundle-3",
-      "path": "/character/bundle/bundle-3.svg",
-      "filename": "bundle-3.svg"
-    },
-    {
-      "id": "bundle",
-      "path": "/character/bundle/bundle.svg",
-      "filename": "bundle.svg"
     }
   ],
   "skin": [

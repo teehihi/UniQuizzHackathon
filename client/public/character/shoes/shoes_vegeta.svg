@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="45" fill="none" viewBox="0 0 96 45">
+  <!-- Left Boot (x: 2..45) -->
+  <!-- White Boot Shaft -->
+  <path fill="#FFFFFF" stroke="#B0BECE" stroke-width="1.5" d="M22 6 C12 6 6 12 4 20 C2 28 4 36 10 40 C18 43 32 43 40 37 C44 32 44 20 42 6 Z" />
+  <!-- Folded White Ankle Cuff -->
+  <path fill="#E5EBF2" stroke="#B0BECE" stroke-width="1.5" d="M2 8 C12 5 32 5 44 8 L43 15 C32 12 12 12 3 15 Z" />
+  <!-- Golden Ribbed Toe Cap -->
+  <path fill="#F5B800" stroke="#C79200" stroke-width="1.5" d="M4 22 C2 28 4 36 10 40 C16 43 25 43 28 40 C22 34 18 26 18 20 Z" />
+  <line x1="7" y1="26" x2="16" y2="32" stroke="#C79200" stroke-width="1.5" />
+  <line x1="9" y1="32" x2="20" y2="37" stroke="#C79200" stroke-width="1.5" />
+  <!-- Black Sole -->
+  <path fill="#333333" d="M5 38 C12 43 32 44 42 38 L41 42 C30 46 10 46 4 41 Z" />
+
+  <!-- Right Boot (x: 51..94) -->
+  <!-- White Boot Shaft -->
+  <path fill="#FFFFFF" stroke="#B0BECE" stroke-width="1.5" d="M54 6 C52 20 52 32 56 37 C64 43 78 43 86 40 C92 36 94 28 92 20 C90 12 84 6 74 6 Z" />
+  <!-- Folded White Ankle Cuff -->
+  <path fill="#E5EBF2" stroke="#B0BECE" stroke-width="1.5" d="M52 8 C64 5 84 5 94 8 L93 15 C84 12 64 12 53 15 Z" />
+  <!-- Golden Ribbed Toe Cap -->
+  <path fill="#F5B800" stroke="#C79200" stroke-width="1.5" d="M92 22 C94 28 92 36 86 40 C80 43 71 43 68 40 C74 34 78 26 78 20 Z" />
+  <line x1="89" y1="26" x2="80" y2="32" stroke="#C79200" stroke-width="1.5" />
+  <line x1="87" y1="32" x2="76" y2="37" stroke="#C79200" stroke-width="1.5" />
+  <!-- Black Sole -->
+  <path fill="#333333" d="M54 38 C64 44 84 43 91 38 L92 41 C86 46 66 46 55 42 Z" />
+</svg>

@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faDice, faSave, faUser, faTshirt, faShoePrints, faSmile, faHatCowboy, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 
 const TABS = [
-  { id: 'bundle', icon: faBoxOpen, label: 'Set đồ' },
   { id: 'hat', icon: faHatCowboy, label: 'Mũ' },
   { id: 'shirts', icon: faTshirt, label: 'Áo' },
   { id: 'pants', icon: 'P', label: 'Quần' },
@@ -15,62 +14,25 @@ const TABS = [
 
 const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) => {
   const [config, setConfig] = useState(initialConfig || {
-    skin: 0, face: 0, hat: -1, shirts: 0, pants: -1, shoes: -1, bundle: -1
+    skin: 0, face: 0, hat: -1, shirts: 0, pants: -1, shoes: -1
   });
   const [activeTab, setActiveTab] = useState('shirts');
-
-  // Load default if needed
-  useEffect(() => {
-    // Ensure 'aohub' is active shirt if nothing else, handled by Avatar render but keeping state consistent is good.
-    // But we allow state to be anything.
-  }, []);
 
   if (!isOpen) return null;
 
   const handleSelectItem = (index) => {
-    if (activeTab === 'bundle') {
-      // Select bundle, clear clothes
-      setConfig(prev => ({
-        ...prev,
-        bundle: index,
-        shirts: -1,
-        pants: -1,
-        shoes: -1
-      }));
-    } else if (['shirts', 'pants', 'shoes'].includes(activeTab)) {
-      // Select clothes, clear bundle
-      setConfig(prev => ({
-        ...prev,
-        [activeTab]: index,
-        bundle: -1
-      }));
-    } else {
-      // Others (Skin, Face, Hat)
-      setConfig(prev => ({ ...prev, [activeTab]: index }));
-    }
+    setConfig(prev => ({ ...prev, [activeTab]: index }));
   };
 
   const handleRandomize = () => {
-    // Logic: Randomize everything. 
-    // 20% chance for Bundle?
-    const useBundle = Math.random() < 0.2;
     const newConfig = {
-      skin: 0, // Fixed
-      face: 0, // Fixed
+      skin: 0,
+      face: 0,
       hat: Math.random() < 0.5 ? -1 : Math.floor(Math.random() * (characterManifest.hat?.length || 1)),
+      shirts: Math.floor(Math.random() * (characterManifest.shirts?.length || 1)),
+      pants: Math.random() < 0.2 ? -1 : Math.floor(Math.random() * (characterManifest.pants?.length || 1)),
+      shoes: Math.random() < 0.2 ? -1 : Math.floor(Math.random() * (characterManifest.shoes?.length || 1)),
     };
-
-    if (useBundle && characterManifest.bundle?.length > 0) {
-      newConfig.bundle = Math.floor(Math.random() * characterManifest.bundle.length);
-      newConfig.shirts = -1;
-      newConfig.pants = -1;
-      newConfig.shoes = -1;
-    } else {
-      newConfig.bundle = -1;
-      newConfig.shirts = Math.floor(Math.random() * (characterManifest.shirts?.length || 1));
-      newConfig.pants = Math.random() < 0.3 ? -1 : Math.floor(Math.random() * (characterManifest.pants?.length || 1));
-      newConfig.shoes = Math.random() < 0.3 ? -1 : Math.floor(Math.random() * (characterManifest.shoes?.length || 1));
-    }
     setConfig(newConfig);
   };
 
@@ -192,7 +154,7 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
           {/* Grid Selection */}
           <div className="flex-1 p-6 md:p-8 overflow-y-auto grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 gap-4 content-start auto-rows-min pb-20 md:pb-8">
             {/* None Option */}
-            {(activeTab === 'hat' || activeTab === 'pants' || activeTab === 'shoes' || activeTab === 'bundle') && (
+            {(activeTab === 'hat' || activeTab === 'pants' || activeTab === 'shoes') && (
               <button
                 onClick={() => handleSelectItem(-1)}
                 className={`aspect-square rounded-xl flex items-center justify-center border-2 border-dashed border-gray-600 text-gray-500 hover:border-gray-400 hover:text-white p-2

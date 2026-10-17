@@ -68,18 +68,6 @@ const SLOTS = {
       transform: 'translateX(-50%)',
       zIndex: 20
     }
-  },
-
-  bundle: {
-    style: {
-      position: 'absolute',
-      top: '10%',
-      left: '50%',
-      width: '80%',
-      height: '90%',
-      transform: 'translateX(-50%)',
-      zIndex: 8
-    }
   }
 };
 
@@ -93,7 +81,6 @@ const CharacterAvatar = ({ config, size = 200, className }) => {
     shirts: 0,
     pants: -1,
     shoes: -1,
-    bundle: -1,
     ...config
   };
 
@@ -112,44 +99,37 @@ const CharacterAvatar = ({ config, size = 200, className }) => {
       type: 'base'
     });
 
-    /* ===== CLOTHES OR BUNDLE ===== */
-    if (activeConfig.bundle !== -1) {
-      const bundle = characterManifest.bundle[activeConfig.bundle];
-      if (bundle) {
-        list.push({ src: bundle.path, type: 'bundle' });
-      }
-    } else {
-      if (
-        activeConfig.pants !== -1 &&
-        characterManifest.pants[activeConfig.pants]
-      ) {
-        list.push({
-          src: characterManifest.pants[activeConfig.pants].path,
-          type: 'pants'
-        });
-      }
+    /* ===== CLOTHES ===== */
+    if (
+      activeConfig.pants !== -1 &&
+      characterManifest.pants[activeConfig.pants]
+    ) {
+      list.push({
+        src: characterManifest.pants[activeConfig.pants].path,
+        type: 'pants'
+      });
+    }
 
-      if (
-        activeConfig.shoes !== -1 &&
-        characterManifest.shoes[activeConfig.shoes]
-      ) {
-        list.push({
-          src: characterManifest.shoes[activeConfig.shoes].path,
-          type: 'shoes'
-        });
-      }
+    if (
+      activeConfig.shoes !== -1 &&
+      characterManifest.shoes[activeConfig.shoes]
+    ) {
+      list.push({
+        src: characterManifest.shoes[activeConfig.shoes].path,
+        type: 'shoes'
+      });
+    }
 
-      let shirtIdx = activeConfig.shirts;
-      if (shirtIdx === -1 || shirtIdx == null) {
-        shirtIdx = defaultShirtIndex;
-      }
+    let shirtIdx = activeConfig.shirts;
+    if (shirtIdx === -1 || shirtIdx == null) {
+      shirtIdx = defaultShirtIndex;
+    }
 
-      if (shirtIdx !== -1 && characterManifest.shirts[shirtIdx]) {
-        list.push({
-          src: characterManifest.shirts[shirtIdx].path,
-          type: 'shirts'
-        });
-      }
+    if (shirtIdx !== -1 && characterManifest.shirts[shirtIdx]) {
+      list.push({
+        src: characterManifest.shirts[shirtIdx].path,
+        type: 'shirts'
+      });
     }
 
     /* ===== HEAD (SEPARATED SVG) ===== */

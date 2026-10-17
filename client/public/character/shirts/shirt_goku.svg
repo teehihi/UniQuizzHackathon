@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="145" height="120" fill="none" viewBox="0 0 145 120">
+  <!-- Sleeves & Undershirt Base (Navy Blue) -->
+  <path fill="#1B3F73" d="M28 20 L18 68 L32 72 L38 32 Z" />
+  <path fill="#1B3F73" d="M117 20 L127 68 L113 72 L107 32 Z" />
+  <!-- Undershirt chest V-neck -->
+  <path fill="#1B3F73" d="M58 18 L87 18 L72.5 52 Z" />
+
+  <!-- Main Orange Gi -->
+  <!-- Left shoulder / sleeve fold -->
+  <path fill="#FF6B00" stroke="#D95200" stroke-width="1.5" d="M26 22 L46 16 L56 36 L30 70 L19 65 Z" />
+  <!-- Right shoulder / sleeve fold -->
+  <path fill="#FF6B00" stroke="#D95200" stroke-width="1.5" d="M119 22 L99 16 L89 36 L115 70 L126 65 Z" />
+  
+  <!-- Torso & V-neck crossover -->
+  <path fill="#FF6B00" stroke="#D95200" stroke-width="1.5" d="M44 16 L58 18 L72.5 48 L87 18 L101 16 L108 85 C108 92 100 98 72.5 98 C45 98 37 92 37 85 Z" />
+  <!-- Gi Crossover Left fold -->
+  <path fill="#E55500" d="M46 18 L76 68 L68 76 L40 32 Z" opacity="0.4" />
+  <!-- Gi Crossover Right lapel -->
+  <path fill="#FF7A1A" stroke="#1B3F73" stroke-width="2.5" d="M98 17 L72.5 54 L52 20" />
+  <path fill="none" stroke="#1B3F73" stroke-width="2.5" d="M47 17 L72.5 54" />
+
+  <!-- Navy Blue Wristbands -->
+  <rect x="16" y="58" width="15" height="12" rx="2" fill="#1B3F73" stroke="#10284D" stroke-width="1" />
+  <rect x="114" y="58" width="15" height="12" rx="2" fill="#1B3F73" stroke="#10284D" stroke-width="1" />
+
+  <!-- Kame Crest Badge (Left chest) -->
+  <circle cx="56" cy="46" r="11" fill="#FFFFFF" stroke="#111111" stroke-width="1.5" />
+  <!-- Kanji Kame (simplified aesthetic) -->
+  <path fill="#111111" d="M51 40 H61 V42 H51 Z M53 43 H59 V49 H53 Z M55 44 H57 V48 H55 Z M49 51 H63 V53 H49 Z M56 42 V55 H54 V42 Z" />
+
+  <!-- Navy Sash Belt bottom hem -->
+  <path fill="#1B3F73" stroke="#10284D" stroke-width="1" d="M36 86 C50 89 95 89 109 86 L109 97 C95 101 50 101 36 97 Z" />
+  <!-- Belt Knot ribbons -->
+  <path fill="#1B3F73" d="M50 92 C48 98 44 110 42 116 L49 115 C51 108 53 100 54 94 Z" />
+  <path fill="#244F8F" d="M54 92 C54 100 56 109 58 115 L64 113 C61 106 58 98 57 93 Z" />
+</svg>
