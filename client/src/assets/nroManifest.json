@@ -1,9 +1,10 @@
 [
   {
-    "key": "nro_goku_ssj_god",
+    "id": "nro_goku_ssj_god",
     "name": "Goku SSJ God (\u0110\u1ecf)",
+    "path": "/character/nro/nro_goku_ssj_god_full.png",
     "width": 145,
-    "height": 204,
+    "height": 237,
     "head": {
       "path": "/character/nro/nro_goku_ssj_god_head.png",
       "x": 0,
@@ -13,29 +14,25 @@
     },
     "shirt": {
       "path": "/character/nro/nro_goku_ssj_god_shirt.png",
-      "x": 31,
+      "x": 12,
       "y": 108,
       "width": 104,
       "height": 83
     },
     "pants": {
       "path": "/character/nro/nro_goku_ssj_god_pants.png",
-      "x": 50,
-      "y": 131,
+      "x": 28,
+      "y": 164,
       "width": 75,
       "height": 73
-    },
-    "full": {
-      "path": "/character/nro/nro_goku_ssj_god_full.png",
-      "width": 145,
-      "height": 204
     }
   },
   {
-    "key": "nro_goku_ssj_blue",
+    "id": "nro_goku_ssj_blue",
     "name": "Goku SSJ Blue",
+    "path": "/character/nro/nro_goku_ssj_blue_full.png",
     "width": 146,
-    "height": 203,
+    "height": 237,
     "head": {
       "path": "/character/nro/nro_goku_ssj_blue_head.png",
       "x": 0,
@@ -45,29 +42,25 @@
     },
     "shirt": {
       "path": "/character/nro/nro_goku_ssj_blue_shirt.png",
-      "x": 32,
-      "y": 109,
+      "x": 8,
+      "y": 108,
       "width": 104,
       "height": 81
     },
     "pants": {
       "path": "/character/nro/nro_goku_ssj_blue_pants.png",
-      "x": 51,
-      "y": 130,
+      "x": 24,
+      "y": 164,
       "width": 75,
       "height": 73
-    },
-    "full": {
-      "path": "/character/nro/nro_goku_ssj_blue_full.png",
-      "width": 146,
-      "height": 203
     }
   },
   {
-    "key": "nro_black_goku",
+    "id": "nro_black_goku",
     "name": "Black Goku Potara",
+    "path": "/character/nro/nro_black_goku_full.png",
     "width": 150,
-    "height": 214,
+    "height": 265,
     "head": {
       "path": "/character/nro/nro_black_goku_head.png",
       "x": 0,
@@ -77,93 +70,81 @@
     },
     "shirt": {
       "path": "/character/nro/nro_black_goku_shirt.png",
-      "x": 30,
-      "y": 107,
+      "x": 16,
+      "y": 108,
       "width": 105,
       "height": 90
     },
     "pants": {
       "path": "/character/nro/nro_black_goku_pants.png",
-      "x": 37,
-      "y": 129,
+      "x": 24,
+      "y": 180,
       "width": 95,
       "height": 85
-    },
-    "full": {
-      "path": "/character/nro/nro_black_goku_full.png",
-      "width": 150,
-      "height": 214
     }
   },
   {
-    "key": "nro_goku_ssj4",
+    "id": "nro_goku_ssj4",
     "name": "Goku SSJ4",
-    "width": 124,
-    "height": 215,
+    "path": "/character/nro/nro_goku_ssj4_full.png",
+    "width": 132,
+    "height": 244,
     "head": {
       "path": "/character/nro/nro_goku_ssj4_head.png",
-      "x": -1,
-      "y": -4,
+      "x": 8,
+      "y": 0,
       "width": 124,
       "height": 128
     },
     "shirt": {
       "path": "/character/nro/nro_goku_ssj4_shirt.png",
       "x": 0,
-      "y": 102,
+      "y": 108,
       "width": 124,
       "height": 100
     },
     "pants": {
       "path": "/character/nro/nro_goku_ssj4_pants.png",
-      "x": 28,
-      "y": 135,
+      "x": 32,
+      "y": 164,
       "width": 84,
       "height": 80
-    },
-    "full": {
-      "path": "/character/nro/nro_goku_ssj4_full.png",
-      "width": 124,
-      "height": 215
     }
   },
   {
-    "key": "nro_goku_ssj_white",
-    "name": "Goku V\u00f4 C\u1ef1c Tr\u1eafng",
-    "width": 161,
-    "height": 208,
+    "id": "nro_goku_ssj_white",
+    "name": "Goku B\u1ea3n N\u0103ng V\u00f4 C\u1ef1c Tr\u1eafng",
+    "path": "/character/nro/nro_goku_ssj_white_full.png",
+    "width": 160,
+    "height": 240,
     "head": {
       "path": "/character/nro/nro_goku_ssj_white_head.png",
-      "x": 37,
-      "y": -4,
+      "x": 36,
+      "y": 0,
       "width": 124,
       "height": 128
     },
     "shirt": {
       "path": "/character/nro/nro_goku_ssj_white_shirt.png",
-      "x": -2,
-      "y": 99,
+      "x": 0,
+      "y": 104,
       "width": 152,
       "height": 96
     },
     "pants": {
       "path": "/character/nro/nro_goku_ssj_white_pants.png",
-      "x": 47,
-      "y": 128,
+      "x": 60,
+      "y": 160,
       "width": 84,
       "height": 80
-    },
-    "full": {
-      "path": "/character/nro/nro_goku_ssj_white_full.png",
-      "width": 161,
-      "height": 208
     }
   },
   {
-    "key": "nro_vegito_ssj3",
+    "id": "nro_vegito_ssj3",
     "name": "Vegito SSJ3 Xeno",
-    "width": 134,
-    "height": 185,
+    "path": "/character/nro/nro_vegito_ssj3_full.png",
+    "width": 136,
+    "height": 208,
     "head": {
       "path": "/character/nro/nro_vegito_ssj3_head.png",
       "x": 0,
@@ -173,54 +154,45 @@
     },
     "shirt": {
       "path": "/character/nro/nro_vegito_ssj3_shirt.png",
-      "x": 10,
+      "x": 28,
       "y": 92,
       "width": 96,
       "height": 80
     },
     "pants": {
       "path": "/character/nro/nro_vegito_ssj3_pants.png",
-      "x": 28,
-      "y": 125,
+      "x": 44,
+      "y": 148,
       "width": 68,
       "height": 60
-    },
-    "full": {
-      "path": "/character/nro/nro_vegito_ssj3_full.png",
-      "width": 134,
-      "height": 185
     }
   },
   {
-    "key": "nro_goku_ssj_blue_wild",
+    "id": "nro_goku_ssj_blue_wild",
     "name": "Goku Blue Hoang D\u00e3",
-    "width": 124,
-    "height": 212,
+    "path": "/character/nro/nro_goku_ssj_blue_wild_full.png",
+    "width": 132,
+    "height": 244,
     "head": {
       "path": "/character/nro/nro_goku_ssj_blue_wild_head.png",
-      "x": -1,
-      "y": -4,
+      "x": 8,
+      "y": 0,
       "width": 124,
       "height": 128
     },
     "shirt": {
       "path": "/character/nro/nro_goku_ssj_blue_wild_shirt.png",
       "x": 0,
-      "y": 98,
+      "y": 104,
       "width": 124,
       "height": 100
     },
     "pants": {
       "path": "/character/nro/nro_goku_ssj_blue_wild_pants.png",
-      "x": 28,
-      "y": 132,
+      "x": 32,
+      "y": 164,
       "width": 84,
       "height": 80
-    },
-    "full": {
-      "path": "/character/nro/nro_goku_ssj_blue_wild_full.png",
-      "width": 124,
-      "height": 212
     }
   }
 ]

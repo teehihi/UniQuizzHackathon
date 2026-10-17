@@ -189,45 +189,7 @@ const CharacterAvatar = ({ config, size = 200, className = '' }) => {
             }
           `}</style>
 
-          {/* Quần (Legs fixed on ground) */}
-          {activeSet.pants && (
-            <img
-              src={activeSet.pants.path}
-              alt="nro-pants"
-              style={{
-                position: 'absolute',
-                left: activeSet.pants.x,
-                top: activeSet.pants.y,
-                width: activeSet.pants.width,
-                height: activeSet.pants.height,
-                zIndex: 1,
-                imageRendering: 'pixelated'
-              }}
-              draggable={false}
-              className="pointer-events-none select-none"
-            />
-          )}
-
-          {/* Áo (Torso with breathing animation) */}
-          {activeSet.shirt && (
-            <img
-              src={activeSet.shirt.path}
-              alt="nro-shirt"
-              className="animate-nro-breathe pointer-events-none select-none"
-              style={{
-                position: 'absolute',
-                left: activeSet.shirt.x,
-                top: activeSet.shirt.y,
-                width: activeSet.shirt.width,
-                height: activeSet.shirt.height,
-                zIndex: 2,
-                imageRendering: 'pixelated'
-              }}
-              draggable={false}
-            />
-          )}
-
-          {/* Đầu / Tóc (Head with breathing animation matching torso) */}
+          {/* Đầu / Tóc (Head with breathing animation behind collar) */}
           {activeSet.head && (
             <img
               src={activeSet.head.path}
@@ -239,6 +201,44 @@ const CharacterAvatar = ({ config, size = 200, className = '' }) => {
                 top: activeSet.head.y,
                 width: activeSet.head.width,
                 height: activeSet.head.height,
+                zIndex: 1,
+                imageRendering: 'pixelated'
+              }}
+              draggable={false}
+            />
+          )}
+
+          {/* Quần (Legs fixed on ground) */}
+          {activeSet.pants && (
+            <img
+              src={activeSet.pants.path}
+              alt="nro-pants"
+              style={{
+                position: 'absolute',
+                left: activeSet.pants.x,
+                top: activeSet.pants.y,
+                width: activeSet.pants.width,
+                height: activeSet.pants.height,
+                zIndex: 2,
+                imageRendering: 'pixelated'
+              }}
+              draggable={false}
+              className="pointer-events-none select-none"
+            />
+          )}
+
+          {/* Áo (Torso with breathing animation on top of head collar and pants) */}
+          {activeSet.shirt && (
+            <img
+              src={activeSet.shirt.path}
+              alt="nro-shirt"
+              className="animate-nro-breathe pointer-events-none select-none"
+              style={{
+                position: 'absolute',
+                left: activeSet.shirt.x,
+                top: activeSet.shirt.y,
+                width: activeSet.shirt.width,
+                height: activeSet.shirt.height,
                 zIndex: 3,
                 imageRendering: 'pixelated'
               }}
