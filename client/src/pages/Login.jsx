@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from "react-router-do
 import { toast } from "react-toastify";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { API_ENDPOINTS } from "../config/api.js";
+import API_BASE_URL, { API_ENDPOINTS } from "../config/api.js";
 
 export default function Login() {
   const location = useLocation();
@@ -16,7 +16,13 @@ export default function Login() {
   const [successMessage, setSuccessMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isColdStarting, setIsColdStarting] = useState(false);
   const navigate = useNavigate();
+
+  // Tự động gửi ping đánh thức Backend ngay khi vào trang Login
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/health`).catch(() => {});
+  }, []);
 
   // Nhận thông báo và email từ trang Register
   useEffect(() => {
@@ -58,6 +64,10 @@ export default function Login() {
       return;
     }
 
+    let coldTimer = setTimeout(() => {
+      setIsColdStarting(true);
+    }, 3500);
+
     try {
       const res = await fetch(API_ENDPOINTS.LOGIN, {
         method: "POST",
@@ -96,6 +106,8 @@ export default function Login() {
       setError(err.message || "Có lỗi xảy ra khi đăng nhập");
       toast.error(err.message || "Đăng nhập thất bại!");
     } finally {
+      clearTimeout(coldTimer);
+      setIsColdStarting(false);
       setIsLoading(false);
     }
   };
@@ -205,6 +217,11 @@ export default function Login() {
                 </>
               ) : "Đăng nhập"}
             </button>
+            {isColdStarting && (
+              <p className="text-amber-600 dark:text-amber-400 text-xs text-center mt-3 animate-pulse bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/50 rounded-lg p-2.5">
+                ⏳ Máy chủ đang khởi động từ trạng thái nghỉ (Render Cold Start). Quá trình này có thể mất 30–50 giây, vui lòng kiên nhẫn chờ nhé!
+              </p>
+            )}
           </form>
           <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
             Chưa có tài khoản?{" "}

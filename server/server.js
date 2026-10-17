@@ -60,9 +60,24 @@ mongoose
   .then(() => console.log("Kết nối MongoDB thành công!"))
   .catch((err) => console.error("Lỗi kết nối MongoDB:", err));
 
-// 3. Cấu hình Multer -> Đã chuyển sang apiRoutes.js
+// 4. Root & Health Check Endpoints (Cho UptimeRobot và Frontend Warm-up)
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "online",
+    message: "UniQuizz Backend Server is running!",
+    timestamp: new Date().toISOString(),
+    dbState: mongoose.connection.readyState === 1 ? "connected" : "connecting"
+  });
+});
 
-// 4. API Endpoints
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    uptime: Math.floor(process.uptime()),
+    dbState: mongoose.connection.readyState === 1 ? "connected" : "connecting"
+  });
+});
+
 // Gắn tất cả các routes từ file apiRoutes vào prefix /api
 app.use("/api", apiRoutes);
 

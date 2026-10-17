@@ -7,12 +7,71 @@ import {
   faCopy, 
   faCheck, 
   faUser,
-  faPlay
+  faPlay,
+  faCrown,
+  faBolt,
+  faGamepad,
+  faPalette,
+  faStar,
+  faFire,
+  faBrain,
+  faBullseye,
+  faRocket,
+  faGraduationCap
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
-import ParticipantAvatar from './ParticipantAvatar'; // Reuse avatar component if possible, or simple img
+import CharacterAvatar from './CharacterAvatar';
 
-export default function ShareRoomModal({ isOpen, onClose, roomCode, quizTitle, participants = [] }) {
+const CHIBI_PALETTES = [
+  {
+    bg: 'from-amber-500/25 via-orange-500/15 to-yellow-500/20 border-amber-400/40',
+    avatarBg: 'bg-gradient-to-b from-amber-400/40 via-yellow-500/30 to-amber-700/35',
+    avatarBorder: 'border-amber-300/90 shadow-[0_0_12px_rgba(245,158,11,0.35)]',
+    tag: 'bg-amber-400/20 text-amber-300 border-amber-400/40',
+    title: 'text-amber-200'
+  },
+  {
+    bg: 'from-fuchsia-500/25 via-pink-500/15 to-rose-500/20 border-pink-400/40',
+    avatarBg: 'bg-gradient-to-b from-pink-400/40 via-fuchsia-500/30 to-rose-700/35',
+    avatarBorder: 'border-pink-300/90 shadow-[0_0_12px_rgba(236,72,153,0.35)]',
+    tag: 'bg-pink-400/20 text-pink-300 border-pink-400/40',
+    title: 'text-pink-200'
+  },
+  {
+    bg: 'from-cyan-500/25 via-sky-500/15 to-blue-500/20 border-cyan-400/40',
+    avatarBg: 'bg-gradient-to-b from-cyan-400/40 via-sky-500/30 to-blue-700/35',
+    avatarBorder: 'border-cyan-300/90 shadow-[0_0_12px_rgba(6,182,212,0.35)]',
+    tag: 'bg-cyan-400/20 text-cyan-300 border-cyan-400/40',
+    title: 'text-cyan-200'
+  },
+  {
+    bg: 'from-emerald-500/25 via-teal-500/15 to-green-500/20 border-emerald-400/40',
+    avatarBg: 'bg-gradient-to-b from-emerald-400/40 via-teal-500/30 to-green-700/35',
+    avatarBorder: 'border-emerald-300/90 shadow-[0_0_12px_rgba(16,185,129,0.35)]',
+    tag: 'bg-emerald-400/20 text-emerald-300 border-emerald-400/40',
+    title: 'text-emerald-200'
+  },
+  {
+    bg: 'from-violet-500/25 via-purple-500/15 to-indigo-500/20 border-violet-400/40',
+    avatarBg: 'bg-gradient-to-b from-purple-400/40 via-violet-500/30 to-indigo-700/35',
+    avatarBorder: 'border-purple-300/90 shadow-[0_0_12px_rgba(139,92,246,0.35)]',
+    tag: 'bg-violet-400/20 text-violet-300 border-violet-400/40',
+    title: 'text-violet-200'
+  }
+];
+
+const CHIBI_TITLES = [
+  { icon: faFire, text: 'Chiến thần trắc nghiệm', color: 'text-orange-400' },
+  { icon: faBrain, text: 'Bậc thầy kiến thức', color: 'text-pink-400' },
+  { icon: faBolt, text: 'Thần tốc bấm phím', color: 'text-yellow-400' },
+  { icon: faBullseye, text: 'Trùm trả lời đúng', color: 'text-rose-400' },
+  { icon: faStar, text: 'Tân thủ may mắn', color: 'text-amber-300' },
+  { icon: faCrown, text: 'Đệ nhất học giả', color: 'text-yellow-400' },
+  { icon: faGraduationCap, text: 'Thợ săn điểm số', color: 'text-cyan-400' },
+  { icon: faRocket, text: 'Kẻ thách thức bảng vàng', color: 'text-purple-400' }
+];
+
+export default function ShareRoomModal({ isOpen, onClose, roomCode, quizTitle, participants = [], currentSocketId }) {
   const [copied, setCopied] = useState(false);
 
   // Generate URLs
@@ -91,16 +150,16 @@ export default function ShareRoomModal({ isOpen, onClose, roomCode, quizTitle, p
               {/* Right Column: Participants List */}
               <div className="flex-1 bg-[#252525] flex flex-col relative">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-700 flex justify-between items-center bg-[#252525] z-10">
+                <div className="p-5 md:p-6 border-b border-gray-700 flex justify-between items-center bg-[#252525] z-10 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="bg-gray-700 p-2 rounded-lg">
+                        <div className="bg-gray-700/80 p-2.5 rounded-xl border border-white/5">
                             <FontAwesomeIcon icon={faUser} className="text-gray-300" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-xl text-white">
-                                {participants.length} người tham gia
+                            <h3 className="font-bold text-lg md:text-xl text-white flex items-center gap-2">
+                                <span>{participants.length} người tham gia</span>
                             </h3>
-                            <p className="text-gray-400 text-xs">Đang chờ người chơi khác...</p>
+                            <p className="text-gray-400 text-xs">Đang chờ các chiến binh khác...</p>
                         </div>
                     </div>
                     
@@ -112,23 +171,103 @@ export default function ShareRoomModal({ isOpen, onClose, roomCode, quizTitle, p
                     </button>
                 </div>
 
-                {/* List */}
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                {/* List Container - Defaulting to Style 3 Chibi Anime */}
+                <div className="flex-1 overflow-y-auto p-5 md:p-6 custom-scrollbar">
                     {participants.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-500 opacity-50">
-                            <div className="w-16 h-16 border-4 border-gray-600 border-t-gray-400 rounded-full animate-spin mb-4"></div>
-                            <p>Đang đợi người chơi tham gia...</p>
+                        <div className="h-full flex flex-col items-center justify-center text-gray-500 opacity-50 py-12">
+                            <div className="w-14 h-14 border-4 border-gray-600 border-t-amber-400 rounded-full animate-spin mb-4"></div>
+                            <p className="text-sm font-medium">Đang đợi các chiến binh tham gia...</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 gap-3">
-                            {participants.map((p, index) => (
-                                <div key={p.socketId || index} className="flex items-center gap-4 bg-gray-800/50 p-3 rounded-xl border border-white/5 hover:border-white/10 transition">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center font-bold text-white shadow-inner">
-                                        {p.displayName.charAt(0).toUpperCase()}
+                        /* ================= THẺ PHONG CÁCH ANIME / CHIBI (Big Capsule Card) ================= */
+                        <div className="grid grid-cols-1 gap-3.5 pt-2">
+                            {participants.map((p, index) => {
+                                const isSelf = currentSocketId && p.socketId === currentSocketId;
+                                const palette = CHIBI_PALETTES[index % CHIBI_PALETTES.length];
+                                const titleHash = ((p.displayName || '').length + index) % CHIBI_TITLES.length;
+                                const funTitle = CHIBI_TITLES[titleHash];
+
+                                return (
+                                    <div 
+                                        key={p.socketId || index} 
+                                        className={`relative flex items-center justify-between p-2.5 pl-3 pr-4 rounded-full border bg-gradient-to-r ${palette.bg} transition-all duration-300 shadow-lg hover:scale-[1.02] hover:shadow-xl`}
+                                    >
+                                        <div className="flex items-center gap-3.5 min-w-0">
+                                            {/* Pop-Out Chibi Avatar with Radiant Aura Glow */}
+                                            <div className={`relative w-13 h-13 -my-2.5 -ml-1 rounded-full border-2 ${palette.avatarBorder} ${palette.avatarBg} flex items-center justify-center shrink-0`}>
+                                                {/* Luồng sáng Aura tỏa xung quanh khung Avatar */}
+                                                <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-yellow-400/40 via-amber-300/30 to-orange-400/35 blur-[5px] animate-pulse pointer-events-none" />
+                                                <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/20 via-transparent to-white/10 pointer-events-none z-10" />
+
+                                                {/* Mini rank bubble */}
+                                                <div className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-black/90 border border-yellow-400/50 text-[10px] font-black text-yellow-300 flex items-center justify-center z-20 shadow">
+                                                    {index + 1}
+                                                </div>
+
+                                                {/* Avatar */}
+                                                <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative">
+                                                    {p.characterConfig && Object.keys(p.characterConfig).length > 0 ? (
+                                                        <div className="transform scale-110 translate-y-1">
+                                                            <CharacterAvatar config={p.characterConfig} size={48} />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center font-black text-lg text-white">
+                                                            {p.displayName?.charAt(0).toUpperCase() || '?'}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Cute Host Crown */}
+                                                {p.isHost && (
+                                                    <span className="absolute -top-3.5 right-0.5 text-yellow-400 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] animate-bounce z-20">
+                                                        <FontAwesomeIcon icon={faCrown} className="text-sm" />
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Info: Name & Fun Title */}
+                                            <div className="flex flex-col min-w-0">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className={`font-black text-sm tracking-wide truncate max-w-[130px] drop-shadow-sm ${
+                                                        p.isHost ? 'text-yellow-200' : isSelf ? 'text-cyan-100' : 'text-white'
+                                                    }`}>
+                                                        {p.displayName}
+                                                    </span>
+
+                                                    {p.isHost && (
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-400 text-yellow-950 shadow-sm flex items-center gap-1.5">
+                                                            <FontAwesomeIcon icon={faCrown} className="text-[9px]" />
+                                                            <span>Trưởng phòng</span>
+                                                        </span>
+                                                    )}
+
+                                                    {isSelf && (
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-cyan-400 text-cyan-950 shadow-sm flex items-center gap-1.5">
+                                                            <FontAwesomeIcon icon={faUser} className="text-[9px]" />
+                                                            <span>Bạn</span>
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Fun Title with FontAwesome Icon */}
+                                                <div className="text-[11px] font-medium text-white/80 flex items-center gap-1.5 mt-0.5 truncate">
+                                                    <FontAwesomeIcon icon={funTitle.icon} className={`${funTitle.color} text-[10px]`} />
+                                                    <span>{funTitle.text}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Status Badge */}
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border shadow-sm backdrop-blur-md flex items-center gap-1.5 ${palette.tag}`}>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                                <FontAwesomeIcon icon={faCheck} className="text-[9px]" />
+                                                <span>Ready</span>
+                                            </span>
+                                        </div>
                                     </div>
-                                    <span className="font-medium text-gray-200">{p.displayName}</span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

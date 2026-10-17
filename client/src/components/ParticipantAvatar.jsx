@@ -23,13 +23,22 @@ const ParticipantAvatar = ({ name, isSelf, index, className }) => {
       className="flex flex-col items-center group relative cursor-pointer hover:z-50"
       whileHover={{ scale: 1.1, y: -10 }}
     >
-      {/* Name Tag */}
-      <div className={`mb-2 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-lg transition-all
-        ${isSelf 
-          ? 'bg-yellow-400 text-red-900 border-2 border-yellow-200' 
-          : 'bg-black/50 text-white backdrop-blur-sm group-hover:bg-white group-hover:text-black'
-        }`}>
-        {name} {isSelf && '(Bạn)'}
+      {/* Clean Minimal Nameplate */}
+      <div className="mb-2 select-none pointer-events-none">
+        <div
+          className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-md flex items-center gap-1.5 backdrop-blur-md transition-all ${
+            isSelf
+              ? 'bg-black/65 text-yellow-300 border border-yellow-300/40 shadow-[0_0_10px_rgba(250,204,21,0.25)]'
+              : 'bg-black/55 text-white/90 border border-white/10'
+          }`}
+        >
+          <span className="tracking-wide">{displayName}</span>
+          {isSelf && (
+            <span className="text-[10px] text-yellow-300/80 font-normal ml-0.5">
+              (Bạn)
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Avatar Character */}

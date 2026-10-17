@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CharacterAvatar from './CharacterAvatar';
 import characterManifest from '../assets/characterManifest.json';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faDice, faSave, faUser, faTshirt, faShoePrints, faSmile, faHatCowboy, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faDice, faSave, faUser, faTshirt, faShoePrints, faSmile, faHatCowboy, faBoxOpen, faFire, faBolt } from '@fortawesome/free-solid-svg-icons';
 
 const TABS = [
   { id: 'sets', icon: faBoxOpen, label: 'Bộ đồ' },
+  { id: 'aura', icon: faBolt, label: 'Aura' },
+  { id: 'back', icon: faFire, label: 'Lưng' },
   { id: 'hat', icon: faHatCowboy, label: 'Mũ' },
   { id: 'shirts', icon: faTshirt, label: 'Áo' },
   { id: 'pants', icon: 'P', label: 'Quần' },
@@ -15,7 +17,7 @@ const TABS = [
 
 const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) => {
   const [config, setConfig] = useState(initialConfig || {
-    skin: 0, face: 0, hat: -1, shirts: 0, pants: -1, shoes: -1, set: -1
+    skin: 0, face: 0, hat: -1, shirts: 0, pants: -1, shoes: -1, set: -1, back: -1, aura: -1
   });
   const [activeTab, setActiveTab] = useState(
     initialConfig?.set !== -1 && initialConfig?.set != null ? 'sets' : 'sets'
@@ -31,6 +33,8 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
         pants: -1,
         shoes: -1,
         set: -1,
+        back: -1,
+        aura: -1,
         ...initialConfig
       });
     }
@@ -40,7 +44,23 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
 
   const handleSelectItem = (index) => {
     if (activeTab === 'sets') {
-      setConfig(prev => ({ ...prev, set: index }));
+      const selectedSet = index !== -1 ? characterManifest.sets?.[index] : null;
+      setConfig(prev => ({
+        ...prev,
+        set: index,
+        back: (selectedSet?.disableBack || selectedSet?.type === 'animated') ? -1 : prev.back
+      }));
+    } else if (activeTab === 'aura') {
+      setConfig(prev => ({ ...prev, aura: index }));
+    } else if (activeTab === 'back') {
+      const currentSet = config.set !== -1 && config.set != null
+        ? (typeof config.set === 'number' ? characterManifest.sets?.[config.set] : characterManifest.sets?.find(s => s.id === config.set || s.key === config.set))
+        : null;
+      if (currentSet?.disableBack || currentSet?.type === 'animated') {
+        setConfig(prev => ({ ...prev, set: -1, back: index }));
+      } else {
+        setConfig(prev => ({ ...prev, back: index }));
+      }
     } else {
       setConfig(prev => ({ ...prev, set: -1, [activeTab]: index }));
     }
@@ -50,9 +70,14 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
     const pickSet = Math.random() < 0.35 && characterManifest.sets?.length > 0;
     if (pickSet) {
       const randomSetIdx = Math.floor(Math.random() * characterManifest.sets.length);
+      const setItem = characterManifest.sets[randomSetIdx];
       setConfig(prev => ({
         ...prev,
-        set: randomSetIdx
+        set: randomSetIdx,
+        aura: Math.random() < 0.4 ? -1 : Math.floor(Math.random() * (characterManifest.aura?.length || 1)),
+        back: (setItem?.disableBack || setItem?.type === 'animated')
+          ? -1
+          : (Math.random() < 0.4 ? -1 : Math.floor(Math.random() * (characterManifest.back?.length || 1)))
       }));
       setActiveTab('sets');
     } else {
@@ -60,6 +85,8 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
         skin: 0,
         face: 0,
         set: -1,
+        aura: Math.random() < 0.4 ? -1 : Math.floor(Math.random() * (characterManifest.aura?.length || 1)),
+        back: Math.random() < 0.3 ? -1 : Math.floor(Math.random() * (characterManifest.back?.length || 1)),
         hat: Math.random() < 0.5 ? -1 : Math.floor(Math.random() * (characterManifest.hat?.length || 1)),
         shirts: Math.floor(Math.random() * (characterManifest.shirts?.length || 1)),
         pants: Math.random() < 0.2 ? -1 : Math.floor(Math.random() * (characterManifest.pants?.length || 1)),
@@ -182,11 +209,17 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
           {/* Grid Selection */}
           <div className="flex-1 p-6 md:p-8 overflow-y-auto grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 gap-4 content-start auto-rows-min pb-20 md:pb-8">
             {/* None Option */}
-            {(activeTab === 'sets' || activeTab === 'hat' || activeTab === 'pants' || activeTab === 'shoes') && (
+            {(activeTab === 'sets' || activeTab === 'hat' || activeTab === 'pants' || activeTab === 'shoes' || activeTab === 'back' || activeTab === 'aura') && (
               <button
                 onClick={() => handleSelectItem(-1)}
                 className={`aspect-square rounded-xl flex items-center justify-center border-2 border-dashed border-gray-600 text-gray-500 hover:border-gray-400 hover:text-white p-2
-                    ${(activeTab === 'sets' ? (config.set === -1 || config.set == null) : config[activeTab] === -1)
+                    ${(activeTab === 'sets'
+                        ? (config.set === -1 || config.set == null)
+                        : (activeTab === 'back'
+                            ? (config.back === -1 || config.back == null)
+                            : (activeTab === 'aura'
+                                ? (config.aura === -1 || config.aura == null)
+                                : config[activeTab] === -1)))
                       ? 'bg-gray-700 border-solid border-purple-500 text-purple-400'
                       : ''}`}
                 title="Bỏ chọn"
@@ -198,11 +231,17 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
             {items.map((item, index) => {
               const isSelected = activeTab === 'sets'
                 ? config.set === index || config.set === item.id || config.set === item.key
-                : config[activeTab] === index;
+                : (activeTab === 'back'
+                    ? config.back === index || config.back === item.id
+                    : (activeTab === 'aura'
+                        ? config.aura === index || config.aura === item.id
+                        : config[activeTab] === index));
 
               const imgSrc = activeTab === 'sets'
-                ? (item.full?.path || item.path)
-                : (activeTab === 'skin' ? item.parts?.head : item.path);
+                ? (item.thumb || item.full?.path || item.head?.path || item.path)
+                : (activeTab === 'back' || activeTab === 'aura'
+                    ? item.thumb
+                    : (activeTab === 'skin' ? item.parts?.head : item.path));
 
               return (
                 <button
@@ -219,7 +258,7 @@ const CharacterCustomizerModal = ({ isOpen, onClose, initialConfig, onSave }) =>
                     alt={item.name || item.id}
                     className="w-full h-full object-contain drop-shadow-md"
                   />
-                  {activeTab === 'sets' && item.name && (
+                  {(activeTab === 'sets' || activeTab === 'back' || activeTab === 'aura') && item.name && (
                     <span className="absolute bottom-1 inset-x-1 text-[9px] text-center truncate text-gray-200 bg-black/70 rounded px-1 py-0.5">
                       {item.name}
                     </span>

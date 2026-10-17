@@ -999,13 +999,25 @@ export default function MultiplayerRoom() {
                         {/* Use CharacterAvatar if config exists, else fallback to ParticipantAvatar (or just wrap logic) */}
                         {p.characterConfig && Object.keys(p.characterConfig).length > 0 ? (
                           <div className="relative flex flex-col items-center">
-                            {/* Name Tag */}
-                            <div className={`mb-2 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-lg transition-all
-                                        ${p.socketId === socketRef.current?.id
-                                ? 'bg-yellow-400 text-red-900 border-2 border-yellow-200'
-                                : 'bg-black/50 text-white backdrop-blur-sm group-hover:bg-white group-hover:text-black'
-                              }`}>
-                              {p.displayName} {p.socketId === socketRef.current?.id && '(Bạn)'}
+                            {/* Clean Minimal Nameplate */}
+                            <div className="mb-2 select-none pointer-events-none group-hover:scale-105 transition-transform duration-200">
+                              <div
+                                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-lg flex items-center gap-1.5 backdrop-blur-md transition-all ${
+                                  p.isHost
+                                    ? 'bg-black/65 text-amber-300 border border-amber-400/50 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                                    : p.socketId === socketRef.current?.id
+                                    ? 'bg-black/65 text-yellow-300 border border-yellow-300/40 shadow-[0_0_10px_rgba(250,204,21,0.25)]'
+                                    : 'bg-black/55 text-white/90 border border-white/10'
+                                }`}
+                              >
+                                {p.isHost && <span className="text-xs leading-none">👑</span>}
+                                <span className="tracking-wide">{p.displayName}</span>
+                                {p.socketId === socketRef.current?.id && (
+                                  <span className="text-[10px] text-yellow-300/80 font-normal ml-0.5">
+                                    (Bạn)
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
                             <CharacterAvatar
@@ -1414,6 +1426,7 @@ export default function MultiplayerRoom() {
         roomCode={roomCode}
         quizTitle={quiz?.title || 'Quiz'}
         participants={participants}
+        currentSocketId={socketRef.current?.id}
       />
 
       {/* Confirm Modals */}

@@ -1,0 +1,1469 @@
+{
+  "hat": [
+    {
+      "id": "11616_1763390808031",
+      "path": "/character/hat/11616_1763390808031.svg",
+      "filename": "11616_1763390808031.svg"
+    },
+    {
+      "id": "3150_1687269099928",
+      "path": "/character/hat/3150_1687269099928.svg",
+      "filename": "3150_1687269099928.svg"
+    },
+    {
+      "id": "3250_1687269133335",
+      "path": "/character/hat/3250_1687269133335.svg",
+      "filename": "3250_1687269133335.svg"
+    },
+    {
+      "id": "4100_1687269448758",
+      "path": "/character/hat/4100_1687269448758.svg",
+      "filename": "4100_1687269448758.svg"
+    },
+    {
+      "id": "5366_1703158360295",
+      "path": "/character/hat/5366_1703158360295.svg",
+      "filename": "5366_1703158360295.svg"
+    },
+    {
+      "id": "5376_1703158436435",
+      "path": "/character/hat/5376_1703158436435.svg",
+      "filename": "5376_1703158436435.svg"
+    },
+    {
+      "id": "5402_1707384002357",
+      "path": "/character/hat/5402_1707384002357.svg",
+      "filename": "5402_1707384002357.svg"
+    },
+    {
+      "id": "backwards_cap",
+      "path": "/character/hat/backwards_cap.svg",
+      "filename": "backwards_cap.svg"
+    },
+    {
+      "id": "bl_bucket_hat",
+      "path": "/character/hat/bl_bucket_hat.svg",
+      "filename": "bl_bucket_hat.svg"
+    },
+    {
+      "id": "football_helmet",
+      "path": "/character/hat/football_helmet.svg",
+      "filename": "football_helmet.svg"
+    },
+    {
+      "id": "lb_beanie",
+      "path": "/character/hat/lb_beanie.svg",
+      "filename": "lb_beanie.svg"
+    },
+    {
+      "id": "lifeguard",
+      "path": "/character/hat/lifeguard.svg",
+      "filename": "lifeguard.svg"
+    },
+    {
+      "id": "smiley_cap",
+      "path": "/character/hat/smiley_cap.svg",
+      "filename": "smiley_cap.svg"
+    },
+    {
+      "id": "traffic_cone",
+      "path": "/character/hat/traffic_cone.svg",
+      "filename": "traffic_cone.svg"
+    },
+    {
+      "id": "frog_hat",
+      "path": "/character/hat/frog_hat.svg",
+      "filename": "frog_hat.svg"
+    },
+    {
+      "id": "yamulke",
+      "path": "/character/hat/yamulke.svg",
+      "filename": "yamulke.svg"
+    },
+    {
+      "id": "gr_skullcap",
+      "path": "/character/hat/gr_skullcap.svg",
+      "filename": "gr_skullcap.svg"
+    },
+    {
+      "id": "br_beanie",
+      "path": "/character/hat/br_beanie.svg",
+      "filename": "br_beanie.svg"
+    },
+    {
+      "id": "elf_hat",
+      "path": "/character/hat/elf_hat.svg",
+      "filename": "elf_hat.svg"
+    },
+    {
+      "id": "noodles_hat",
+      "path": "/character/hat/noodles_hat.svg",
+      "filename": "noodles_hat.svg"
+    },
+    {
+      "id": "panda_cap",
+      "path": "/character/hat/panda_cap.svg",
+      "filename": "panda_cap.svg"
+    }
+  ],
+  "pants": [
+    {
+      "id": "b_ripped_jeans",
+      "path": "/character/pants/b_ripped_jeans.svg",
+      "filename": "b_ripped_jeans.svg"
+    },
+    {
+      "id": "g_cargo_pants",
+      "path": "/character/pants/g_cargo_pants.svg",
+      "filename": "g_cargo_pants.svg"
+    },
+    {
+      "id": "lb_patch_jeans",
+      "path": "/character/pants/lb_patch_jeans.svg",
+      "filename": "lb_patch_jeans.svg"
+    },
+    {
+      "id": "p_sweats",
+      "path": "/character/pants/p_sweats.svg",
+      "filename": "p_sweats.svg"
+    },
+    {
+      "id": "plaid_skirt",
+      "path": "/character/pants/plaid_skirt.svg",
+      "filename": "plaid_skirt.svg"
+    },
+    {
+      "id": "bl_denim_skirt",
+      "path": "/character/pants/bl_denim_skirt.svg",
+      "filename": "bl_denim_skirt.svg"
+    },
+    {
+      "id": "gr_bermuda",
+      "path": "/character/pants/gr_bermuda.svg",
+      "filename": "gr_bermuda.svg"
+    },
+    {
+      "id": "rainbow_tights",
+      "path": "/character/pants/rainbow_tights.svg",
+      "filename": "rainbow_tights.svg"
+    },
+    {
+      "id": "beach_shorts",
+      "path": "/character/pants/beach_shorts.svg",
+      "filename": "beach_shorts.svg"
+    },
+    {
+      "id": "dino_pants",
+      "path": "/character/pants/dino_pants.svg",
+      "filename": "dino_pants.svg"
+    },
+    {
+      "id": "p_tskirt",
+      "path": "/character/pants/p_tskirt.svg",
+      "filename": "p_tskirt.svg"
+    },
+    {
+      "id": "pi_tskirt",
+      "path": "/character/pants/pi_tskirt.svg",
+      "filename": "pi_tskirt.svg"
+    }
+  ],
+  "shirts": [
+    {
+      "id": "aiute",
+      "path": "/character/shirts/aiute.svg",
+      "filename": "aiute.svg"
+    },
+    {
+      "id": "aohub",
+      "path": "/character/shirts/aohub.svg",
+      "filename": "aohub.svg"
+    },
+    {
+      "id": "aoUEH",
+      "path": "/character/shirts/aoUEH.svg",
+      "filename": "aoUEH.svg"
+    },
+    {
+      "id": "jvt",
+      "path": "/character/shirts/jvt.svg",
+      "filename": "jvt.svg"
+    },
+    {
+      "id": "aoMU",
+      "path": "/character/shirts/aoMU.svg",
+      "filename": "aoMU.svg"
+    },
+    {
+      "id": "aoASN",
+      "path": "/character/shirts/aoASN.svg",
+      "filename": "aoASN.svg"
+    },
+    {
+      "id": "br_brazilTee4",
+      "path": "/character/shirts/br_brazilTee4.svg",
+      "filename": "br_brazilTee4.svg"
+    },
+    {
+      "id": "br_brazilTee3",
+      "path": "/character/shirts/br_brazilTee3.svg",
+      "filename": "br_brazilTee3.svg"
+    },
+    {
+      "id": "br_brazilTee5",
+      "path": "/character/shirts/br_brazilTee5.svg",
+      "filename": "br_brazilTee5.svg"
+    },
+    {
+      "id": "br_brazilTee6",
+      "path": "/character/shirts/br_brazilTee6.svg",
+      "filename": "br_brazilTee6.svg"
+    },
+    {
+      "id": "g_varsity",
+      "path": "/character/shirts/g_varsity.svg",
+      "filename": "g_varsity.svg"
+    },
+    {
+      "id": "one_fb_jersey",
+      "path": "/character/shirts/one_fb_jersey.svg",
+      "filename": "one_fb_jersey.svg"
+    },
+    {
+      "id": "p_crop_sweater",
+      "path": "/character/shirts/p_crop_sweater.svg",
+      "filename": "p_crop_sweater.svg"
+    },
+    {
+      "id": "r_polkadot",
+      "path": "/character/shirts/r_polkadot.svg",
+      "filename": "r_polkadot.svg"
+    },
+    {
+      "id": "safari_jacket",
+      "path": "/character/shirts/safari_jacket.svg",
+      "filename": "safari_jacket.svg"
+    },
+    {
+      "id": "fire_tshirt",
+      "path": "/character/shirts/fire_tshirt.svg",
+      "filename": "fire_tshirt.svg"
+    },
+    {
+      "id": "poncho",
+      "path": "/character/shirts/poncho.svg",
+      "filename": "poncho.svg"
+    },
+    {
+      "id": "bl_usa",
+      "path": "/character/shirts/bl_usa.svg",
+      "filename": "bl_usa.svg"
+    },
+    {
+      "id": "disco_tee",
+      "path": "/character/shirts/disco_tee.svg",
+      "filename": "disco_tee.svg"
+    },
+    {
+      "id": "pi_tswift",
+      "path": "/character/shirts/pi_tswift.svg",
+      "filename": "pi_tswift.svg"
+    },
+    {
+      "id": "r_canada",
+      "path": "/character/shirts/r_canada.svg",
+      "filename": "r_canada.svg"
+    },
+    {
+      "id": "t_akatsuki",
+      "path": "/character/shirts/t_akatsuki.svg",
+      "filename": "t_akatsuki.svg"
+    },
+    {
+      "id": "w_animetop",
+      "path": "/character/shirts/w_animetop.svg",
+      "filename": "w_animetop.svg"
+    },
+    {
+      "id": "w_pokemon",
+      "path": "/character/shirts/w_pokemon.svg",
+      "filename": "w_pokemon.svg"
+    },
+    {
+      "id": "xmas_sweater",
+      "path": "/character/shirts/xmas_sweater.svg",
+      "filename": "xmas_sweater.svg"
+    },
+    {
+      "id": "y_brazil",
+      "path": "/character/shirts/y_brazil.svg",
+      "filename": "y_brazil.svg"
+    }
+  ],
+  "shoes": [
+    {
+      "id": "b_boots",
+      "path": "/character/shoes/b_boots.svg",
+      "filename": "b_boots.svg"
+    },
+    {
+      "id": "bl_gum_boots",
+      "path": "/character/shoes/bl_gum_boots.svg",
+      "filename": "bl_gum_boots.svg"
+    },
+    {
+      "id": "g_sports_shoes",
+      "path": "/character/shoes/g_sports_shoes.svg",
+      "filename": "g_sports_shoes.svg"
+    },
+    {
+      "id": "r_converse",
+      "path": "/character/shoes/r_converse.svg",
+      "filename": "r_converse.svg"
+    },
+    {
+      "id": "pencil_shoe",
+      "path": "/character/shoes/pencil_shoe.svg",
+      "filename": "pencil_shoe.svg"
+    },
+    {
+      "id": "b_hightops",
+      "path": "/character/shoes/b_hightops.svg",
+      "filename": "b_hightops.svg"
+    },
+    {
+      "id": "frog_shoe",
+      "path": "/character/shoes/frog_shoe.svg",
+      "filename": "frog_shoe.svg"
+    },
+    {
+      "id": "p_crocs",
+      "path": "/character/shoes/p_crocs.svg",
+      "filename": "p_crocs.svg"
+    },
+    {
+      "id": "r_jordans",
+      "path": "/character/shoes/r_jordans.svg",
+      "filename": "r_jordans.svg"
+    }
+  ],
+  "skin": [
+    {
+      "id": "Tint 1",
+      "parts": {
+        "arm": "/character/skin/Tint 1/tint1_arm.png",
+        "hand": "/character/skin/Tint 1/tint1_hand.png",
+        "head": "/character/skin/Tint 1/tint1_head.png",
+        "leg": "/character/skin/Tint 1/tint1_leg.png",
+        "neck": "/character/skin/Tint 1/tint1_neck.png"
+      }
+    },
+    {
+      "id": "Tint 2",
+      "parts": {
+        "arm": "/character/skin/Tint 2/tint2_arm.png",
+        "hand": "/character/skin/Tint 2/tint2_hand.png",
+        "head": "/character/skin/Tint 2/tint2_head.png",
+        "leg": "/character/skin/Tint 2/tint2_leg.png",
+        "neck": "/character/skin/Tint 2/tint2_neck.png"
+      }
+    },
+    {
+      "id": "Tint 3",
+      "parts": {
+        "arm": "/character/skin/Tint 3/tint3_arm.png",
+        "hand": "/character/skin/Tint 3/tint3_hand.png",
+        "head": "/character/skin/Tint 3/tint3_head.png",
+        "leg": "/character/skin/Tint 3/tint3_leg.png",
+        "neck": "/character/skin/Tint 3/tint3_neck.png"
+      }
+    },
+    {
+      "id": "Tint 4",
+      "parts": {
+        "arm": "/character/skin/Tint 4/tint4_arm.png",
+        "hand": "/character/skin/Tint 4/tint4_hand.png",
+        "head": "/character/skin/Tint 4/tint4_head.png",
+        "leg": "/character/skin/Tint 4/tint4_leg.png",
+        "neck": "/character/skin/Tint 4/tint4_neck.png"
+      }
+    },
+    {
+      "id": "Tint 5",
+      "parts": {
+        "arm": "/character/skin/Tint 5/tint5_arm.png",
+        "hand": "/character/skin/Tint 5/tint5_hand.png",
+        "head": "/character/skin/Tint 5/tint5_head.png",
+        "leg": "/character/skin/Tint 5/tint5_leg.png",
+        "neck": "/character/skin/Tint 5/tint5_neck.png"
+      }
+    },
+    {
+      "id": "Tint 6",
+      "parts": {
+        "arm": "/character/skin/Tint 6/tint6_arm.png",
+        "hand": "/character/skin/Tint 6/tint6_hand.png",
+        "head": "/character/skin/Tint 6/tint6_head.png",
+        "leg": "/character/skin/Tint 6/tint6_leg.png",
+        "neck": "/character/skin/Tint 6/tint6_neck.png"
+      }
+    },
+    {
+      "id": "Tint 7",
+      "parts": {
+        "arm": "/character/skin/Tint 7/tint7_arm.png",
+        "hand": "/character/skin/Tint 7/tint7_hand.png",
+        "head": "/character/skin/Tint 7/tint7_head.png",
+        "leg": "/character/skin/Tint 7/tint7_leg.png",
+        "neck": "/character/skin/Tint 7/tint7_neck.png"
+      }
+    },
+    {
+      "id": "Tint 8",
+      "parts": {
+        "arm": "/character/skin/Tint 8/tint8_arm.png",
+        "hand": "/character/skin/Tint 8/tint8_hand.png",
+        "head": "/character/skin/Tint 8/tint8_head.png",
+        "leg": "/character/skin/Tint 8/tint8_leg.png",
+        "neck": "/character/skin/Tint 8/tint8_neck.png"
+      }
+    }
+  ],
+  "sets": [
+    {
+      "id": "nro_goku_ssj_god",
+      "name": "Goku SSJ God (Đỏ)",
+      "path": "/character/nro/nro_goku_ssj_god_full.png",
+      "width": 145,
+      "height": 237,
+      "head": {
+        "path": "/character/nro/nro_goku_ssj_god_head.png",
+        "x": 0,
+        "y": 0,
+        "width": 145,
+        "height": 123
+      },
+      "shirt": {
+        "path": "/character/nro/nro_goku_ssj_god_shirt.png",
+        "x": 12,
+        "y": 108,
+        "width": 104,
+        "height": 83
+      },
+      "pants": {
+        "path": "/character/nro/nro_goku_ssj_god_pants.png",
+        "x": 28,
+        "y": 164,
+        "width": 75,
+        "height": 73
+      },
+      "lightning": "/character/nro/nro_eff_lightning_red.png",
+      "thumb": "/character/thumbnails/set_nro_goku_ssj_god.png"
+    },
+    {
+      "id": "nro_goku_ssj_blue",
+      "name": "Goku SSJ Blue",
+      "path": "/character/nro/nro_goku_ssj_blue_full.png",
+      "width": 146,
+      "height": 229,
+      "head": {
+        "path": "/character/nro/nro_goku_ssj_blue_head.png",
+        "x": 0,
+        "y": 0,
+        "width": 146,
+        "height": 124
+      },
+      "shirt": {
+        "path": "/character/nro/nro_goku_ssj_blue_shirt.png",
+        "x": 18,
+        "y": 108,
+        "width": 104,
+        "height": 81
+      },
+      "pants": {
+        "path": "/character/nro/nro_goku_ssj_blue_pants.png",
+        "x": 34,
+        "y": 156,
+        "width": 75,
+        "height": 73
+      },
+      "lightning": "/character/nro/nro_eff_lightning_blue.png",
+      "thumb": "/character/thumbnails/set_nro_goku_ssj_blue.png"
+    },
+    {
+      "id": "nro_black_goku",
+      "name": "Black Goku Potara",
+      "path": "/character/nro/nro_black_goku_full.png",
+      "width": 150,
+      "height": 265,
+      "head": {
+        "path": "/character/nro/nro_black_goku_head.png",
+        "x": 0,
+        "y": 0,
+        "width": 150,
+        "height": 125
+      },
+      "shirt": {
+        "path": "/character/nro/nro_black_goku_shirt.png",
+        "x": 16,
+        "y": 108,
+        "width": 105,
+        "height": 90
+      },
+      "pants": {
+        "path": "/character/nro/nro_black_goku_pants.png",
+        "x": 24,
+        "y": 180,
+        "width": 95,
+        "height": 85
+      },
+      "lightning": "/character/nro/nro_eff_lightning_yellow.png",
+      "thumb": "/character/thumbnails/set_nro_black_goku.png"
+    },
+    {
+      "id": "nro_goku_ssj4",
+      "name": "Goku SSJ4",
+      "path": "/character/nro/nro_goku_ssj4_full.png",
+      "width": 132,
+      "height": 244,
+      "head": {
+        "path": "/character/nro/nro_goku_ssj4_head.png",
+        "x": 8,
+        "y": 0,
+        "width": 124,
+        "height": 128
+      },
+      "shirt": {
+        "path": "/character/nro/nro_goku_ssj4_shirt.png",
+        "x": 0,
+        "y": 108,
+        "width": 124,
+        "height": 100
+      },
+      "pants": {
+        "path": "/character/nro/nro_goku_ssj4_pants.png",
+        "x": 32,
+        "y": 164,
+        "width": 84,
+        "height": 80
+      },
+      "lightning": "/character/nro/nro_eff_lightning_red.png",
+      "thumb": "/character/thumbnails/set_nro_goku_ssj4.png"
+    },
+    {
+      "id": "nro_goku_ssj_white",
+      "name": "Goku Bản Năng Vô Cực Trắng",
+      "path": "/character/nro/nro_goku_ssj_white_full.png",
+      "width": 160,
+      "height": 240,
+      "head": {
+        "path": "/character/nro/nro_goku_ssj_white_head.png",
+        "x": 36,
+        "y": 0,
+        "width": 124,
+        "height": 128
+      },
+      "shirt": {
+        "path": "/character/nro/nro_goku_ssj_white_shirt.png",
+        "x": 0,
+        "y": 104,
+        "width": 152,
+        "height": 96
+      },
+      "pants": {
+        "path": "/character/nro/nro_goku_ssj_white_pants.png",
+        "x": 60,
+        "y": 160,
+        "width": 84,
+        "height": 80
+      },
+      "lightning": "/character/nro/nro_eff_lightning_blue.png",
+      "thumb": "/character/thumbnails/set_nro_goku_ssj_white.png"
+    },
+    {
+      "id": "nro_vegito_ssj3",
+      "name": "Vegito SSJ3 Xeno",
+      "path": "/character/nro/nro_vegito_ssj3_full.png",
+      "width": 136,
+      "height": 208,
+      "head": {
+        "path": "/character/nro/nro_vegito_ssj3_head.png",
+        "x": 0,
+        "y": 0,
+        "width": 136,
+        "height": 126
+      },
+      "shirt": {
+        "path": "/character/nro/nro_vegito_ssj3_shirt.png",
+        "x": 28,
+        "y": 92,
+        "width": 96,
+        "height": 80
+      },
+      "pants": {
+        "path": "/character/nro/nro_vegito_ssj3_pants.png",
+        "x": 44,
+        "y": 148,
+        "width": 68,
+        "height": 60
+      },
+      "lightning": "/character/nro/nro_eff_lightning_yellow.png",
+      "thumb": "/character/thumbnails/set_nro_vegito_ssj3.png"
+    },
+    {
+      "id": "nro_goku_ssj_blue_wild",
+      "name": "Goku Blue Hoang Dã",
+      "path": "/character/nro/nro_goku_ssj_blue_wild_full.png",
+      "width": 132,
+      "height": 244,
+      "head": {
+        "path": "/character/nro/nro_goku_ssj_blue_wild_head.png",
+        "x": 8,
+        "y": 0,
+        "width": 124,
+        "height": 128
+      },
+      "shirt": {
+        "path": "/character/nro/nro_goku_ssj_blue_wild_shirt.png",
+        "x": 0,
+        "y": 104,
+        "width": 124,
+        "height": 100
+      },
+      "pants": {
+        "path": "/character/nro/nro_goku_ssj_blue_wild_pants.png",
+        "x": 32,
+        "y": 164,
+        "width": 84,
+        "height": 80
+      },
+      "lightning": "/character/nro/nro_eff_lightning_blue.png",
+      "thumb": "/character/thumbnails/set_nro_goku_ssj_blue_wild.png"
+    },
+    {
+      "id": "ds_tanjiro",
+      "key": "ds_tanjiro",
+      "name": "Kamado Tanjiro (Kimetsu)",
+      "width": 84,
+      "height": 144,
+      "head": {
+        "path": "/character/nro/set_tanjiro_head.png",
+        "x": 8,
+        "y": 0,
+        "width": 72,
+        "height": 68
+      },
+      "shirt": {
+        "path": "/character/nro/set_tanjiro_shirt.png",
+        "x": 0,
+        "y": 60,
+        "width": 84,
+        "height": 64
+      },
+      "pants": {
+        "path": "/character/nro/set_tanjiro_pants.png",
+        "x": 16,
+        "y": 104,
+        "width": 64,
+        "height": 40
+      },
+      "thumb": "/character/thumbnails/set_ds_tanjiro.png"
+    },
+    {
+      "id": "ds_inosuke_boar",
+      "key": "ds_inosuke_boar",
+      "name": "Inosuke Heo (Kimetsu)",
+      "width": 100,
+      "height": 156,
+      "head": {
+        "path": "/character/nro/set_inosuke_boar_head.png",
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 84
+      },
+      "shirt": {
+        "path": "/character/nro/set_inosuke_boar_shirt.png",
+        "x": 4,
+        "y": 72,
+        "width": 76,
+        "height": 56
+      },
+      "pants": {
+        "path": "/character/nro/set_inosuke_boar_pants.png",
+        "x": 16,
+        "y": 116,
+        "width": 64,
+        "height": 40
+      },
+      "thumb": "/character/thumbnails/set_ds_inosuke_boar.png"
+    },
+    {
+      "id": "ds_zenitsu",
+      "key": "ds_zenitsu",
+      "name": "Zenitsu Agatsuma (Kimetsu)",
+      "width": 84,
+      "height": 144,
+      "head": {
+        "path": "/character/nro/set_zenitsu_head.png",
+        "x": 8,
+        "y": 0,
+        "width": 76,
+        "height": 68
+      },
+      "shirt": {
+        "path": "/character/nro/set_zenitsu_shirt.png",
+        "x": 0,
+        "y": 60,
+        "width": 84,
+        "height": 64
+      },
+      "pants": {
+        "path": "/character/nro/set_zenitsu_pants.png",
+        "x": 20,
+        "y": 104,
+        "width": 64,
+        "height": 40
+      },
+      "lightning": "/character/nro/nro_eff_lightning_yellow.png",
+      "thumb": "/character/thumbnails/set_ds_zenitsu.png"
+    },
+    {
+      "id": "ds_nezuko",
+      "key": "ds_nezuko",
+      "name": "Kamado Nezuko (Kimetsu)",
+      "width": 132,
+      "height": 148,
+      "head": {
+        "path": "/character/nro/set_nezuko_head.png",
+        "x": 0,
+        "y": 0,
+        "width": 112,
+        "height": 100
+      },
+      "shirt": {
+        "path": "/character/nro/set_nezuko_shirt.png",
+        "x": 28,
+        "y": 56,
+        "width": 104,
+        "height": 76
+      },
+      "pants": {
+        "path": "/character/nro/set_nezuko_pants.png",
+        "x": 56,
+        "y": 96,
+        "width": 60,
+        "height": 52
+      },
+      "thumb": "/character/thumbnails/set_ds_nezuko.png"
+    },
+    {
+      "id": "ds_inosuke",
+      "key": "ds_inosuke",
+      "name": "Inosuke Hashibira (Kimetsu)",
+      "width": 76,
+      "height": 148,
+      "head": {
+        "path": "/character/nro/set_inosuke_head.png",
+        "x": 4,
+        "y": 0,
+        "width": 72,
+        "height": 72
+      },
+      "shirt": {
+        "path": "/character/nro/set_inosuke_shirt.png",
+        "x": 0,
+        "y": 64,
+        "width": 76,
+        "height": 56
+      },
+      "pants": {
+        "path": "/character/nro/set_inosuke_pants.png",
+        "x": 12,
+        "y": 108,
+        "width": 64,
+        "height": 40
+      },
+      "thumb": "/character/thumbnails/set_ds_inosuke.png"
+    },
+    {
+      "id": "nro_gogeta_ssj4",
+      "key": "nro_gogeta_ssj4",
+      "name": "Gogeta SSJ4 Vô Địch",
+      "width": 136,
+      "height": 228,
+      "head": {
+        "path": "/character/nro/set_gogeta_ssj4_head.png",
+        "sheet": "/character/nro/set_gogeta_ssj4_head_sheet.png",
+        "frames": 2,
+        "duration": 0.45,
+        "x": 8,
+        "y": 0,
+        "width": 128,
+        "height": 124
+      },
+      "shirt": {
+        "path": "/character/nro/set_gogeta_ssj4_shirt.png",
+        "x": 0,
+        "y": 100,
+        "width": 124,
+        "height": 100
+      },
+      "pants": {
+        "path": "/character/nro/set_gogeta_ssj4_pants.png",
+        "x": 28,
+        "y": 148,
+        "width": 84,
+        "height": 80
+      },
+      "lightning": "/character/nro/nro_eff_lightning_blue.png",
+      "thumb": "/character/thumbnails/set_nro_gogeta_ssj4.png"
+    },
+    {
+      "id": "nro_robot_pet",
+      "key": "nro_robot_pet",
+      "name": "Người Máy Bánh Răng (Robot Anim)",
+      "type": "animated",
+      "disableBack": true,
+      "width": 144,
+      "height": 144,
+      "sheet": "/character/nro/set_robot_anim.png",
+      "thumb": "/character/nro/set_robot_thumb.png",
+      "frames": 8,
+      "duration": 0.8
+    },
+    {
+      "id": "nro_set_14206",
+      "key": "nro_set_14206",
+      "name": "Chiến Binh Tóc Dài 14206",
+      "width": 110,
+      "height": 220,
+      "head": {
+        "path": "/character/nro/set_14206_head.png",
+        "x": 0,
+        "y": 0,
+        "width": 108,
+        "height": 152
+      },
+      "shirt": {
+        "path": "/character/nro/set_14206_shirt.png",
+        "x": 15,
+        "y": 80,
+        "width": 80,
+        "height": 88
+      },
+      "pants": {
+        "path": "/character/nro/set_14206_pants.png",
+        "x": 21,
+        "y": 136,
+        "width": 68,
+        "height": 72
+      },
+      "thumb": "/character/thumbnails/set_nro_14206.png"
+    },
+    {
+      "id": "nro_set_16587",
+      "key": "nro_set_16587",
+      "name": "Hắc Long Chiến Binh 16587",
+      "width": 120,
+      "height": 200,
+      "head": {
+        "path": "/character/nro/set_16587_head.png",
+        "x": -2,
+        "y": 0,
+        "width": 120,
+        "height": 96
+      },
+      "shirt": {
+        "path": "/character/nro/set_16590_shirt.png",
+        "x": 8,
+        "y": 82,
+        "width": 104,
+        "height": 96
+      },
+      "pants": {
+        "path": "/character/nro/set_16590_pants.png",
+        "x": 20,
+        "y": 138,
+        "width": 80,
+        "height": 64
+      },
+      "thumb": "/character/thumbnails/set_nro_16587.png"
+    },
+    {
+      "id": "nro_set_ssj_blue_god",
+      "key": "nro_set_ssj_blue_god",
+      "name": "Chiến Binh SSJ Blue Thần Cấp (Anim Head)",
+      "width": 130,
+      "height": 235,
+      "headOverShirt": true,
+      "head": {
+        "path": "/character/nro/set_15502_head.png",
+        "sheet": "/character/nro/set_15502_head_sheet.png",
+        "frames": 3,
+        "duration": 0.45,
+        "x": -4,
+        "y": 6,
+        "width": 112,
+        "height": 124
+      },
+      "shirt": {
+        "path": "/character/nro/set_15502_shirt.png",
+        "x": 0,
+        "y": 100,
+        "width": 128,
+        "height": 84
+      },
+      "pants": {
+        "path": "/character/nro/set_15502_pants.png",
+        "x": 16,
+        "y": 150,
+        "width": 96,
+        "height": 84
+      },
+      "lightning": "/character/nro/nro_eff_lightning_blue.png",
+      "thumb": "/character/thumbnails/set_nro_15502.png"
+    },
+    {
+      "id": "nro_pet_blue_dragon",
+      "key": "nro_pet_blue_dragon",
+      "name": "Phi Long Thần Lam",
+      "type": "animated",
+      "disableBack": true,
+      "width": 352,
+      "height": 212,
+      "sheet": "/character/nro/nro_pet_blue_dragon_sheet.png",
+      "thumb": "/character/nro/nro_pet_blue_dragon_thumb.png",
+      "frames": 5,
+      "duration": 0.65,
+      "scale": 0.58
+    },
+    {
+      "id": "nro_pet_mecha_drone",
+      "key": "nro_pet_mecha_drone",
+      "name": "Tiểu Đĩa Bay Mecha",
+      "type": "animated",
+      "disableBack": true,
+      "width": 180,
+      "height": 116,
+      "sheet": "/character/nro/nro_pet_mecha_drone_sheet.png",
+      "thumb": "/character/nro/nro_pet_mecha_drone_thumb.png",
+      "frames": 6,
+      "duration": 0.6
+    },
+    {
+      "id": "nro_pet_teddy_bear",
+      "key": "nro_pet_teddy_bear",
+      "name": "Búp Bê Gấu Nâu",
+      "type": "animated",
+      "disableBack": true,
+      "width": 104,
+      "height": 120,
+      "sheet": "/character/nro/nro_pet_teddy_bear_sheet.png",
+      "thumb": "/character/nro/nro_pet_teddy_bear_thumb.png",
+      "frames": 6,
+      "duration": 0.6
+    },
+    {
+      "id": "nro_pet_pink_bunny",
+      "key": "nro_pet_pink_bunny",
+      "name": "Búp Bê Thỏ Hồng",
+      "type": "animated",
+      "disableBack": true,
+      "width": 112,
+      "height": 112,
+      "sheet": "/character/nro/nro_pet_pink_bunny_sheet.png",
+      "thumb": "/character/nro/nro_pet_pink_bunny_thumb.png",
+      "frames": 6,
+      "duration": 0.6
+    },
+    {
+      "id": "nro_pet_green_frog",
+      "key": "nro_pet_green_frog",
+      "name": "Búp Bê Ếch Xanh",
+      "type": "animated",
+      "disableBack": true,
+      "width": 92,
+      "height": 112,
+      "sheet": "/character/nro/nro_pet_green_frog_sheet.png",
+      "thumb": "/character/nro/nro_pet_green_frog_thumb.png",
+      "frames": 6,
+      "duration": 0.6
+    }
+  ],
+  "back": [
+    {
+      "id": "acc_mecha_saw",
+      "name": "Cưa Máy Mecha",
+      "sheet": "/character/accessories/acc_mecha_saw_sheet.png",
+      "thumb": "/character/accessories/acc_mecha_saw_thumb.png",
+      "frames": 8,
+      "frameWidth": 280,
+      "frameHeight": 280,
+      "duration": 0.6,
+      "offsetX": -20,
+      "offsetY": -10,
+      "scale": 0.52
+    },
+    {
+      "id": "acc_golden_spear",
+      "name": "Hoàng Kim Thương Sét",
+      "sheet": "/character/accessories/acc_golden_spear_sheet.png",
+      "thumb": "/character/accessories/acc_golden_spear_thumb.png",
+      "frames": 8,
+      "frameWidth": 280,
+      "frameHeight": 280,
+      "duration": 0.6,
+      "offsetX": -20,
+      "offsetY": -10,
+      "scale": 0.52
+    },
+    {
+      "id": "acc_flame_sword",
+      "name": "Hỏa Long Kiếm",
+      "sheet": "/character/accessories/acc_flame_sword_sheet.png",
+      "thumb": "/character/accessories/acc_flame_sword_thumb.png",
+      "frames": 45,
+      "frameWidth": 400,
+      "frameHeight": 344,
+      "duration": 3.0,
+      "offsetX": -30,
+      "offsetY": -22,
+      "scale": 0.44
+    },
+    {
+      "id": "acc_shadow_wings",
+      "name": "Cánh Hắc Ám (Shadow Wings)",
+      "sheet": "/character/accessories/acc_shadow_wings_sheet.png",
+      "thumb": "/character/accessories/acc_shadow_wings_thumb.png",
+      "frames": 4,
+      "frameWidth": 140,
+      "frameHeight": 130,
+      "duration": 0.5,
+      "offsetX": -56,
+      "offsetY": -12,
+      "scale": 0.82
+    },
+    {
+      "id": "acc_angel_wings",
+      "name": "Cánh Thiên Thần (Angel Wings)",
+      "sheet": "/character/accessories/acc_angel_wings_sheet.png",
+      "thumb": "/character/accessories/acc_angel_wings_thumb.png",
+      "frames": 4,
+      "frameWidth": 220,
+      "frameHeight": 210,
+      "duration": 0.55,
+      "offsetX": -56,
+      "offsetY": -16,
+      "scale": 0.65
+    }
+  ],
+  "aura": [
+    {
+      "id": "aura_5",
+      "name": "Hào Quang Lửa Đỏ (Fire Aura)",
+      "thumb": "/character/aura/thumbs/aura_5.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_5_0.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_5_1.png",
+        "width": 320,
+        "frameHeight": 320,
+        "sheetHeight": 1280,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_6",
+      "name": "Hào Quang Sét Vàng (Gold Spark)",
+      "thumb": "/character/aura/thumbs/aura_6.png",
+      "layer0": null,
+      "layer1": {
+        "sheet": "/character/aura/aura_6_1.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_7",
+      "name": "Hào Quang Thiên Thần (Holy Blue)",
+      "thumb": "/character/aura/thumbs/aura_7.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_7_0.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_7_1.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_8",
+      "name": "Hào Quang Lục Bảo (Emerald Glow)",
+      "thumb": "/character/aura/thumbs/aura_8.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_8_0.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_8_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_10",
+      "name": "Hào Quang Tím U Tối (Dark Violet)",
+      "thumb": "/character/aura/thumbs/aura_10.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_10_0.png",
+        "width": 320,
+        "frameHeight": 320,
+        "sheetHeight": 1280,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": null
+    },
+    {
+      "id": "aura_11",
+      "name": "Hào Quang Băng Lam (Frost Cyan)",
+      "thumb": "/character/aura/thumbs/aura_11.png",
+      "layer0": null,
+      "layer1": {
+        "sheet": "/character/aura/aura_11_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_12",
+      "name": "Hào Quang Hoàng Kim (Golden Sun)",
+      "thumb": "/character/aura/thumbs/aura_12.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_12_0.png",
+        "width": 320,
+        "frameHeight": 330,
+        "sheetHeight": 1321,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_12_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_13",
+      "name": "Hào Quang Huyết Nguyệt (Crimson Moon)",
+      "thumb": "/character/aura/thumbs/aura_13.png",
+      "layer0": null,
+      "layer1": {
+        "sheet": "/character/aura/aura_13_1.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_14",
+      "name": "Hào Quang Bão Điện (Electric Storm)",
+      "thumb": "/character/aura/thumbs/aura_14.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_14_0.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": null
+    },
+    {
+      "id": "aura_15",
+      "name": "Hào Quang Vô Cực (Ultra Instinct)",
+      "thumb": "/character/aura/thumbs/aura_15.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_15_0.png",
+        "width": 600,
+        "frameHeight": 600,
+        "sheetHeight": 2400,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": null
+    },
+    {
+      "id": "aura_16",
+      "name": "Hào Quang Ma Vương (Demonic Flame)",
+      "thumb": "/character/aura/thumbs/aura_16.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_16_0.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": null
+    },
+    {
+      "id": "aura_17",
+      "name": "Hào Quang Thần Vũ (Divine Flare)",
+      "thumb": "/character/aura/thumbs/aura_17.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_17_0.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_17_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_18",
+      "name": "Hào Quang Hắc Ám (Shadow Mist)",
+      "thumb": "/character/aura/thumbs/aura_18.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_18_0.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_18_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_19",
+      "name": "Hào Quang Hỏa Long (Dragon Blaze)",
+      "thumb": "/character/aura/thumbs/aura_19.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_19_0.png",
+        "width": 318,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": null
+    },
+    {
+      "id": "aura_20",
+      "name": "Hào Quang Kim Cương (Diamond Prism)",
+      "thumb": "/character/aura/thumbs/aura_20.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_20_0.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_20_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_21",
+      "name": "Hào Quang Tinh Vân (Nebula Glow)",
+      "thumb": "/character/aura/thumbs/aura_21.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_21_0.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_21_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_22",
+      "name": "Hào Quang Sấm Sét (Thunder Bolt)",
+      "thumb": "/character/aura/thumbs/aura_22.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_22_0.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_22_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_23",
+      "name": "Hào Quang Thần Bí (Mystic Arcana)",
+      "thumb": "/character/aura/thumbs/aura_23.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_23_0.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_23_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_24",
+      "name": "Hào Quang Thần Cấp Đỏ (Godly Red)",
+      "thumb": "/character/aura/thumbs/aura_24.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_24_0.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_24_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_25",
+      "name": "Hào Quang Thần Cấp Lam (Godly Blue)",
+      "thumb": "/character/aura/thumbs/aura_25.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_25_0.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_25_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_26",
+      "name": "Hào Quang Bản Năng (Instinct Aura)",
+      "thumb": "/character/aura/thumbs/aura_26.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_26_0.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_26_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    },
+    {
+      "id": "aura_27",
+      "name": "Hào Quang Thượng Giới (Celestial Nova)",
+      "thumb": "/character/aura/thumbs/aura_27.png",
+      "layer0": {
+        "sheet": "/character/aura/aura_27_0.png",
+        "width": 400,
+        "frameHeight": 400,
+        "sheetHeight": 1600,
+        "frames": 4,
+        "duration": 0.45
+      },
+      "layer1": {
+        "sheet": "/character/aura/aura_27_1.png",
+        "width": 280,
+        "frameHeight": 360,
+        "sheetHeight": 1440,
+        "frames": 4,
+        "duration": 0.45
+      }
+    }
+  ]
+}
