@@ -463,7 +463,7 @@
       "name": "Goku SSJ Blue",
       "path": "/character/nro/nro_goku_ssj_blue_full.png",
       "width": 146,
-      "height": 237,
+      "height": 229,
       "head": {
         "path": "/character/nro/nro_goku_ssj_blue_head.png",
         "x": 0,
@@ -473,15 +473,15 @@
       },
       "shirt": {
         "path": "/character/nro/nro_goku_ssj_blue_shirt.png",
-        "x": 8,
+        "x": 18,
         "y": 108,
         "width": 104,
         "height": 81
       },
       "pants": {
         "path": "/character/nro/nro_goku_ssj_blue_pants.png",
-        "x": 24,
-        "y": 164,
+        "x": 34,
+        "y": 156,
         "width": 75,
         "height": 73
       }
