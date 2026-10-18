@@ -170,52 +170,7 @@ router.post('/:roomCode/reset-participants', verifyToken, async (req, res) => {
   }
 });
 
-// CLEANUP old rooms (chỉ xóa các phòng cũ hơn 60 ngày - 2 tháng)
-router.post('/cleanup/all', verifyToken, async (req, res) => {
-  try {
-    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
-    
-    const result = await Room.deleteMany({
-      createdAt: { $lt: sixtyDaysAgo }
-    });
 
-    res.json({ 
-      message: `Đã xóa ${result.deletedCount} phòng quá hạn 2 tháng`,
-      deletedCount: result.deletedCount 
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi server: ' + error.message });
-  }
-});
-
-// FORCE CLEANUP - Xóa TẤT CẢ rooms và disconnect TẤT CẢ sockets (for testing)
-router.post('/cleanup/force', verifyToken, async (req, res) => {
-  try {
-    const io = req.app.get('io');
-    let disconnectedCount = 0;
-    
-    if (io) {
-      // Disconnect tất cả sockets
-      const allSockets = await io.fetchSockets();
-      for (const socket of allSockets) {
-        socket.removeAllListeners();
-        socket.disconnect(true);
-        disconnectedCount++;
-      }
-    }
-    
-    // Xóa TẤT CẢ rooms
-    const result = await Room.deleteMany({});
-
-    res.json({ 
-      message: `Đã xóa ${result.deletedCount} phòng và disconnect ${disconnectedCount} sockets`,
-      deletedRooms: result.deletedCount,
-      disconnectedSockets: disconnectedCount
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi server: ' + error.message });
-  }
-});
 
 // GET all rooms (for debugging)
 router.get('/debug/all', verifyToken, async (req, res) => {

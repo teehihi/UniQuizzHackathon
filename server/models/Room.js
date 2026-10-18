@@ -113,20 +113,11 @@ const RoomSchema = new mongoose.Schema({
   }
 });
 
-// TTL Index: Tự động xóa phòng sau 60 ngày (~ 2 tháng)
-RoomSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });
-
-// Middleware bảo vệ: Tuyệt đối chặn các truy vấn xóa phòng rỗng người chơi
+// BẢO VỆ TUYỆT ĐỐI: KHÔNG DÙNG TTL INDEX - PHÒNG TỒN TẠI VĨNH VIỄN
+// Chặn mọi hành vi Room.deleteMany xóa hàng loạt (từ cronjob ngầm hay code cũ)
 RoomSchema.pre('deleteMany', function() {
-  const filter = this.getFilter();
-  if (filter && filter.$or) {
-    // Loại bỏ bất kỳ điều kiện nào xóa phòng rỗng (participants: { $size: 0 })
-    filter.$or = filter.$or.filter(cond => !cond.participants && !cond['participants.isOnline']);
-    if (filter.$or.length === 0) {
-      // Hủy bỏ lệnh xóa nếu chỉ chứa điều kiện xóa phòng rỗng
-      this.setQuery({ _id: null });
-    }
-  }
+  console.warn('⛔ BLOCKED Room.deleteMany! Rooms are persistent and cannot be bulk-deleted.');
+  this.setQuery({ _id: null }); // Match nothing -> Không cho phép xóa bất kỳ phòng nào
 });
 
 // Generate unique room code
