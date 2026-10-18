@@ -28,8 +28,9 @@ export default function Header() {
 
   useEffect(() => {
     const updateUser = () => {
+      const token = localStorage.getItem("token");
       const userData = localStorage.getItem("user");
-      if (userData) {
+      if (token && userData) {
         try {
           setUser(JSON.parse(userData));
         } catch (e) {

@@ -34,6 +34,8 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       console.log("Token hết hạn hoặc không hợp lệ. Đang đẩy về trang Login.");
       localStorage.removeItem('token'); 
+      localStorage.removeItem('user');
+      window.dispatchEvent(new Event("userUpdate"));
       window.location.href = '/login';
     }
     return Promise.reject(error);
