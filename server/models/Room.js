@@ -116,6 +116,19 @@ const RoomSchema = new mongoose.Schema({
 // TTL Index: Tự động xóa phòng sau 60 ngày (~ 2 tháng)
 RoomSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 24 * 60 * 60 });
 
+// Middleware bảo vệ: Tuyệt đối chặn các truy vấn xóa phòng rỗng người chơi
+RoomSchema.pre('deleteMany', function() {
+  const filter = this.getFilter();
+  if (filter && filter.$or) {
+    // Loại bỏ bất kỳ điều kiện nào xóa phòng rỗng (participants: { $size: 0 })
+    filter.$or = filter.$or.filter(cond => !cond.participants && !cond['participants.isOnline']);
+    if (filter.$or.length === 0) {
+      // Hủy bỏ lệnh xóa nếu chỉ chứa điều kiện xóa phòng rỗng
+      this.setQuery({ _id: null });
+    }
+  }
+});
+
 // Generate unique room code
 RoomSchema.statics.generateRoomCode = async function() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
