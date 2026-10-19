@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Room = require('./models/Room');
 const Deck = require('./models/Deck');
 const RoomLeaderboard = require('./models/RoomLeaderboard');
+const { syncRoomToBackup, restoreRoomIfMissing } = require('./services/roomPersistenceService');
 
 // Store để track connections
 const roomConnections = new Map(); // roomCode -> Set of socketIds
@@ -160,7 +161,10 @@ module.exports = (io) => {
 
         await room.save();
         
-        console.log('🎮 [CREATE-ROOM] Room saved to DB:', {
+        // Sao lưu sang rooms_backup để bảo vệ vĩnh viễn
+        await syncRoomToBackup(room);
+        
+        console.log('🎮 [CREATE-ROOM] Room saved to DB and persistent backup:', {
           roomCode,
           mode: room.mode,
           status: room.status
@@ -183,7 +187,7 @@ module.exports = (io) => {
       }
     });
 
-    // JOIN ROOM - LOGIC ĐƠN GIẢN
+    // JOIN ROOM - LOGIC ĐƠN GIẢN (KÈM AUTO-HEAL)
     socket.on('join-room', async (data, callback) => {
       try {
         const { roomCode, displayName, characterConfig } = data;
@@ -191,6 +195,9 @@ module.exports = (io) => {
         if (!roomCode || !displayName) {
           return callback({ error: 'Thiếu thông tin' });
         }
+
+        // Tự động hồi sinh phòng nếu bị rơi rụng
+        await restoreRoomIfMissing(roomCode);
 
         const room = await Room.findOne({ roomCode: roomCode.toUpperCase() }).populate('quizId');
         
@@ -682,6 +689,7 @@ module.exports = (io) => {
         room.startedAt = null;
         room.finishedAt = null;
         await room.save();
+        await syncRoomToBackup(room);
 
         io.to(roomCode.toUpperCase()).emit('room-restarted', { 
           room, 
@@ -733,11 +741,13 @@ module.exports = (io) => {
       }
     });
 
-    // GET ROOM DATA
+    // GET ROOM DATA (KÈM AUTO-HEAL)
     socket.on('get-room-data', async (data, callback) => {
       try {
         const { roomCode } = data;
         
+        await restoreRoomIfMissing(roomCode);
+
         const room = await Room.findOne({ roomCode }).populate('quizId');
         if (!room) {
           return callback({ error: 'Không tìm thấy phòng' });

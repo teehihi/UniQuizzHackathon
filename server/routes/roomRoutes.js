@@ -4,6 +4,7 @@ const router = express.Router();
 const Room = require('../models/Room');
 const Deck = require('../models/Deck');
 const jwt = require('jsonwebtoken');
+const { restoreRoomIfMissing, restoreMyRoomsIfMissing, deleteRoomPermanently } = require('../services/roomPersistenceService');
 
 // Middleware xác thực
 const verifyToken = (req, res, next) => {
@@ -21,10 +22,15 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// GET room info (public - không cần auth)
+// GET room info (public - không cần auth, tự động hồi sinh nếu bị mất)
 router.get('/:roomCode', async (req, res) => {
   try {
-    const room = await Room.findOne({ roomCode: req.params.roomCode.toUpperCase() })
+    const upperCode = req.params.roomCode.toUpperCase();
+    
+    // Tự động kiểm tra và hồi sinh từ bản sao lưu nếu bị mất
+    await restoreRoomIfMissing(upperCode);
+
+    const room = await Room.findOne({ roomCode: upperCode })
       .populate('quizId')
       .populate('hostId', 'email fullName');
     
@@ -80,9 +86,12 @@ router.get('/:roomCode/leaderboard', async (req, res) => {
   }
 });
 
-// GET my rooms (cần auth)
+// GET my rooms (cần auth, tự động hồi sinh phòng của user nếu bị rơi rụng)
 router.get('/my/rooms', verifyToken, async (req, res) => {
   try {
+    // Hồi sinh toàn bộ phòng của host nếu bị mất khỏi collection chính
+    await restoreMyRoomsIfMissing(req.userId);
+
     const rooms = await Room.find({ hostId: req.userId })
       .populate('quizId', 'title courseCode')
       .sort({ createdAt: -1 })
@@ -94,7 +103,7 @@ router.get('/my/rooms', verifyToken, async (req, res) => {
   }
 });
 
-// DELETE room (chỉ host) - TRIỆT ĐỂ
+// DELETE room (chỉ host) - TRIỆT ĐỂ (Xóa khỏi cả primary lẫn persistent backup)
 router.delete('/:roomCode', verifyToken, async (req, res) => {
   try {
     const roomCode = req.params.roomCode.toUpperCase();
@@ -132,8 +141,8 @@ router.delete('/:roomCode', verifyToken, async (req, res) => {
       console.log(`🗑️ Deleted room ${roomCode} and force disconnected ${socketsInRoom.length} sockets`);
     }
 
-    // 3. Xóa room khỏi database
-    await Room.findByIdAndDelete(room._id);
+    // 3. Xóa vĩnh viễn room khỏi CẢ HAI collections (rooms và rooms_backup)
+    await deleteRoomPermanently(roomCode);
     
     res.json({ 
       message: 'Đã xóa phòng thành công',

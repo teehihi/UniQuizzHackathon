@@ -50,14 +50,22 @@ app.set('io', io);
 // Middleware
 app.use(express.json());
 
-// 2. Kết nối MongoDB
+// 2. Kết nối MongoDB với chuẩn majority & journal
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
   throw new Error("Không tìm thấy MONGO_URI trong file .env");
 }
+const { startAutoHealDaemon } = require("./services/roomPersistenceService");
+
 mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("Kết nối MongoDB thành công!"))
+  .connect(MONGO_URI, {
+    w: "majority",
+    journal: true
+  })
+  .then(() => {
+    console.log("Kết nối MongoDB thành công!");
+    startAutoHealDaemon();
+  })
   .catch((err) => console.error("Lỗi kết nối MongoDB:", err));
 
 // 4. Root & Health Check Endpoints (Cho UptimeRobot và Frontend Warm-up)
